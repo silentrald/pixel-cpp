@@ -22,13 +22,17 @@ public:
   Button& operator=(Button&&) noexcept = default;
   ~Button() noexcept override = default;
 
+  [[nodiscard]] bool is_enabled() const noexcept;
+
   void set_theme(input::BtnTheme theme) noexcept;
   void set_texture(Texture&& tex) noexcept;
   void set_left_click_listener(void (*left_click_listener)()) noexcept;
   void set_right_click_listener(void (*right_click_listener)()) noexcept;
+  void enable() noexcept;
+  void disable() noexcept;
 
   void reset() noexcept override;
-  void input(const event::Input& evt) noexcept override;
+  void input(const event::Input& evt, Data& data) noexcept override;
   void update() noexcept override;
   void render(const Renderer& renderer) const noexcept override;
 

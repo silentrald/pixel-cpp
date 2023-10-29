@@ -6,6 +6,8 @@
  *==========================*/
 
 #include "./manager.hpp"
+#include "SDL_events.h"
+#include "SDL_keyboard.h"
 #include "SDL_keycode.h"
 #include "SDL_mouse.h"
 #include "core/logger/logger.hpp"
@@ -59,6 +61,15 @@ void Manager::input() noexcept {
       this->is_input_evt = true;
       break;
 
+    case SDL_EVENT_TEXT_INPUT:
+      this->data.sel_textbox->push_text(event.text.text);
+      this->is_text_input_changed = true;
+      break;
+
+    case SDL_EVENT_TEXT_EDITING:
+      // TODO:
+      break;
+
     case SDL_EVENT_WINDOW_MOUSE_LEAVE:
       if (this->mouse_box_id > -1) {
         this->boxes[this->mouse_box_id]->reset();
@@ -80,40 +91,63 @@ void Manager::input() noexcept {
     }
   }
 
-  if (this->is_input_evt) {
-    this->is_input_evt = false;
+  this->handle_input_event();
 
-    if (this->modals.get_size() > 0) {
-      // NOTE: Check if only handle inputs on the top
-      this->modals.back()->input(this->input_evt);
-    } else {
-      i32 i = 0;
-      for (; i < this->boxes.get_size(); ++i) {
-        if (this->boxes[i]->rect.has_point(this->input_evt.mouse.pos)) {
-          if (this->mouse_box_id == -1) {
-            this->mouse_box_id = i;
-          } else if (this->mouse_box_id != i) {
-            this->boxes[this->mouse_box_id]->reset();
-            this->mouse_box_id = i;
-          }
-
-          this->boxes[i]->input(this->input_evt);
-          break;
-        }
-      }
-
-      if (i == this->boxes.get_size()) {
-        this->boxes[this->mouse_box_id]->reset();
-        this->mouse_box_id = -1;
-      }
-    }
-  }
-
-  // Update the states
   update_mouse_state(this->input_evt.mouse.left.state, this->is_input_evt);
   update_mouse_state(this->input_evt.mouse.right.state, this->is_input_evt);
   update_mouse_state(this->input_evt.mouse.middle.state, this->is_input_evt);
   this->input_evt.mouse.wheel = {};
+
+  if (this->is_text_input_changed && this->data.sel_textbox) {
+    this->data.sel_textbox->reposition_text_rect(this->font);
+  }
+}
+
+void Manager::handle_input_event() noexcept {
+  if (!this->is_input_evt) {
+    return;
+  }
+  this->is_input_evt = false;
+
+  if (this->modals.get_size() > 0) {
+    // NOTE: Check if only handle inputs on the top
+    this->modals.back()->input(this->input_evt, this->data);
+    if (this->data.new_sel_textbox) {
+      if (this->data.sel_textbox) {
+        this->data.sel_textbox->focused = false;
+        this->data.sel_textbox->update_texture(this->renderer, this->font);
+      }
+      this->data.sel_textbox = this->data.new_sel_textbox;
+      this->data.new_sel_textbox = nullptr;
+      SDL_StartTextInput();
+    } else if (this->input_evt.mouse.left.state == input::MouseState::UP && this->data.sel_textbox) {
+      this->data.sel_textbox->focused = false;
+      this->data.sel_textbox->update_texture(this->renderer, this->font);
+      this->data.sel_textbox = nullptr;
+      SDL_StopTextInput();
+    }
+    return;
+  }
+
+  i32 i = 0;
+  for (; i < this->boxes.get_size(); ++i) {
+    if (this->boxes[i]->rect.has_point(this->input_evt.mouse.pos)) {
+      if (this->mouse_box_id == -1) {
+        this->mouse_box_id = i;
+      } else if (this->mouse_box_id != i) {
+        this->boxes[this->mouse_box_id]->reset();
+        this->mouse_box_id = i;
+      }
+
+      this->boxes[i]->input(this->input_evt, this->data);
+      break;
+    }
+  }
+
+  if (i == this->boxes.get_size()) {
+    this->boxes[this->mouse_box_id]->reset();
+    this->mouse_box_id = -1;
+  }
 }
 
 // === Mouse Input === //
@@ -178,6 +212,14 @@ inline void next_mouse_state(input::MouseState& state) noexcept {
 
 // === Keyboard === //
 void Manager::handle_key_down_input(i32 keycode) noexcept { // NOLINT
+  if (SDL_TextInputActive()) {
+    this->handle_key_down_text_input(keycode);
+  } else {
+    this->handle_key_down_key(keycode);
+  }
+}
+
+void Manager::handle_key_down_key(i32 keycode) noexcept {
   switch (keycode) {
   case SDLK_LCTRL:
   case SDLK_RCTRL:
@@ -202,7 +244,40 @@ void Manager::handle_key_down_input(i32 keycode) noexcept { // NOLINT
   }
 }
 
+void Manager::handle_key_down_text_input(i32 keycode) noexcept {
+  if (!this->data.sel_textbox) {
+    return;
+  }
+
+  switch (keycode) {
+  case SDLK_BACKSPACE:
+    if (this->data.sel_textbox->pop_char() != '\0') {
+      this->is_text_input_changed = true;
+    }
+    break;
+
+  case SDLK_RETURN:
+    this->data.sel_textbox->focused = false;
+    this->data.sel_textbox->update_texture(this->renderer, this->font);
+    this->data.sel_textbox = nullptr;
+    this->is_text_input_changed = false;
+    SDL_StopTextInput();
+    break;
+
+  case SDLK_TAB:
+    // TODO: Refocus to another input
+    break;
+
+  default:
+    break;
+  }
+}
+
 void Manager::handle_key_up_input(i32 keycode) noexcept { // NOLINT
+  if (SDL_TextInputActive()) {
+    return;
+  }
+
   switch (keycode) {
   case SDLK_LCTRL:
   case SDLK_RCTRL:

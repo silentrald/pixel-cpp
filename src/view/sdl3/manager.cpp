@@ -173,8 +173,16 @@ void Manager::run() noexcept {
   }
 }
 
+void Manager::reset_data() noexcept {
+  this->data.sel_textbox = nullptr;
+  this->data.new_sel_textbox = nullptr;
+}
+
 void Manager::update() noexcept {
-  // No need to update I think
+  for (i32 i = 0; i < this->modals.get_size(); ++i) {
+    this->modals[i]->update();
+  }
+
   for (i32 i = 0; i < this->boxes.get_size(); ++i) {
     this->boxes[i]->update();
   }

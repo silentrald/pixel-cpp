@@ -19,7 +19,7 @@ void StatusBox::reset() noexcept {
   // TODO:
 }
 
-void StatusBox::input(const event::Input& evt) noexcept {
+void StatusBox::input(const event::Input& evt, Data& _data) noexcept {
   //
 }
 

@@ -14,7 +14,7 @@ void DrawBox::init_textures(const Renderer& renderer, ivec size) noexcept {
   rgba8 pixels[size.x * size.y]; // NOLINT
   for (i32 y = 0; y < size.y; ++y) {
     for (i32 x = 0; x < size.x; ++x) {
-      pixels[x + y * size.x] = (x & 0b100) ^ (y & 0b100)
+      pixels[x + y * size.x] = (x & 0b1000) ^ (y & 0b1000)
                                    ? rgba8{0x88, 0x88, 0x88, 0xff}
                                    : rgba8{0xff, 0xff, 0xff, 0xff};
     }
@@ -64,7 +64,7 @@ void DrawBox::reset() noexcept {
   //
 }
 
-void DrawBox::input(const event::Input& evt) noexcept {
+void DrawBox::input(const event::Input& evt, Data& data) noexcept {
   if (!this->rect.has_point(evt.mouse.pos)) {
     return;
   }

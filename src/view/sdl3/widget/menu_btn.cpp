@@ -26,7 +26,7 @@ void MenuBtn::reset() noexcept {
   this->state = input::BtnState::NORMAL;
 }
 
-void MenuBtn::input(const event::Input& evt) noexcept {
+void MenuBtn::input(const event::Input& evt, Data& _data) noexcept {
   if (this->state == input::BtnState::DISABLED) {
     return;
   }

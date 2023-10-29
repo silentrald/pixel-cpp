@@ -38,9 +38,9 @@ void ToolBox::reset() noexcept {
   }
 }
 
-void ToolBox::input(const event::Input& evt) noexcept {
+void ToolBox::input(const event::Input& evt, Data& data) noexcept {
   for (i32 i = 0; i < this->btns.get_size(); ++i) {
-    this->btns[i].input(evt);
+    this->btns[i].input(evt, data);
   }
 }
 
