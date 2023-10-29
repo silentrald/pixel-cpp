@@ -87,6 +87,12 @@ Texture Renderer::create_texture(ivec size) const noexcept {
 }
 
 Texture Renderer::create_text(const Font& font, const c8* str) const noexcept {
+  assert(str != nullptr);
+
+  if (str[0] == '\0') {
+    return Texture{};
+  }
+
   SDL_Surface* surface =
       TTF_RenderText_Solid(font.get_font(), str, {0x00U, 0x00U, 0x00U, 0xffU});
   if (surface == nullptr) {

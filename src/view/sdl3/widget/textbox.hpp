@@ -24,16 +24,19 @@ public:
   Textbox& operator=(Textbox&&) noexcept = default;
   ~Textbox() noexcept override = default;
 
+  [[nodiscard]] const std::string& get_text() const noexcept;
+  void push_text(const c8* str) noexcept;
+  c8 pop_char() noexcept;
   void update_texture(const Renderer& renderer, const Font& font) noexcept;
+  void reposition_text_rect(const Font& font) noexcept;
 
   void reset() noexcept override;
-  void input(const event::Input& evt) noexcept override;
+  void input(const event::Input& evt, Data& data) noexcept override;
   void update() noexcept override;
   void render(const Renderer& renderer) const noexcept override;
 
-  std::string text{};
-
 private:
+  std::string text{};
   Texture tex{};
 
 public:

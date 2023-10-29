@@ -11,6 +11,7 @@
 #include "../font.hpp"
 #include "../texture.hpp"
 #include "../widget/button.hpp"
+#include "../widget/textbox.hpp"
 #include "./modal.hpp"
 
 namespace view::sdl3::widget {
@@ -34,7 +35,7 @@ public:
   void resize(const frect& rect) noexcept override;
   void drag(fvec pos) noexcept override;
   void reset() noexcept override;
-  void input(const event::Input& evt) noexcept override;
+  void input(const event::Input& evt, Data& data) noexcept override;
   void update() noexcept override;
   void render(const Renderer& renderer) const noexcept override;
 
@@ -52,6 +53,10 @@ private:
   Texture px_tex{};
   frect px_rect1{};
   frect px_rect2{};
+
+  // === Textboxes === //
+  Textbox width_textbox{};
+  Textbox height_textbox{};
 
   // === Buttons === //
   Button new_btn{};

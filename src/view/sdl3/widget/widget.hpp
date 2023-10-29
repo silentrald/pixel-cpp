@@ -8,6 +8,7 @@
 #ifndef PXL_VIEW_SDL3_WIDGET_HPP
 #define PXL_VIEW_SDL3_WIDGET_HPP
 
+#include "../data.hpp"
 #include "../renderer.hpp"
 #include "types.hpp"
 #include "view/event.hpp"
@@ -28,7 +29,7 @@ public:
    * Tries to reset to original state, without any highlight
    **/
   virtual void reset() noexcept = 0;
-  virtual void input(const event::Input& evt) noexcept = 0;
+  virtual void input(const event::Input& evt, Data& data) noexcept = 0;
   virtual void update() noexcept = 0;
   virtual void render(const Renderer& renderer) const noexcept = 0;
 

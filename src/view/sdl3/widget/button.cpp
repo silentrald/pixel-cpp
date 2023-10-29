@@ -10,6 +10,10 @@
 
 namespace view::sdl3::widget {
 
+bool Button::is_enabled() const noexcept {
+  return (this->info & input::BtnMask::STATES) != input::BtnState::DISABLED;
+}
+
 void Button::set_theme(input::BtnTheme theme) noexcept {
   this->info = (this->info & ~input::BtnMask::THEME) | theme;
 }
@@ -26,6 +30,15 @@ void Button::set_right_click_listener(void (*right_click_listener)()) noexcept {
   this->right_click_listener = right_click_listener;
 }
 
+void Button::enable() noexcept {
+  this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::NORMAL;
+}
+
+void Button::disable() noexcept {
+  this->info =
+      (this->info & ~input::BtnMask::STATES) | input::BtnState::DISABLED;
+}
+
 void Button::reset() noexcept {
   if ((this->info & input::BtnMask::STATES) == input::BtnState::DISABLED) {
     return;
@@ -34,7 +47,7 @@ void Button::reset() noexcept {
   this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::NORMAL;
 }
 
-void Button::input(const event::Input& evt) noexcept {
+void Button::input(const event::Input& evt, Data& _data) noexcept {
   if ((this->info & input::BtnMask::STATES) == input::BtnState::DISABLED) {
     return;
   }

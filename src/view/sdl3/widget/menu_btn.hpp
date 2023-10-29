@@ -26,7 +26,7 @@ public:
   void set_left_click_listener(void (*left_click_listener)()) noexcept;
 
   void reset() noexcept override;
-  void input(const event::Input& evt) noexcept override;
+  void input(const event::Input& evt, Data& data) noexcept override;
   void update() noexcept override;
   void render(const Renderer& renderer) const noexcept override;
 

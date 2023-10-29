@@ -299,6 +299,10 @@ void presenter::create_anim() noexcept {
   delete data; // NOLINT
   view.clear_modals();
 
+  if (size.x <= 0 || size.y <= 0) {
+    return;
+  }
+
   model.anim.init(size, draw::RGBA8);
   model.frame_index = 0;
   model.layer_index = 0;

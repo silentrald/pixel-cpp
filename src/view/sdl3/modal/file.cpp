@@ -7,6 +7,8 @@
 
 #include "./file.hpp"
 #include "presenter/presenter.hpp"
+#include <algorithm>
+#include <cstdlib>
 #include <new>
 
 namespace view::sdl3::widget {
@@ -37,6 +39,12 @@ void FileModal::init(const Renderer& renderer, const Font& font) noexcept {
   this->px_rect1 = {off.x, this->width_rect.y, (f32)size.x, (f32)size.y};
   this->px_rect2 = {off.x, this->height_rect.y, (f32)size.x, (f32)size.y};
 
+  off.x = 32.0F + std::max(this->width_rect.w, this->height_rect.w);
+  this->width_textbox.rect = {
+      off.x, this->width_rect.y, 320.0F - off.x - size.x, (f32)size.y};
+  this->height_textbox.rect = {
+      off.x, this->height_rect.y, 320.0F - off.x - size.x, (f32)size.y};
+
   this->new_btn.set_theme(input::BtnTheme::TOOL_BTN); // TODO: Primary btn
   this->new_btn.set_texture(renderer.create_text(font, "New"));
   size = font.get_text_size("New");
@@ -58,7 +66,10 @@ void FileModal::init(const Renderer& renderer, const Font& font) noexcept {
 }
 
 void* FileModal::get_data() const noexcept {
-  return new (std::nothrow) modal::NewFileData{.size = {32, 32}};
+  return new (std::nothrow) modal::NewFileData{
+      .size = {
+          atoi(this->width_textbox.get_text().c_str()),    // NOLINT
+          atoi(this->height_textbox.get_text().c_str())}}; // NOLINT
 }
 
 void FileModal::resize(const frect& rect) noexcept {
@@ -73,17 +84,26 @@ void FileModal::reset() noexcept {
   //
 }
 
-void FileModal::input(const event::Input& evt) noexcept {
-  this->new_btn.input(evt);
-  this->cancel_btn.input(evt);
+void FileModal::input(const event::Input& evt, Data& data) noexcept {
+  this->width_textbox.input(evt, data);
+  this->height_textbox.input(evt, data);
+
+  this->new_btn.input(evt, data);
+  this->cancel_btn.input(evt, data);
 }
 
 void FileModal::update() noexcept {
-  //
+  bool valid = !this->width_textbox.get_text().empty() &&
+               !this->height_textbox.get_text().empty();
+  if (!this->new_btn.is_enabled() && valid) {
+    this->new_btn.enable();
+  } else if (this->new_btn.is_enabled() && !valid) {
+    this->new_btn.disable();
+  }
 }
 
 void FileModal::render(const Renderer& renderer) const noexcept {
-  renderer.set_color({0xff, 0xff, 0xff, 0xff});
+  renderer.set_color({0xdd, 0xdd, 0xdd, 0xff});
   renderer.fill_rect(this->rect);
 
   // Texts
@@ -92,6 +112,10 @@ void FileModal::render(const Renderer& renderer) const noexcept {
   renderer.render_texture(this->height_tex, this->height_rect);
   renderer.render_texture(this->px_tex, this->px_rect1);
   renderer.render_texture(this->px_tex, this->px_rect2);
+
+  // Textboxes
+  this->width_textbox.render(renderer);
+  this->height_textbox.render(renderer);
 
   // Buttons
   this->new_btn.render(renderer);

@@ -55,6 +55,8 @@ modal::Id Manager::pop_modal() noexcept {
   auto* modal = this->modals.pop();
   auto id = modal->get_id();
   delete modal; // NOLINT
+
+  this->reset_data();
   return id;
 }
 
@@ -63,6 +65,8 @@ void Manager::clear_modals() noexcept {
     delete this->modals[i]; // NOLINT
   }
   this->modals.clear();
+
+  this->reset_data();
 }
 
 } // namespace view::sdl3

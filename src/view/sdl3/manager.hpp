@@ -8,6 +8,7 @@
 #ifndef PXL_VIEW_SDL3_MANAGER_HPP
 #define PXL_VIEW_SDL3_MANAGER_HPP
 
+#include "../input.hpp"
 #include "./box/box.hpp"
 #include "./box/draw.hpp"
 #include "./box/menu.hpp"
@@ -87,13 +88,17 @@ private:
   ds::vector<widget::Modal*> modals{};
 
   event::Input input_evt{};
+  Data data{};
+
   i32 select_ticks = 0;
   i32 mouse_box_id = -1; // where is the mouse currently
 
-  bool is_input_evt = false;
   bool running = false;
+  bool is_input_evt = false;
+  bool is_text_input_changed = false;
 
   void input() noexcept;
+  void handle_input_event() noexcept;
 
   void inline handle_mouse_input(
       const SDL_MouseButtonEvent& mouse, input::MouseState state
@@ -102,9 +107,13 @@ private:
   void handle_mouse_scroll_input(const SDL_MouseWheelEvent& mouse) noexcept;
 
   inline void handle_key_down_input(i32 keycode) noexcept;
+  inline void handle_key_down_key(i32 keycode) noexcept;
+  inline void handle_key_down_text_input(i32 keycode) noexcept;
   inline void handle_key_up_input(i32 keycode) noexcept;
 
   void handle_resize(ivec new_size) noexcept;
+
+  void reset_data() noexcept;
 
   void update() noexcept;
   void render() noexcept;
