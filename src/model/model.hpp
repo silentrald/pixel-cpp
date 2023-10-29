@@ -38,6 +38,7 @@ struct Model {
   i32 layer_index = 0;
   rgba8 fg_color{0x00, 0x00, 0x00, 0xff};
   rgba8 bg_color{0xff, 0xff, 0xff, 0xff};
+  // NOTE: ds::vector<bool> is not optimized like std::vector<bool>
   std::vector<bool> select_mask{};
 
   [[nodiscard]] i32 get_pixel_index() const noexcept {

@@ -176,6 +176,8 @@ void Manager::run() noexcept {
 void Manager::reset_data() noexcept {
   this->data.sel_textbox = nullptr;
   this->data.new_sel_textbox = nullptr;
+
+  SDL_StopTextInput();
 }
 
 void Manager::update() noexcept {
