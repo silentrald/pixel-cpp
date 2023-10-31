@@ -2,106 +2,147 @@
  * Author/s:
  *  - silentrald
  * Version: 1.0
- * Created: 2023-10-05
+ * Created: 2023-10-29
  *==========================*/
 
 #ifndef PXL_DRAW_ANIM_HPP
 #define PXL_DRAW_ANIM_HPP
 
-#include "./frame.hpp"
+#include "./layer.hpp"
 #include "./types.hpp"
+#include "core/ds/vector.hpp"
 #include "types.hpp"
-#include <cassert>
 
 namespace draw {
 
-// NOTE: have a file cache in the future
 /**
- * Contains the animation data
+ * Animation data containing the image information for frames/layers
  **/
 class Anim {
 public:
   Anim() noexcept = default;
   Anim(const Anim&) noexcept = delete;
   Anim& operator=(const Anim&) noexcept = delete;
-  Anim(Anim&& rhs) noexcept;
-  Anim& operator=(Anim&& rhs) noexcept;
-
-  ~Anim() noexcept;
+  Anim(Anim&& rhs) noexcept = default;
+  Anim& operator=(Anim&& rhs) noexcept = default;
+  ~Anim() noexcept = default;
 
   void init(ivec size, ColorType type) noexcept;
-  void copy(const Anim& other) noexcept;
+  /* void load(const c8* str) noexcept; // For file loading */
 
-  [[nodiscard]] data_ptr get_ptr() noexcept;
-  [[nodiscard]] ColorType get_type() const noexcept;
-  [[nodiscard]] i32 get_frame_count() const noexcept;
-  [[nodiscard]] i32 get_layer_count() const noexcept;
-  [[nodiscard]] i32 get_frame_capacity() const noexcept;
-  [[nodiscard]] i32 get_layer_capacity() const noexcept;
+  void copy(const Anim& other) noexcept;
+  void minicopy(const Anim& other) noexcept;
+  void clear() noexcept;
+
+  [[nodiscard]] bool has_point(ivec pos) const noexcept;
+
   [[nodiscard]] ivec get_size() const noexcept;
   [[nodiscard]] i32 get_width() const noexcept;
   [[nodiscard]] i32 get_height() const noexcept;
 
-  /**
-   * Check if the pixel position is within the dimension
-   **/
-  [[nodiscard]] bool has_point(ivec point) const noexcept;
+  [[nodiscard]] i32 get_layer_count() const noexcept;
 
-  void clear() noexcept;
+  [[nodiscard]] u32 insert_layer(i32 index) noexcept;
+  [[nodiscard]] Layer get_layer(u32 id) const noexcept;
+  [[nodiscard]] u32 get_layer_id(i32 frame_id, i32 layer_index) const noexcept;
 
-  void insert_frame(i32 index) noexcept;
-  void insert_layer(i32 index) noexcept;
-
-  // Inserts (count) number of frames at the index
-  void insert_frames(i32 index, i32 count) noexcept;
-  // Inserts (count) number of layers at the index
-  void insert_layers(i32 index, i32 count) noexcept;
-
-  [[nodiscard]] Frame get_frame(i32 index) noexcept {
-    assert(index >= 0 && index < this->frame_count);
-
-    return Frame{// NOLINTNEXTLINE
-                 this->ptr + index * this->next_frame, this->next_layer,
-                 this->size, this->type};
-  }
-
-  [[nodiscard]] Layer get_layer(i32 frame, i32 layer) noexcept {
-    assert(frame >= 0 && frame < this->frame_count);
-    assert(layer >= 0 && layer < this->layer_count);
-
-    return Layer{
-        // NOLINTNEXTLINE
-        this->ptr + frame * this->next_frame + layer * this->next_layer,
-        this->size, this->type};
-  }
-
-  // === Debugging === //
-  void print() const noexcept;
+  [[nodiscard]] explicit operator bool() const noexcept;
 
 private:
-  // NOTE: check if there is a need for multiple data pointers
-  data_ptr ptr = nullptr;
-  i32 max_size = 0;
-  // how many frames can fit in the total allocated memory
-  i32 frame_capacity = 0;
-  i32 frame_count = 0;
-  // what to add to get the next frame data
-  i32 next_frame = 0;
-  // how many layers can fit in the total allocated memory
-  i32 layer_capacity = 0;
-  i32 layer_count = 0;
-  // what to add to get the next layer data
-  i32 next_layer = 0;
-  ColorType type = ColorType::NONE;
+  // SOA Arena of layers
+  class LayerArena {
+  public:
+    LayerArena() noexcept = default;
+    LayerArena(const LayerArena&) noexcept = delete;
+    LayerArena& operator=(const LayerArena&) noexcept = delete;
+
+    void init(i32 bytes, i32 capacity) noexcept;
+    LayerArena(LayerArena&& rhs) noexcept;
+    LayerArena& operator=(LayerArena&& rhs) noexcept;
+    void copy(const LayerArena& other) noexcept;
+    void minicopy(const LayerArena& other) noexcept;
+    ~LayerArena() noexcept;
+
+    [[nodiscard]] data_ptr get_ptr() const noexcept;
+    [[nodiscard]] data_ptr get_layer(u32 id) const noexcept;
+
+    void create_layer(u32 new_id) noexcept;
+
+  private:
+    // TODO: Change datatypes (64 bit) to support higher sizes
+    data_ptr ptr = nullptr;
+    i32 insert = 0;
+    i32 last = 0;
+    i32 capacity = 0;
+    i32 size = 0;
+
+    i32 bytes = 0;
+    i32 allocated_size = 0;
+
+    // === Copy Helpers === //
+    void copy_empty(const LayerArena& other) noexcept;
+    void copy_normal(const LayerArena& other) noexcept;
+    void copy_overfit(const LayerArena& other) noexcept;
+    void copy_grow(const LayerArena& other) noexcept;
+
+    // === Memory === //
+    void allocate(i32 allocated_size) noexcept;
+    void reallocate(i32 new_allocated_size) noexcept;
+  };
+
+  // SOA Arena of frames
+  class FrameArena {
+  public:
+    FrameArena() noexcept = default;
+    FrameArena(const FrameArena&) noexcept = delete;
+    FrameArena& operator=(const FrameArena&) noexcept = delete;
+
+    void init() noexcept;
+    FrameArena(FrameArena&& rhs) noexcept;
+    FrameArena& operator=(FrameArena&& rhs) noexcept;
+    void copy(const FrameArena& other) noexcept;
+    // NOTE: Frame can't be resized
+    /* void minicopy(const FrameArena& other) noexcept; */
+    ~FrameArena() noexcept;
+
+    [[nodiscard]] i32 get_layer_count() const noexcept;
+    [[nodiscard]] i32 get_layer_capacity() const noexcept;
+    [[nodiscard]] u32
+    get_layer_id(i32 frame_id, i32 layer_index) const noexcept;
+    [[nodiscard]] i32 get_allocated_size() const noexcept;
+
+    void insert_layer(i32 index, u32 layer_id) noexcept;
+
+  private:
+    u32* ptr = nullptr;
+    i32 layer_count = 0;
+    i32 frame_count = 0;
+    i32 layer_capacity = 0;
+    i32 frame_capacity = 0;
+    i32 allocated_size = 0;
+    // NOTE: Padded by +4
+
+    // === Copy Helpers === //
+    void copy_empty(const FrameArena& other) noexcept;
+    void copy_normal(const FrameArena& other) noexcept;
+    void copy_overfit(const FrameArena& other) noexcept;
+    void copy_grow(const FrameArena& other) noexcept;
+
+    // === Memory === //
+    void allocate(i32 new_size) noexcept;
+    void reallocate_on_layer(i32 new_layer_capacity) noexcept;
+  };
+
+  LayerArena layers{};
+  FrameArena frames{};
+
+  u32 layers_id = 0U;
+
+  // Dimension size of the animation
   ivec size{};
 
-  [[nodiscard]] i32 get_datatype_size() const noexcept;
-
-  // === Resize Logic === //
-  // TODO: May error, bad alloc
-  void resize_frame(i32 new_frame_capacity) noexcept;
-  // TODO: May error, bad alloc
-  void resize_layer(i32 new_layer_capacity) noexcept;
+  // What color depth is being used
+  ColorType type = ColorType::NONE;
 };
 
 } // namespace draw

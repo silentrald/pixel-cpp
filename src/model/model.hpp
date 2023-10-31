@@ -34,7 +34,7 @@ struct Model {
 
   //
   tool::Type tool = tool::Type::PENCIL;
-  i32 frame_index = 0;
+  u32 frame_id = 1U;
   i32 layer_index = 0;
   rgba8 fg_color{0x00, 0x00, 0x00, 0xff};
   rgba8 bg_color{0xff, 0xff, 0xff, 0xff};

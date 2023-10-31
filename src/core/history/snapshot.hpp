@@ -31,7 +31,7 @@ public:
 
 private:
   draw::Anim anim{};
-  i32 frame_index = -1;
+  i32 frame_id = -1;
   i32 layer_index = -1;
 };
 

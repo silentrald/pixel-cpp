@@ -11,6 +11,7 @@
 #include "types.hpp"
 #include <cassert>
 #include <cstdlib>
+#include <cstring>
 #include <new>
 #include <type_traits>
 #include <utility>
@@ -228,8 +229,11 @@ private:
       std::abort();
     }
 
-    // For new store, need to transfer the data manually
-    if constexpr (!std::is_fundamental<T>::value) {
+    if constexpr (std::is_fundamental<T>::value) {
+      // For realloc, set the new data to 0
+      std::memset(this->data + this->capacity, 0, new_size - this->capacity);
+    } else {
+      // For new store, need to transfer the data manually
       for (i32 i = 0; i < this->top; ++i) {
         new_data[i] = std::move(this->data[i]);
       }

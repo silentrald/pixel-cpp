@@ -13,6 +13,7 @@
 
 namespace history {
 
+// NOTE: Add memory arena here, to better store the animation data
 class Caretaker {
 public:
   Caretaker(const Caretaker&) noexcept = delete;

@@ -21,8 +21,10 @@ endif()
 
 # Set the srcs
 set(draw_srcs
+  src/core/draw/types.cpp
   src/core/draw/anim.cpp
-  src/core/draw/frame.cpp
+  src/core/draw/anim_frames.cpp
+  src/core/draw/anim_layers.cpp
   src/core/draw/layer.cpp
 )
 
@@ -82,7 +84,6 @@ set(srcs src/entry.cpp
   ${config_srcs}
 )
 
-add_executable(${PROJECT_NAME} ${srcs})
 include_directories(src)
 
 # SDL3 stuff
@@ -96,7 +97,12 @@ add_subdirectory(${SDL3_IMG_DIR})
 
 # Unit testing
 add_subdirectory(external/catch2)
-add_executable(pixel_draw test/draw.cpp src/math.cpp ${draw_srcs})
+add_executable(pixel_draw test/draw.cpp
+  src/math.cpp
+  src/colors.cpp
+  ${draw_srcs}
+  ${logger_srcs}
+)
 target_link_libraries(pixel_draw PRIVATE Catch2::Catch2WithMain)
 
 add_executable(pixel_vector test/vector.cpp)
@@ -118,5 +124,6 @@ elseif (WIN32)
   )
 endif (UNIX)
 
+add_executable(${PROJECT_NAME} ${srcs})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${pxl_lib})
 

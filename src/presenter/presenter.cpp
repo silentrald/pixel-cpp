@@ -86,10 +86,9 @@ void presenter::window_resized() noexcept {
 
 inline void update_canvas_texture() noexcept {
   using namespace presenter;
+  auto id = model.anim.get_layer_id(model.frame_id, model.layer_index);
   presenter::view.get_curr_texture().set_pixels(
-      (rgba8*)model.anim.get_layer(model.frame_index, model.layer_index)
-          .get_ptr(),
-      model.anim.get_size()
+      (rgba8*)model.anim.get_layer(id).get_ptr(), model.anim.get_size()
   );
 }
 
@@ -283,7 +282,7 @@ void presenter::new_file_clicked() noexcept {
 
 void presenter::create_anim() noexcept {
   // TODO: Prototype
-  if (model.anim.get_ptr() != nullptr) {
+  if (model.anim) {
     return;
   }
 
@@ -304,9 +303,10 @@ void presenter::create_anim() noexcept {
   }
 
   model.anim.init(size, draw::RGBA8);
-  model.frame_index = 0;
+  model.frame_id = 1U;
   model.layer_index = 0;
-  model.layer = model.anim.get_layer(model.frame_index, model.layer_index);
+  auto id = model.anim.get_layer_id(model.frame_id, model.layer_index);
+  model.layer = model.anim.get_layer(id);
   model.select_mask.resize(size.x * size.y); // NOLINT
   std::fill(model.select_mask.begin(), model.select_mask.end(), true);
 
