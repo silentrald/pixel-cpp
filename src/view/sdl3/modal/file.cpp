@@ -6,6 +6,8 @@
  *==========================*/
 
 #include "./file.hpp"
+#include "core/cfg/locale.hpp"
+#include "core/logger/logger.hpp"
 #include "presenter/presenter.hpp"
 #include <algorithm>
 #include <cstdlib>
@@ -18,22 +20,26 @@ void FileModal::init(const Renderer& renderer, const Font& font) noexcept {
   ivec size{};
   fvec off = {24.0F, 24.0F};
 
-  this->new_file_tex = renderer.create_text(font, "New File");
-  size = font.get_text_size("New File");
+  const auto* text = cfg::locale::get_text(cfg::locale::TextId::NEW_FILE);
+  this->new_file_tex = renderer.create_text(font, text);
+  size = font.get_text_size(text);
   this->new_file_rect = {off.x, off.y, (f32)size.x, (f32)size.y};
-
   off.y += size.y + 4.0F;
-  this->width_tex = renderer.create_text(font, "width:");
-  size = font.get_text_size("width:");
+
+  text = cfg::locale::get_text(cfg::locale::TextId::WIDTH);
+  this->width_tex = renderer.create_text(font, text);
+  size = font.get_text_size(text);
   this->width_rect = {off.x, off.y, (f32)size.x, (f32)size.y};
-
   off.y += size.y + 4.0F;
-  this->height_tex = renderer.create_text(font, "height:");
-  size = font.get_text_size("height:");
+
+  text = cfg::locale::get_text(cfg::locale::TextId::HEIGHT);
+  this->height_tex = renderer.create_text(font, text);
+  size = font.get_text_size(text);
   this->height_rect = {off.x, off.y, (f32)size.x, (f32)size.y};
 
-  this->px_tex = renderer.create_text(font, "px");
-  size = font.get_text_size("px");
+  text = cfg::locale::get_text(cfg::locale::TextId::PX);
+  this->px_tex = renderer.create_text(font, text);
+  size = font.get_text_size(text);
 
   off.x = this->rect.x + this->rect.w - size.x - 4.0F;
   this->px_rect1 = {off.x, this->width_rect.y, (f32)size.x, (f32)size.y};
@@ -45,9 +51,10 @@ void FileModal::init(const Renderer& renderer, const Font& font) noexcept {
   this->height_textbox.rect = {
       off.x, this->height_rect.y, 320.0F - off.x - size.x, (f32)size.y};
 
+  text = cfg::locale::get_text(cfg::locale::TextId::NEW);
   this->new_btn.set_theme(input::BtnTheme::TOOL_BTN); // TODO: Primary btn
-  this->new_btn.set_texture(renderer.create_text(font, "New"));
-  size = font.get_text_size("New");
+  this->new_btn.set_texture(renderer.create_text(font, text));
+  size = font.get_text_size(text);
   off.x = this->rect.x + this->rect.w - size.x - 8.0F;
   off.y = this->rect.y + this->rect.h - size.y - 8.0F;
   this->new_btn.rect = {
@@ -55,9 +62,10 @@ void FileModal::init(const Renderer& renderer, const Font& font) noexcept {
   this->new_btn.tex_rect = {off.x, off.y, (f32)size.x, (f32)size.y};
   this->new_btn.set_left_click_listener(presenter::create_anim);
 
+  text = cfg::locale::get_text(cfg::locale::TextId::CANCEL);
   this->cancel_btn.set_theme(input::BtnTheme::TOOL_BTN); // TODO: Cancel btn
-  this->cancel_btn.set_texture(renderer.create_text(font, "Cancel"));
-  size = font.get_text_size("Cancel");
+  this->cancel_btn.set_texture(renderer.create_text(font, text));
+  size = font.get_text_size(text);
   off.x -= size.x + 12.0F;
   this->cancel_btn.rect = {
       off.x - 4.0F, off.y - 4.0F, (f32)size.x + 8.0F, (f32)size.y + 8.0F};

@@ -61,7 +61,7 @@ public:
   [[nodiscard]] inline ivec get_text_size(const c8* str) const noexcept {
     assert(this->font != nullptr && str != nullptr);
     ivec size{};
-    TTF_SizeText(this->font, str, &size.x, &size.y);
+    TTF_SizeUTF8(this->font, str, &size.x, &size.y);
     return size;
   }
 

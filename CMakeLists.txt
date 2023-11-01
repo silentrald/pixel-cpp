@@ -10,6 +10,12 @@ if (WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
 endif (WIN32)
 
+# Copy files
+file(COPY assets DESTINATION .)
+file(COPY themes DESTINATION .)
+file(COPY locale DESTINATION .)
+file(COPY keys.cfg DESTINATION .)
+
 # Disable assert in release
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
   message("Being released")
@@ -68,6 +74,7 @@ set(history_srcs
 )
 
 set(config_srcs
+  src/core/cfg/locale.cpp
   src/core/cfg/shortcut.cpp
   src/core/cfg/theme.cpp)
 

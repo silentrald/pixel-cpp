@@ -15,6 +15,7 @@
 #include "SDL_oldnames.h"
 #include "SDL_rect.h"
 #include "SDL_timer.h"
+#include "core/cfg/locale.hpp"
 #include "core/logger/logger.hpp"
 #include "presenter/presenter.hpp"
 #include <cmath>
@@ -30,7 +31,7 @@ const u64 SPF = 1000 / FPS;
 void Manager::init() noexcept {
   this->window.init();
 
-  this->font.init("../assets/fonts/PixeloidSans.ttf", 18);
+  this->font.init(cfg::locale::get_font(), cfg::locale::get_size());
   this->renderer.init(this->window.get_window(), this->font);
 
   this->handle_resize(this->window.size);
@@ -44,27 +45,27 @@ void Manager::init() noexcept {
   widget::Button btn{};
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(this->renderer.load_img("../assets/tools/pencil.png"));
+  btn.set_texture(this->renderer.load_img("assets/tools/pencil.png"));
   btn.set_left_click_listener(presenter::set_pencil_tool);
   this->tool_box.push_btn(std::move(btn));
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(this->renderer.load_img("../assets/tools/eraser.png"));
+  btn.set_texture(this->renderer.load_img("assets/tools/eraser.png"));
   btn.set_left_click_listener(presenter::set_eraser_tool);
   this->tool_box.push_btn(std::move(btn));
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(this->renderer.load_img("../assets/tools/line.png"));
+  btn.set_texture(this->renderer.load_img("assets/tools/line.png"));
   btn.set_left_click_listener(presenter::set_line_tool);
   this->tool_box.push_btn(std::move(btn));
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(this->renderer.load_img("../assets/tools/fill.png"));
+  btn.set_texture(this->renderer.load_img("assets/tools/fill.png"));
   btn.set_left_click_listener(presenter::set_fill_tool);
   this->tool_box.push_btn(std::move(btn));
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(this->renderer.load_img("../assets/tools/fill.png"));
+  btn.set_texture(this->renderer.load_img("assets/tools/fill.png"));
   btn.set_left_click_listener(presenter::set_select_tool);
   this->tool_box.push_btn(std::move(btn));
 
@@ -72,22 +73,25 @@ void Manager::init() noexcept {
   ivec size{};
   widget::MenuBtn menu_btn{};
 
-  menu_btn.set_texture(this->renderer.create_text(this->font, "File"));
-  size = this->font.get_text_size("File");
+  const c8* text = cfg::locale::get_text(cfg::locale::TextId::FILE_MENU_ITEM);
+  menu_btn.set_texture(this->renderer.create_text(this->font, text));
+  size = this->font.get_text_size(text);
   menu_btn.tex_rect.size = {(f32)size.x, (f32)size.y};
   menu_btn.rect.size = {(f32)size.x + 16.0F, (f32)size.y + 4.0F};
   menu_btn.set_left_click_listener(presenter::new_file_clicked);
   this->menu_box.push_menu_btn(std::move(menu_btn));
 
-  menu_btn.set_texture(this->renderer.create_text(this->font, "Edit"));
-  size = this->font.get_text_size("Edit");
+  text = cfg::locale::get_text(cfg::locale::TextId::EDIT_MENU_ITEM);
+  menu_btn.set_texture(this->renderer.create_text(this->font, text));
+  size = this->font.get_text_size(text);
   menu_btn.tex_rect.size = {(f32)size.x, (f32)size.y};
   menu_btn.rect.size = {(f32)size.x + 16.0F, (f32)size.y + 4.0F};
   menu_btn.set_left_click_listener(presenter::debug_callback); // TODO:
   this->menu_box.push_menu_btn(std::move(menu_btn));
 
-  menu_btn.set_texture(this->renderer.create_text(this->font, "View"));
-  size = this->font.get_text_size("View");
+  text = cfg::locale::get_text(cfg::locale::TextId::VIEW_MENU_ITEM);
+  menu_btn.set_texture(this->renderer.create_text(this->font, text));
+  size = this->font.get_text_size(text);
   menu_btn.tex_rect.size = {(f32)size.x, (f32)size.y};
   menu_btn.rect.size = {(f32)size.x + 16.0F, (f32)size.y + 4.0F};
   menu_btn.set_left_click_listener(presenter::debug_callback); // TODO:

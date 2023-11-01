@@ -94,7 +94,7 @@ Texture Renderer::create_text(const Font& font, const c8* str) const noexcept {
   }
 
   SDL_Surface* surface =
-      TTF_RenderText_Solid(font.get_font(), str, {0x00U, 0x00U, 0x00U, 0xffU});
+      TTF_RenderUTF8_Solid(font.get_font(), str, {0x00U, 0x00U, 0x00U, 0xffU});
   if (surface == nullptr) {
     logger::fatal("Could not create surface");
     std::abort();

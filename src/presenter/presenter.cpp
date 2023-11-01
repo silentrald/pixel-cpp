@@ -6,6 +6,7 @@
  *==========================*/
 
 #include "./presenter.hpp"
+#include "core/cfg/locale.hpp"
 #include "core/cfg/shortcut.hpp"
 #include "core/draw/types.hpp"
 #include "core/history/caretaker.hpp"
@@ -55,9 +56,11 @@ inline View view{};
 } // namespace presenter
 
 void presenter::init() noexcept {
-  view.init();
+  // TODO: make this changeable while app is running
+  cfg::locale::load_locale(cfg::locale::Locale::ENGLISH);
+  shortcut.load_config("keys.cfg");
 
-  shortcut.load_config("../keys.cfg");
+  view.init();
 }
 
 void presenter::run() noexcept {
