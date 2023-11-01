@@ -54,6 +54,7 @@ set(view_srcs src/view/sdl3/manager.cpp
   # Widgets
   src/view/sdl3/widget/button.cpp
   src/view/sdl3/widget/menu_btn.cpp
+  src/view/sdl3/widget/text.cpp
   src/view/sdl3/widget/textbox.cpp
 )
 

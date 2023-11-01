@@ -17,39 +17,33 @@ namespace view::sdl3::widget {
 
 void FileModal::init(const Renderer& renderer, const Font& font) noexcept {
   this->rect = {20.0F, 20.0F, 320.0F, 120.0F};
-  ivec size{};
   fvec off = {24.0F, 24.0F};
 
-  const auto* text = cfg::locale::get_text(cfg::locale::TextId::NEW_FILE);
-  this->new_file_tex = renderer.create_text(font, text);
-  size = font.get_text_size(text);
-  this->new_file_rect = {off.x, off.y, (f32)size.x, (f32)size.y};
-  off.y += size.y + 4.0F;
+  this->new_file_text.rect.pos = off;
+  this->new_file_text.set_text(cfg::locale::TextId::NEW_FILE, renderer, font);
+  off.y += this->new_file_text.rect.h + 4.0F;
 
-  text = cfg::locale::get_text(cfg::locale::TextId::WIDTH);
-  this->width_tex = renderer.create_text(font, text);
-  size = font.get_text_size(text);
-  this->width_rect = {off.x, off.y, (f32)size.x, (f32)size.y};
-  off.y += size.y + 4.0F;
+  this->width_text.rect.pos = off;
+  this->width_text.set_text(cfg::locale::TextId::WIDTH, renderer, font);
+  off.y += this->width_text.rect.h + 4.0F;
 
-  text = cfg::locale::get_text(cfg::locale::TextId::HEIGHT);
-  this->height_tex = renderer.create_text(font, text);
-  size = font.get_text_size(text);
-  this->height_rect = {off.x, off.y, (f32)size.x, (f32)size.y};
+  this->height_text.rect.pos = off;
+  this->height_text.set_text(cfg::locale::TextId::HEIGHT, renderer, font);
+  off.y += this->height_text.rect.h + 4.0F;
 
-  text = cfg::locale::get_text(cfg::locale::TextId::PX);
+  const auto* text = cfg::locale::get_text(cfg::locale::TextId::PX);
   this->px_tex = renderer.create_text(font, text);
-  size = font.get_text_size(text);
+  auto size = font.get_text_size(text);
 
   off.x = this->rect.x + this->rect.w - size.x - 4.0F;
-  this->px_rect1 = {off.x, this->width_rect.y, (f32)size.x, (f32)size.y};
-  this->px_rect2 = {off.x, this->height_rect.y, (f32)size.x, (f32)size.y};
+  this->px_rect1 = {off.x, this->width_text.rect.y, (f32)size.x, (f32)size.y};
+  this->px_rect2 = {off.x, this->height_text.rect.y, (f32)size.x, (f32)size.y};
 
-  off.x = 32.0F + std::max(this->width_rect.w, this->height_rect.w);
+  off.x = 32.0F + std::max(this->width_text.rect.w, this->height_text.rect.w);
   this->width_textbox.rect = {
-      off.x, this->width_rect.y, 320.0F - off.x - size.x, (f32)size.y};
+      off.x, this->width_text.rect.y, 320.0F - off.x - size.x, (f32)size.y};
   this->height_textbox.rect = {
-      off.x, this->height_rect.y, 320.0F - off.x - size.x, (f32)size.y};
+      off.x, this->height_text.rect.y, 320.0F - off.x - size.x, (f32)size.y};
 
   text = cfg::locale::get_text(cfg::locale::TextId::NEW);
   this->new_btn.set_theme(input::BtnTheme::TOOL_BTN); // TODO: Primary btn
@@ -115,9 +109,9 @@ void FileModal::render(const Renderer& renderer) const noexcept {
   renderer.fill_rect(this->rect);
 
   // Texts
-  renderer.render_texture(this->new_file_tex, this->new_file_rect);
-  renderer.render_texture(this->width_tex, this->width_rect);
-  renderer.render_texture(this->height_tex, this->height_rect);
+  this->new_file_text.render(renderer);
+  this->width_text.render(renderer);
+  this->height_text.render(renderer);
   renderer.render_texture(this->px_tex, this->px_rect1);
   renderer.render_texture(this->px_tex, this->px_rect2);
 
