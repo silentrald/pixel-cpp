@@ -9,7 +9,7 @@
 #define PXL_MODEL_HPP
 
 #include "core/draw/anim.hpp"
-#include "core/draw/layer.hpp"
+#include "core/draw/image.hpp"
 #include "core/tool/enum.hpp"
 #include "types.hpp"
 #include <vector>
@@ -20,7 +20,7 @@ using Texture = view::sdl3::Texture;
 
 struct Model {
   draw::Anim anim{};
-  draw::Layer layer{};
+  draw::Image img{};
   Texture* tex1 = nullptr;
   Texture* tex2 = nullptr;
   frect rect{};
@@ -36,6 +36,7 @@ struct Model {
   tool::Type tool = tool::Type::PENCIL;
   u32 frame_id = 1U;
   i32 layer_index = 0;
+  u32 img_id = 1U;
   rgba8 fg_color{0x00, 0x00, 0x00, 0xff};
   rgba8 bg_color{0xff, 0xff, 0xff, 0xff};
   // NOTE: ds::vector<bool> is not optimized like std::vector<bool>

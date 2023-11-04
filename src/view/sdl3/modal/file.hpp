@@ -29,7 +29,7 @@ public:
   FileModal& operator=(FileModal&&) noexcept = default;
   ~FileModal() noexcept override = default;
 
-  void init(const Renderer& renderer, const Font& font) noexcept;
+  void init(const Renderer& renderer) noexcept;
 
   [[nodiscard]] void* get_data() const noexcept override;
 

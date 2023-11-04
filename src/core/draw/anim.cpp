@@ -28,10 +28,10 @@ void Anim::init(ivec size, ColorType type) noexcept {
   this->type = type;
 
   // TODO: Compute whether layers_max_bytes or layers_capacity is set
-  this->layers.init(size.x * size.y * get_color_type_size(this->type), 64);
-  this->frames.init();
+  this->images.init(size.x * size.y * get_color_type_size(this->type), 64);
+  this->timeline.init();
 
-  this->layers_id = 1U;
+  this->images_id = 1U;
 }
 
 void Anim::copy(const Anim& other) noexcept {
@@ -39,10 +39,10 @@ void Anim::copy(const Anim& other) noexcept {
     return;
   }
 
-  this->layers.copy(other.layers);
-  this->frames.copy(other.frames);
+  this->images.copy(other.images);
+  this->timeline.copy(other.timeline);
 
-  this->layers_id = other.layers_id;
+  this->images_id = other.images_id;
   this->size = other.size;
   this->type = other.type;
 }
@@ -52,10 +52,10 @@ void Anim::minicopy(const Anim& other) noexcept {
     return;
   }
 
-  this->layers.minicopy(other.layers);
-  this->frames.copy(other.frames);
+  this->images.minicopy(other.images);
+  this->timeline.copy(other.timeline);
 
-  this->layers_id = other.layers_id;
+  this->images_id = other.images_id;
   this->size = other.size;
   this->type = other.type;
 }
@@ -84,33 +84,77 @@ i32 Anim::get_height() const noexcept {
 }
 
 i32 Anim::get_layer_count() const noexcept {
-  return this->frames.get_layer_count();
+  return this->timeline.get_layer_count();
+}
+
+Image Anim::get_image(u32 id) const noexcept {
+  return Image{this->images.get_image(id), this->size, this->type, id};
+}
+
+Image Anim::get_image(u32 frame_id, i32 layer_index) const noexcept {
+  auto id = this->get_image_id(frame_id, layer_index);
+  return Image{this->images.get_image(id), this->size, this->type, id};
+}
+
+u32 Anim::get_image_id(u32 frame_id, i32 layer_index) const noexcept {
+  return this->timeline.get_image_id(frame_id, layer_index);
+}
+
+const c8* Anim::get_layer_name(i32 layer_index) const noexcept {
+  return this->timeline.get_layer_name(layer_index);
+}
+
+bool Anim::is_layer_visible(i32 layer_index) const noexcept {
+  return this->timeline.is_layer_visible(layer_index);
+}
+
+void Anim::get_flatten(
+    u32 frame_id, i32 start_layer, i32 end_layer, ds::vector<rgba8>& pixels
+) const noexcept {
+  assert(frame_id != 0U);
+  assert(pixels.get_size() == this->size.x * this->size.y);
+  assert(start_layer <= end_layer);
+  assert(start_layer >= 0 && start_layer < this->timeline.get_layer_count());
+  assert(end_layer >= 0 && end_layer < this->timeline.get_layer_count());
+
+  rgba8* img_ptr = nullptr;
+  auto frame = this->timeline.get_frame(frame_id);
+  for (i32 i = start_layer; i <= end_layer; ++i) {
+    if (!this->timeline.is_layer_visible(i)) {
+      continue;
+    }
+
+    img_ptr = (rgba8*)this->images.get_image(frame.get_image_id(i));
+    // NOTE: Add blending calculations here
+    for (i32 i = 0; i < pixels.get_size(); ++i) {
+      if (img_ptr[i].a) {
+        pixels[i] = img_ptr[i];
+      }
+    }
+  }
+}
+
+Anim::operator bool() const noexcept {
+  return this->images.get_ptr() != nullptr;
 }
 
 // === Modifiers === //
+
 u32 Anim::insert_layer(i32 index) noexcept {
-  assert(index >= 0 && index <= this->frames.get_layer_count());
+  assert(index >= 0 && index <= this->timeline.get_layer_count());
 
   // Create a new layer in the layers data
-  auto id = ++this->layers_id;
-  this->layers.create_layer(id);
+  auto id = ++this->images_id;
+  this->images.create_layer(id);
 
   // Insert it into the first frame
-  this->frames.insert_layer(index, id);
+  this->timeline.insert_layer(index, id);
 
   return id;
 }
 
-Layer Anim::get_layer(u32 id) const noexcept {
-  return Layer(this->layers.get_layer(id), this->size, this->type, id);
-}
-
-u32 Anim::get_layer_id(i32 frame_id, i32 layer_index) const noexcept {
-  return this->frames.get_layer_id(frame_id, layer_index);
-}
-
-Anim::operator bool() const noexcept {
-  return this->layers.get_ptr() != nullptr;
+bool Anim::toggle_layer_visibility(i32 layer_index) noexcept {
+  return this->timeline.toggle_layer_visibility(layer_index);
 }
 
 } // namespace draw

@@ -39,7 +39,7 @@ void Manager::push_modal(modal::Id id) noexcept {
       std::abort();
     }
 
-    ((widget::FileModal*)modal)->init(this->renderer, this->font);
+    ((widget::FileModal*)modal)->init(this->renderer);
     break;
 
   case modal::Id::NONE:

@@ -37,7 +37,7 @@ u32 Eraser::execute(Model& model, const event::Input& evt) noexcept {
 
 /**
  * Uses:
- *   model.tex1 - current layer
+ *   model.tex1 - current image
  **/
 void Eraser::handle_mouse_down(Model& model, fvec pos) noexcept {
   if (!model.anim.has_point(model.curr_pos) ||
@@ -45,13 +45,13 @@ void Eraser::handle_mouse_down(Model& model, fvec pos) noexcept {
     return;
   }
 
-  model.layer.paint(model.curr_pos, color::TRANSPARENT_COLOR);
+  model.img.paint(model.curr_pos, color::TRANSPARENT_COLOR);
   model.tex1->paint(model.get_pixel_index(), color::TRANSPARENT_COLOR);
 }
 
 /**
  * Uses:
- *   model.tex1 - current layer
+ *   model.tex1 - current image
  **/
 void Eraser::handle_mouse_motion(Model& model, fvec pos) noexcept {
   i32 distance = model.prev_pos.chebyshev_distance(model.curr_pos);
@@ -67,14 +67,14 @@ void Eraser::handle_mouse_motion(Model& model, fvec pos) noexcept {
       return;
     }
 
-    model.layer.paint(model.get_pixel_index(), color::TRANSPARENT_COLOR);
+    model.img.paint(model.get_pixel_index(), color::TRANSPARENT_COLOR);
     model.tex1->paint(model.get_pixel_index(), color::TRANSPARENT_COLOR);
     return;
   }
 
   // Draw a line to the previous and current position
   utils::draw_line(
-      &model.layer, *model.tex1, model.anim.get_size(), model.curr_pos,
+      &model.img, *model.tex1, model.anim.get_size(), model.curr_pos,
       model.prev_pos, color::TRANSPARENT_COLOR, model.select_mask
   );
 }

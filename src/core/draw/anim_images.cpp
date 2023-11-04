@@ -16,18 +16,18 @@ inline const i32 ID_SIZE = sizeof(u32);
 inline const i32 NEXT_ELEM_SIZE = sizeof(i32);
 inline const i32 LAYER_HEADER_SIZE = ID_SIZE + NEXT_ELEM_SIZE;
 
-Anim::LayerArena::LayerArena(LayerArena&& rhs) noexcept
+ImageDb::ImageDb(ImageDb&& rhs) noexcept
     : ptr(rhs.ptr),
       insert(rhs.insert),
       last(rhs.last),
       capacity(rhs.capacity),
       size(rhs.size),
       bytes(rhs.bytes),
-      allocated_size(rhs.allocated_size) {
+      alloc_size(rhs.alloc_size) {
   rhs.ptr = nullptr;
 }
 
-Anim::LayerArena& Anim::LayerArena::operator=(LayerArena&& rhs) noexcept {
+ImageDb& ImageDb::operator=(ImageDb&& rhs) noexcept {
   if (this == &rhs) {
     return *this;
   }
@@ -40,12 +40,12 @@ Anim::LayerArena& Anim::LayerArena::operator=(LayerArena&& rhs) noexcept {
   this->capacity = rhs.capacity;
   this->size = rhs.size;
   this->bytes = rhs.bytes;
-  this->allocated_size = rhs.allocated_size;
+  this->alloc_size = rhs.alloc_size;
 
   return *this;
 }
 
-void Anim::LayerArena::init(i32 bytes, i32 capacity) noexcept {
+void ImageDb::init(i32 bytes, i32 capacity) noexcept {
   this->bytes = bytes;
   this->capacity = capacity;
   this->allocate(capacity * (bytes + LAYER_HEADER_SIZE));
@@ -53,25 +53,25 @@ void Anim::LayerArena::init(i32 bytes, i32 capacity) noexcept {
 
 // === Copy Functions === //
 
-void Anim::LayerArena::copy(const LayerArena& other) noexcept {
+void ImageDb::copy(const ImageDb& other) noexcept {
   if (this == &other) {
     return;
   }
 
   if (this->ptr == nullptr) {
     this->copy_empty(other);
-  } else if (this->allocated_size == other.allocated_size) {
+  } else if (this->alloc_size == other.alloc_size) {
     this->copy_normal(other);
-  } else if (this->allocated_size > other.allocated_size) {
+  } else if (this->alloc_size > other.alloc_size) {
     this->copy_overfit(other);
   } else {
     this->copy_grow(other);
   }
 }
 
-void Anim::LayerArena::copy_empty(const LayerArena& other) noexcept {
+void ImageDb::copy_empty(const ImageDb& other) noexcept {
   // NOLINTNEXTLINE
-  this->ptr = (data_ptr)std::malloc(other.allocated_size);
+  this->ptr = (data_ptr)std::malloc(other.alloc_size);
   if (this->ptr == nullptr) {
     logger::fatal("Could not allocate animation layers");
     std::abort();
@@ -80,24 +80,24 @@ void Anim::LayerArena::copy_empty(const LayerArena& other) noexcept {
   this->copy_normal(other);
 }
 
-void Anim::LayerArena::copy_normal(const LayerArena& other) noexcept {
-  std::memcpy(this->ptr, other.ptr, other.allocated_size);
+void ImageDb::copy_normal(const ImageDb& other) noexcept {
+  std::memcpy(this->ptr, other.ptr, other.alloc_size);
 
   this->insert = other.insert;
   this->last = other.last;
   this->capacity = other.capacity;
   this->size = other.size;
   this->bytes = other.bytes;
-  this->allocated_size = other.allocated_size;
+  this->alloc_size = other.alloc_size;
 }
 
-void Anim::LayerArena::copy_overfit(const LayerArena& other) noexcept {
+void ImageDb::copy_overfit(const ImageDb& other) noexcept {
   this->size = other.size;
   this->bytes = other.bytes;
 
   // Recompute the new capacity value
-  this->capacity = this->allocated_size / (this->bytes + LAYER_HEADER_SIZE);
-  std::memset(this->ptr, 0, this->allocated_size);
+  this->capacity = this->alloc_size / (this->bytes + LAYER_HEADER_SIZE);
+  std::memset(this->ptr, 0, this->alloc_size);
 
   // Set the values of the next id
   for (i32 i = this->size; i < this->capacity; ++i) {
@@ -114,7 +114,7 @@ void Anim::LayerArena::copy_overfit(const LayerArena& other) noexcept {
   for (i32 i = 0, count = 0; count < this->size;
        ++i, src_cursor += other.bytes) {
     // NOTE: Way to check for inf loops
-    assert(src_cursor - other.ptr <= other.allocated_size);
+    assert(src_cursor - other.ptr <= other.alloc_size);
 
     if (((u32*)other.ptr)[i] == 0U) {
       continue;
@@ -128,9 +128,9 @@ void Anim::LayerArena::copy_overfit(const LayerArena& other) noexcept {
   }
 }
 
-void Anim::LayerArena::copy_grow(const LayerArena& other) noexcept {
+void ImageDb::copy_grow(const ImageDb& other) noexcept {
   // NOLINTNEXTLINE
-  auto* new_ptr = (data_ptr)std::realloc(this->ptr, other.allocated_size);
+  auto* new_ptr = (data_ptr)std::realloc(this->ptr, other.alloc_size);
   if (new_ptr == nullptr) {
     logger::fatal("Could not allocate animation layers");
     std::abort();
@@ -140,7 +140,7 @@ void Anim::LayerArena::copy_grow(const LayerArena& other) noexcept {
   this->copy_normal(other);
 }
 
-void Anim::LayerArena::minicopy(const LayerArena& other) noexcept {
+void ImageDb::minicopy(const ImageDb& other) noexcept {
   if (this == &other) {
     return;
   }
@@ -154,10 +154,10 @@ void Anim::LayerArena::minicopy(const LayerArena& other) noexcept {
   this->insert = this->last = -1;
   this->size = this->capacity = other.size;
   this->bytes = other.bytes;
-  this->allocated_size = other.size * (other.bytes + LAYER_HEADER_SIZE);
+  this->alloc_size = other.size * (other.bytes + LAYER_HEADER_SIZE);
 
   // NOLINTNEXTLINE
-  this->ptr = (data_ptr)std::malloc(this->allocated_size);
+  this->ptr = (data_ptr)std::malloc(this->alloc_size);
   if (this->ptr == nullptr) {
     logger::fatal("Could not allocate animation layers");
     std::abort();
@@ -170,7 +170,7 @@ void Anim::LayerArena::minicopy(const LayerArena& other) noexcept {
   for (i32 i = 0, count = 0; count < this->size;
        ++i, src_cursor += other.bytes) {
     // NOTE: Way to check for inf loops
-    assert(src_cursor - other.ptr <= other.allocated_size);
+    assert(src_cursor - other.ptr <= other.alloc_size);
 
     if (((u32*)other.ptr)[i] == 0U) {
       continue;
@@ -184,7 +184,7 @@ void Anim::LayerArena::minicopy(const LayerArena& other) noexcept {
   }
 }
 
-Anim::LayerArena::~LayerArena() noexcept {
+ImageDb::~ImageDb() noexcept {
   if (this->ptr) {
     std::free(this->ptr); // NOLINT
     this->ptr = nullptr;
@@ -193,11 +193,11 @@ Anim::LayerArena::~LayerArena() noexcept {
 
 // === Getters / Accessors === //
 
-data_ptr Anim::LayerArena::get_ptr() const noexcept {
+data_ptr ImageDb::get_ptr() const noexcept {
   return this->ptr;
 }
 
-data_ptr Anim::LayerArena::get_layer(u32 id) const noexcept {
+data_ptr ImageDb::get_image(u32 id) const noexcept {
   assert(this->ptr != nullptr);
 
   for (i32 i = 0; i < this->capacity; ++i) {
@@ -214,7 +214,7 @@ data_ptr Anim::LayerArena::get_layer(u32 id) const noexcept {
 
 // === Modifiers === //
 
-void Anim::LayerArena::create_layer(u32 new_id) noexcept {
+void ImageDb::create_layer(u32 new_id) noexcept {
   // TODO: Try to invalidate a frame
   assert(this->ptr != nullptr);
   assert(this->insert != -1);
@@ -226,14 +226,14 @@ void Anim::LayerArena::create_layer(u32 new_id) noexcept {
 
 // === Memory === //
 
-void Anim::LayerArena::allocate(i32 allocated_size) noexcept {
+void ImageDb::allocate(i32 alloc_size) noexcept {
   // NOLINTNEXTLINE
-  this->ptr = (data_ptr)std::malloc(allocated_size);
+  this->ptr = (data_ptr)std::malloc(alloc_size);
   if (this->ptr == nullptr) {
     logger::fatal("Could not allocate animation layers");
     std::abort();
   }
-  this->allocated_size = allocated_size;
+  this->alloc_size = alloc_size;
 
   // Set all ids to 0
   std::memset(this->ptr, 0, this->capacity * sizeof(u32));
@@ -252,7 +252,7 @@ void Anim::LayerArena::allocate(i32 allocated_size) noexcept {
   std::memset(
       // NOLINTNEXTLINE
       this->ptr + LAYER_HEADER_SIZE * this->capacity, 0,
-      this->allocated_size - LAYER_HEADER_SIZE * this->capacity
+      this->alloc_size - LAYER_HEADER_SIZE * this->capacity
   );
 }
 

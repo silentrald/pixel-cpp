@@ -12,6 +12,13 @@
 #include "view/event.hpp"
 #include "view/input.hpp"
 
+// NOTE: Can be changed depending on the gui to be used
+#include "view/modal.hpp"
+#include "view/sdl3/manager.hpp"
+using View = view::sdl3::Manager;
+
+class Model;
+
 namespace presenter {
 
 void init() noexcept;
@@ -45,10 +52,56 @@ void close_modals() noexcept;
 void new_file_clicked() noexcept;
 void create_anim() noexcept;
 
+void set_selected(u32 frame_id, i32 layer_index) noexcept;
+void toggle_visibility(i32 layer_index) noexcept;
+void insert_layer(i32 layer_index) noexcept;
+void push_back_layer() noexcept;
+
 // NOTE: For debugging purposes
 void debug_callback() noexcept;
 
 } // namespace presenter
+
+// Variables
+namespace tool {
+
+class Pencil;
+class Eraser;
+class Line;
+class Fill;
+class Select;
+class Pan;
+class Zoom;
+
+} // namespace tool
+
+namespace cfg {
+
+class Shortcut;
+
+} // namespace cfg
+
+namespace history {
+
+class Caretaker;
+
+} // namespace history
+
+extern Model model_;
+extern View view_;
+
+extern tool::Pencil pencil_;
+extern tool::Eraser eraser_;
+extern tool::Line line_;
+extern tool::Fill fill_;
+extern tool::Select select_;
+
+extern tool::Pan pan_;
+extern tool::Zoom zoom_;
+
+extern cfg::Shortcut shortcut_;
+
+extern history::Caretaker caretaker_;
 
 #endif
 

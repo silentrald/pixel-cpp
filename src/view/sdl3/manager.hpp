@@ -13,6 +13,7 @@
 #include "./box/draw.hpp"
 #include "./box/menu.hpp"
 #include "./box/status.hpp"
+#include "./box/timeline.hpp"
 #include "./box/tool.hpp"
 #include "./font.hpp"
 #include "./modal/file.hpp"
@@ -65,6 +66,8 @@ public:
   [[nodiscard]] void* get_modal_data(modal::Id id) const noexcept;
 
   // === Modifiers === //
+  void insert_layer(i32 index, const c8* name) noexcept;
+
   void push_modal(modal::Id id) noexcept;
   modal::Id pop_modal() noexcept;
   void clear_modals() noexcept;
@@ -75,10 +78,9 @@ private:
   Window window{};
   Renderer renderer{};
 
-  Font font{};
-
   // NOTE: There can be multiple drawbox
   widget::DrawBox draw_box{};
+  widget::TimelineBox timeline_box{};
   widget::ToolBox tool_box{};
   widget::StatusBox status_box{};
   widget::MenuBox menu_box{};

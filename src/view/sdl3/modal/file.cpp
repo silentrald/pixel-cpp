@@ -15,25 +15,25 @@
 
 namespace view::sdl3::widget {
 
-void FileModal::init(const Renderer& renderer, const Font& font) noexcept {
+void FileModal::init(const Renderer& renderer) noexcept {
   this->rect = {20.0F, 20.0F, 320.0F, 120.0F};
   fvec off = {24.0F, 24.0F};
 
   this->new_file_text.rect.pos = off;
-  this->new_file_text.set_text(cfg::locale::TextId::NEW_FILE, renderer, font);
+  this->new_file_text.set_text(cfg::locale::TextId::NEW_FILE, renderer);
   off.y += this->new_file_text.rect.h + 4.0F;
 
   this->width_text.rect.pos = off;
-  this->width_text.set_text(cfg::locale::TextId::WIDTH, renderer, font);
+  this->width_text.set_text(cfg::locale::TextId::WIDTH, renderer);
   off.y += this->width_text.rect.h + 4.0F;
 
   this->height_text.rect.pos = off;
-  this->height_text.set_text(cfg::locale::TextId::HEIGHT, renderer, font);
+  this->height_text.set_text(cfg::locale::TextId::HEIGHT, renderer);
   off.y += this->height_text.rect.h + 4.0F;
 
   const auto* text = cfg::locale::get_text(cfg::locale::TextId::PX);
-  this->px_tex = renderer.create_text(font, text);
-  auto size = font.get_text_size(text);
+  this->px_tex = renderer.create_text(text);
+  auto size = renderer.get_text_size(text);
 
   off.x = this->rect.x + this->rect.w - size.x - 4.0F;
   this->px_rect1 = {off.x, this->width_text.rect.y, (f32)size.x, (f32)size.y};
@@ -47,8 +47,8 @@ void FileModal::init(const Renderer& renderer, const Font& font) noexcept {
 
   text = cfg::locale::get_text(cfg::locale::TextId::NEW);
   this->new_btn.set_theme(input::BtnTheme::TOOL_BTN); // TODO: Primary btn
-  this->new_btn.set_texture(renderer.create_text(font, text));
-  size = font.get_text_size(text);
+  this->new_btn.set_texture(renderer.create_text(text));
+  size = renderer.get_text_size(text);
   off.x = this->rect.x + this->rect.w - size.x - 8.0F;
   off.y = this->rect.y + this->rect.h - size.y - 8.0F;
   this->new_btn.rect = {
@@ -58,8 +58,8 @@ void FileModal::init(const Renderer& renderer, const Font& font) noexcept {
 
   text = cfg::locale::get_text(cfg::locale::TextId::CANCEL);
   this->cancel_btn.set_theme(input::BtnTheme::TOOL_BTN); // TODO: Cancel btn
-  this->cancel_btn.set_texture(renderer.create_text(font, text));
-  size = font.get_text_size(text);
+  this->cancel_btn.set_texture(renderer.create_text(text));
+  size = renderer.get_text_size(text);
   off.x -= size.x + 12.0F;
   this->cancel_btn.rect = {
       off.x - 4.0F, off.y - 4.0F, (f32)size.x + 8.0F, (f32)size.y + 8.0F};

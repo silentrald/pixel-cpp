@@ -14,13 +14,14 @@
 #include "SDL_rect.h"
 #include "SDL_surface.h"
 #include "SDL_video.h"
+#include "core/cfg/locale.hpp"
 #include "core/logger/logger.hpp"
 #include <cstdio>
 #include <cstdlib>
 
 namespace view::sdl3 {
 
-void Renderer::init(SDL_Window* window, const Font& font) noexcept {
+void Renderer::init(SDL_Window* window) noexcept {
   this->renderer =
       SDL_CreateRenderer(window, nullptr, SDL_RENDERER_ACCELERATED);
   if (!this->renderer) {
@@ -28,10 +29,12 @@ void Renderer::init(SDL_Window* window, const Font& font) noexcept {
     std::abort();
   }
 
+  this->font.init(cfg::locale::get_font(), cfg::locale::get_size());
+
   // For transparency of textures
   SDL_SetRenderDrawBlendMode(this->renderer, SDL_BLENDMODE_BLEND);
 
-  this->textures.init(font, *this);
+  this->textures.init(*this);
 }
 
 Renderer::~Renderer() noexcept {
@@ -86,15 +89,24 @@ Texture Renderer::create_texture(ivec size) const noexcept {
   return Texture{tex};
 }
 
-Texture Renderer::create_text(const Font& font, const c8* str) const noexcept {
+fvec Renderer::get_text_size(const c8* str) const noexcept {
+  return this->font.get_text_size(str);
+}
+
+f32 Renderer::get_text_height() const noexcept {
+  return this->textures.get_height();
+}
+
+Texture Renderer::create_text(const c8* str) const noexcept {
   assert(str != nullptr);
 
   if (str[0] == '\0') {
     return Texture{};
   }
 
-  SDL_Surface* surface =
-      TTF_RenderUTF8_Solid(font.get_font(), str, {0x00U, 0x00U, 0x00U, 0xffU});
+  SDL_Surface* surface = TTF_RenderUTF8_Solid(
+      this->font.get_font(), str, {0x00U, 0x00U, 0x00U, 0xffU}
+  );
   if (surface == nullptr) {
     logger::fatal("Could not create surface");
     std::abort();

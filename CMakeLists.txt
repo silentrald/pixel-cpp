@@ -29,9 +29,10 @@ endif()
 set(draw_srcs
   src/core/draw/types.cpp
   src/core/draw/anim.cpp
-  src/core/draw/anim_frames.cpp
-  src/core/draw/anim_layers.cpp
-  src/core/draw/layer.cpp
+  src/core/draw/anim_images.cpp
+  src/core/draw/anim_timeline.cpp
+  src/core/draw/frame.cpp
+  src/core/draw/image.cpp
 )
 
 # NOTE: Can be changed depending on the gui lib
@@ -46,6 +47,7 @@ set(view_srcs src/view/sdl3/manager.cpp
   src/view/sdl3/box/draw.cpp
   src/view/sdl3/box/menu.cpp
   src/view/sdl3/box/status.cpp
+  src/view/sdl3/box/timeline.cpp
   src/view/sdl3/box/tool.cpp
 
   # Modal
@@ -80,6 +82,7 @@ set(config_srcs
   src/core/cfg/theme.cpp)
 
 set(srcs src/entry.cpp
+  src/presenter/presenter_var.cpp
   src/presenter/presenter.cpp
   src/colors.cpp
   src/math.cpp

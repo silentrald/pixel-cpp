@@ -105,7 +105,7 @@ ivec Line::get_snapping_point(fvec pos, fvec offset, i32 scale) const noexcept {
 
 /**
  * Uses:
- *   model.tex2 - blank layer
+ *   model.tex2 - blank image
  **/
 void Line::handle_mouse_motion(
     Model& model, input::KeyMod key, fvec pos
@@ -133,8 +133,8 @@ void Line::handle_mouse_motion(
 
 /**
  * Uses:
- *   model.tex1 - current layer
- *   model.tex2 - empty layer
+ *   model.tex1 - current image
+ *   model.tex2 - empty image
  **/
 void Line::handle_mouse_up(Model& model, input::KeyMod key, fvec pos) noexcept {
   // Delete the previous line
@@ -149,7 +149,7 @@ void Line::handle_mouse_up(Model& model, input::KeyMod key, fvec pos) noexcept {
 
   // Draw the final line
   utils::draw_line(
-      &model.layer, *model.tex1, model.anim.get_size(), this->origin,
+      &model.img, *model.tex1, model.anim.get_size(), this->origin,
       model.curr_pos, model.color, model.select_mask
   );
 }

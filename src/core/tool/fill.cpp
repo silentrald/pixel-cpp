@@ -13,7 +13,7 @@ namespace tool {
 
 /**
  * Uses:
- *   model.tex1 - current layer
+ *   model.tex1 - current image
  **/
 u32 Fill::execute(Model& model, const event::Input& evt) noexcept {
   if ((evt.mouse.left.state != input::MouseState::UP &&
@@ -26,14 +26,14 @@ u32 Fill::execute(Model& model, const event::Input& evt) noexcept {
   this->new_color = evt.mouse.left.state == input::MouseState::UP
                         ? model.fg_color
                         : model.bg_color;
-  this->old_color = *(rgba8*)model.layer.get_pixel(model.get_pixel_index());
+  this->old_color = *(rgba8*)model.img.get_pixel(model.get_pixel_index());
 
   if (this->old_color == this->new_color) {
     return event::Flag::NONE;
   }
 
   this->scan_fill(
-      model.layer, *model.tex1, model.anim.get_size(), model.curr_pos,
+      model.img, *model.tex1, model.anim.get_size(), model.curr_pos,
       model.select_mask
   );
   return event::Flag::SNAPSHOT;
@@ -44,14 +44,14 @@ u32 Fill::execute(Model& model, const event::Input& evt) noexcept {
 }
 
 bool Fill::check_pixel(
-    const std::vector<bool>& mask, const draw::Layer& layer, ivec pos, i32 width
+    const std::vector<bool>& mask, const draw::Image& image, ivec pos, i32 width
 ) const noexcept {
   return mask[get_index(pos, width)] &&
-         *(rgba8*)layer.get_pixel(get_index(pos, width)) == this->old_color;
+         *(rgba8*)image.get_pixel(get_index(pos, width)) == this->old_color;
 }
 
 void Fill::scan_fill(
-    draw::Layer& layer, Texture& texture, ivec size, ivec pos,
+    draw::Image& image, Texture& texture, ivec size, ivec pos,
     const std::vector<bool>& mask
 ) noexcept {
   std::stack<ivec> s{};
@@ -65,30 +65,30 @@ void Fill::scan_fill(
     pos = s.top();
     s.pop();
 
-    while (pos.x >= 0 && this->check_pixel(mask, layer, pos, size.x)) {
+    while (pos.x >= 0 && this->check_pixel(mask, image, pos, size.x)) {
       --pos.x;
     }
     ++pos.x;
     span_above = span_below = false;
 
-    for (; pos.x < size.x && this->check_pixel(mask, layer, pos, size.x);
+    for (; pos.x < size.x && this->check_pixel(mask, image, pos, size.x);
          ++pos.x) {
-      layer.paint(get_index(pos, size.x), this->new_color);
+      image.paint(get_index(pos, size.x), this->new_color);
       pixels.paint(get_index(pos, size.x), this->new_color);
 
       if (!span_above && pos.y > 0 &&
-          this->check_pixel(mask, layer, {pos.x, pos.y - 1}, size.x)) {
+          this->check_pixel(mask, image, {pos.x, pos.y - 1}, size.x)) {
         s.push({pos.x, pos.y - 1});
         span_above = true;
-      } else if (span_above && pos.y > 0 && !this->check_pixel(mask, layer, {pos.x, pos.y - 1}, size.x)) {
+      } else if (span_above && pos.y > 0 && !this->check_pixel(mask, image, {pos.x, pos.y - 1}, size.x)) {
         span_above = false;
       }
 
       if (!span_below && pos.y < size.y - 1 &&
-          this->check_pixel(mask, layer, {pos.x, pos.y + 1}, size.x)) {
+          this->check_pixel(mask, image, {pos.x, pos.y + 1}, size.x)) {
         s.push({pos.x, pos.y + 1});
         span_below = true;
-      } else if (span_below && pos.y < size.y - 1 && !this->check_pixel(mask, layer, {pos.x, pos.y + 1}, size.x)) {
+      } else if (span_below && pos.y < size.y - 1 && !this->check_pixel(mask, image, {pos.x, pos.y + 1}, size.x)) {
         span_below = false;
       }
     }

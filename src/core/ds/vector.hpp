@@ -73,6 +73,10 @@ public:
 
   // === Info === //
 
+  [[nodiscard]] ptr get_data() const noexcept {
+    return this->data;
+  }
+
   /**
    * Number of elements within the vector
    **/
@@ -203,8 +207,8 @@ private:
   // TODO: Replace to std::expected
   void allocate(i32 new_size) noexcept {
     if constexpr (std::is_fundamental<T>::value) {
-      // Primitive use malloc
-      this->data = (ptr)std::malloc(new_size * sizeof(T)); // NOLINT
+      // Primitive use calloc
+      this->data = (ptr)std::calloc(new_size, sizeof(T)); // NOLINT
     } else {
       // Use memory store for classes
       this->data = new (std::nothrow) T[new_size]; // NOLINT
@@ -231,7 +235,10 @@ private:
 
     if constexpr (std::is_fundamental<T>::value) {
       // For realloc, set the new data to 0
-      std::memset(this->data + this->capacity, 0, new_size - this->capacity);
+      std::memset(
+          this->data + this->capacity, 0,
+          (new_size - this->capacity) * sizeof(T)
+      );
     } else {
       // For new store, need to transfer the data manually
       for (i32 i = 0; i < this->top; ++i) {

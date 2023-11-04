@@ -63,7 +63,7 @@ void Pencil::handle_mouse_down(Model& model, input::MouseType type) noexcept {
     return;
   }
 
-  model.layer.paint(model.get_pixel_index(), model.color);
+  model.img.paint(model.get_pixel_index(), model.color);
   model.tex1->paint(model.get_pixel_index(), model.color);
 }
 
@@ -80,14 +80,14 @@ void Pencil::handle_mouse_motion(Model& model) noexcept {
       return;
     }
 
-    model.layer.paint(model.get_pixel_index(), model.color);
+    model.img.paint(model.get_pixel_index(), model.color);
     model.tex1->paint(model.get_pixel_index(), model.color);
     return;
   }
 
   // Draw a line to the previous and current position
   utils::draw_line(
-      &model.layer, *model.tex1, model.anim.get_size(), model.curr_pos,
+      &model.img, *model.tex1, model.anim.get_size(), model.curr_pos,
       model.prev_pos, model.color, model.select_mask
   );
 }

@@ -24,16 +24,16 @@ void test_color(rgba8 c1, rgba8 c2) {
   REQUIRE(std::memcmp(&c1, &c2, 4) == 0);
 }
 
-void test_empty_layer(const Layer& layer, u32 id) noexcept {
-  REQUIRE(layer.get_id() == id);
-  REQUIRE(layer.get_size().x == SIZE.x);
-  REQUIRE(layer.get_width() == SIZE.x);
-  REQUIRE(layer.get_size().y == SIZE.y);
-  REQUIRE(layer.get_height() == SIZE.y);
-  REQUIRE(layer.get_ptr() != nullptr);
+void test_empty_layer(const Image& image, u32 id) noexcept {
+  REQUIRE(image.get_id() == id);
+  REQUIRE(image.get_size().x == SIZE.x);
+  REQUIRE(image.get_width() == SIZE.x);
+  REQUIRE(image.get_size().y == SIZE.y);
+  REQUIRE(image.get_height() == SIZE.y);
+  REQUIRE(image.get_ptr() != nullptr);
 
   for (i32 i = 0; i < ISIZE; ++i) {
-    test_color(*(rgba8*)layer.get_pixel(i), {});
+    test_color(*(rgba8*)image.get_pixel(i), {});
   }
 }
 
@@ -44,8 +44,8 @@ void test_init_anim(const Anim& anim) noexcept {
   REQUIRE(anim.get_height() == SIZE.y);
   REQUIRE(anim.get_layer_count() == 1);
 
-  auto layer = anim.get_layer(1U);
-  test_empty_layer(layer, 1U);
+  auto image = anim.get_image(1U);
+  test_empty_layer(image, 1U);
 }
 
 TEST_CASE("Anim: layers modification", "[draw]") {
@@ -55,20 +55,22 @@ TEST_CASE("Anim: layers modification", "[draw]") {
   test_init_anim(anim);
 
   u32 id = 0U;
-  Layer layer{};
+  Image image{};
 
-  for (i32 i = 0; i < 5; ++i) {
+  const i32 INSERT_COUNT = 6;
+
+  for (i32 i = 1; i < INSERT_COUNT; ++i) {
     id = anim.insert_layer(0);
     REQUIRE(id != 1U);
-    REQUIRE(anim.get_layer_count() == i + 2);
+    REQUIRE(anim.get_layer_count() == i + 1);
 
-    layer = std::move(anim.get_layer(id));
-    test_empty_layer(layer, id);
+    image = std::move(anim.get_image(id));
+    test_empty_layer(image, id);
   }
 
   // Check ordering
-  for (i32 i = 0; i < 6; ++i) {
-    id = anim.get_layer_id(1, i);
+  for (i32 i = 0; i < INSERT_COUNT; ++i) {
+    id = anim.get_image_id(1, i);
     REQUIRE(i + id == 6U);
   }
 
@@ -78,16 +80,16 @@ TEST_CASE("Anim: layers modification", "[draw]") {
       {0x33, 0x33, 0x33, 0x33}, {0x44, 0x44, 0x44, 0x44},
       {0x55, 0x55, 0x55, 0x55}, {0x66, 0x66, 0x66, 0x66}};
   for (id = 1U; id <= 6U; ++id) {
-    layer = std::move(anim.get_layer(id));
+    image = std::move(anim.get_image(id));
     for (i32 i = 0; i < ISIZE; ++i) {
-      layer.paint(i, expected_colors[id - 1]);
+      image.paint(i, expected_colors[id - 1]);
     }
   }
 
-  for (id = 1U; id <= 6U; ++id) {
-    layer = std::move(anim.get_layer(id));
+  for (id = 1U; id <= INSERT_COUNT; ++id) {
+    image = std::move(anim.get_image(id));
     for (i32 i = 0; i < ISIZE; ++i) {
-      test_color(*(rgba8*)layer.get_pixel(i), expected_colors[id - 1]);
+      test_color(*(rgba8*)image.get_pixel(i), expected_colors[id - 1]);
     }
   }
 }

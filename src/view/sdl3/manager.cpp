@@ -30,13 +30,12 @@ const u64 SPF = 1000 / FPS;
 
 void Manager::init() noexcept {
   this->window.init();
-
-  this->font.init(cfg::locale::get_font(), cfg::locale::get_size());
-  this->renderer.init(this->window.get_window(), this->font);
+  this->renderer.init(this->window.get_window());
 
   this->handle_resize(this->window.size);
 
   this->boxes.push_back(&this->draw_box);
+  this->boxes.push_back(&this->timeline_box);
   this->boxes.push_back(&this->tool_box);
   this->boxes.push_back(&this->status_box);
   this->boxes.push_back(&this->menu_box);
@@ -70,32 +69,34 @@ void Manager::init() noexcept {
   this->tool_box.push_btn(std::move(btn));
 
   // Menu box
-  ivec size{};
+  fvec size{};
   widget::MenuBtn menu_btn{};
 
   const c8* text = cfg::locale::get_text(cfg::locale::TextId::FILE_MENU_ITEM);
-  menu_btn.set_texture(this->renderer.create_text(this->font, text));
-  size = this->font.get_text_size(text);
+  menu_btn.set_texture(this->renderer.create_text(text));
+  size = this->renderer.get_text_size(text);
   menu_btn.tex_rect.size = {(f32)size.x, (f32)size.y};
   menu_btn.rect.size = {(f32)size.x + 16.0F, (f32)size.y + 4.0F};
   menu_btn.set_left_click_listener(presenter::new_file_clicked);
   this->menu_box.push_menu_btn(std::move(menu_btn));
 
   text = cfg::locale::get_text(cfg::locale::TextId::EDIT_MENU_ITEM);
-  menu_btn.set_texture(this->renderer.create_text(this->font, text));
-  size = this->font.get_text_size(text);
+  menu_btn.set_texture(this->renderer.create_text(text));
+  size = this->renderer.get_text_size(text);
   menu_btn.tex_rect.size = {(f32)size.x, (f32)size.y};
   menu_btn.rect.size = {(f32)size.x + 16.0F, (f32)size.y + 4.0F};
   menu_btn.set_left_click_listener(presenter::debug_callback); // TODO:
   this->menu_box.push_menu_btn(std::move(menu_btn));
 
   text = cfg::locale::get_text(cfg::locale::TextId::VIEW_MENU_ITEM);
-  menu_btn.set_texture(this->renderer.create_text(this->font, text));
-  size = this->font.get_text_size(text);
+  menu_btn.set_texture(this->renderer.create_text(text));
+  size = this->renderer.get_text_size(text);
   menu_btn.tex_rect.size = {(f32)size.x, (f32)size.y};
   menu_btn.rect.size = {(f32)size.x + 16.0F, (f32)size.y + 4.0F};
   menu_btn.set_left_click_listener(presenter::debug_callback); // TODO:
   this->menu_box.push_menu_btn(std::move(menu_btn));
+
+  this->timeline_box.init(this->renderer);
 }
 
 Manager::~Manager() noexcept {
@@ -157,6 +158,10 @@ Texture& Manager::get_select1_texture() noexcept {
 
 Texture& Manager::get_select2_texture() noexcept {
   return this->draw_box.get_select2_texture();
+}
+
+void Manager::insert_layer(i32 index, const c8* name) noexcept {
+  this->timeline_box.insert_layer_info(index, name, this->renderer);
 }
 
 void Manager::run() noexcept {

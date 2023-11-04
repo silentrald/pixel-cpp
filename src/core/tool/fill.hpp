@@ -8,7 +8,7 @@
 #ifndef PXL_TOOL_FILL_HPP
 #define PXL_TOOL_FILL_HPP
 
-#include "../draw/layer.hpp"
+#include "../draw/image.hpp"
 #include "./enum.hpp"
 #include "model/model.hpp"
 #include "types.hpp"
@@ -30,7 +30,7 @@ private:
   rgba8 old_color{};
 
   [[nodiscard]] inline bool check_pixel(
-      const std::vector<bool>& mask, const draw::Layer& layer, ivec pos,
+      const std::vector<bool>& mask, const draw::Image& image, ivec pos,
       i32 width
   ) const noexcept;
 
@@ -38,7 +38,7 @@ private:
    * Refer: https://lodev.org/cgtutor/floodfill.html
    **/
   void scan_fill(
-      draw::Layer& layer, Texture& texture, ivec size, ivec pos,
+      draw::Image& image, Texture& texture, ivec size, ivec pos,
       const std::vector<bool>& mask
   ) noexcept;
 };

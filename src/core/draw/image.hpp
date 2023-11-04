@@ -5,18 +5,18 @@
  * Created: 2023-10-30
  *==========================*/
 
-#ifndef PXL_DRAW_LAYER_HPP
-#define PXL_DRAW_LAYER_HPP
+#ifndef PXL_DRAW_IMAGE_HPP
+#define PXL_DRAW_IMAGE_HPP
 
 #include "./types.hpp"
 #include "types.hpp"
 
 namespace draw {
 
-class Layer {
+class Image {
 public:
-  Layer() noexcept = default;
-  explicit Layer(data_ptr ptr, ivec size, ColorType type, u32 id) noexcept;
+  Image() noexcept = default;
+  explicit Image(data_ptr ptr, ivec size, ColorType type, u32 id) noexcept;
 
   [[nodiscard]] data_ptr get_ptr() const noexcept;
   [[nodiscard]] ivec get_size() const noexcept;

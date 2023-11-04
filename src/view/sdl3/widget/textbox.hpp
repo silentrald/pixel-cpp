@@ -27,8 +27,8 @@ public:
   [[nodiscard]] const std::string& get_text() const noexcept;
   void push_text(const c8* str) noexcept;
   c8 pop_char() noexcept;
-  void update_texture(const Renderer& renderer, const Font& font) noexcept;
-  void reposition_text_rect(const Font& font) noexcept;
+  void update_texture(const Renderer& renderer) noexcept;
+  void reposition_text_rect(const Renderer& renderer) noexcept;
 
   void reset() noexcept override;
   void input(const event::Input& evt, Data& data) noexcept override;

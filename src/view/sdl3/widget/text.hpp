@@ -27,9 +27,7 @@ public:
   Text& operator=(Text&&) noexcept = default;
   ~Text() noexcept override = default;
 
-  void set_text(
-      cfg::locale::TextId id, const Renderer& renderer, const Font& font
-  ) noexcept;
+  void set_text(cfg::locale::TextId id, const Renderer& renderer) noexcept;
 
   void reset() noexcept override;
   void input(const event::Input& evt, Data& data) noexcept override;

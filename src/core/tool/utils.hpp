@@ -8,7 +8,7 @@
 #ifndef PXL_TOOL_UTILS_HPP
 #define PXL_TOOL_UTILS_HPP
 
-#include "../draw/layer.hpp"
+#include "../draw/image.hpp"
 #include "types.hpp"
 #include <vector>
 
@@ -20,16 +20,16 @@ namespace tool::utils {
 /**
  * Refer: https://en.wikipedia.org/wiki/Bresenham's_line_algorithm#All_cases
  *
- * @param layer - nullable, if texture is the only thing needs to be updated
+ * @param image - nullable, if texture is the only thing needs to be updated
  * @param texture
- * @param size - size of the layer/texture
+ * @param size - size of the image/texture
  * @param start - point where to start to draw the line
  * @param end - point where to end to draw the line
- * @param color - what color to paint on the layer/texture
- * @param mask - allowed pixel position to draw on the layer/texture
+ * @param color - what color to paint on the image/texture
+ * @param mask - allowed pixel position to draw on the image/texture
  **/
 void draw_line(
-    draw::Layer* layer, Texture& texture, ivec size, ivec start, ivec end,
+    draw::Image* image, Texture& texture, ivec size, ivec start, ivec end,
     rgba8 color, const std::vector<bool>& mask
 ) noexcept;
 

@@ -33,10 +33,10 @@ using c8 = char;
 template <typename Type> struct rgba {
   union {
     struct {
-      Type r;
-      Type g;
-      Type b;
-      Type a;
+      Type r{};
+      Type g{};
+      Type b{};
+      Type a{};
     };
     Type colors[4]; // NOLINT
   };
@@ -65,8 +65,8 @@ const rgba8 TRANSPARENT_COLOR{0x00, 0x00, 0x00, 0x00};
 // === Geom Types === //
 
 template <typename Type> struct vec {
-  Type x;
-  Type y;
+  Type x{};
+  Type y{};
 
   /**
    * Refer: https://en.wikipedia.org/wiki/Chebyshev_distance
