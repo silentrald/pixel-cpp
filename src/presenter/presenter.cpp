@@ -61,12 +61,49 @@ void presenter::window_resized() noexcept {
   view_.set_canvas_rect(model_.rect);
 }
 
-inline void update_canvas_texture() noexcept {
-  using namespace presenter;
-  auto id = model_.anim.get_image_id(model_.frame_id, model_.layer_index);
-  view_.get_curr_texture().set_pixels(
-      (rgba8*)model_.anim.get_image(id).get_ptr(), model_.anim.get_size()
-  );
+void update_canvas_textures() noexcept {
+  ds::vector<rgba8> pixels{};
+  pixels.resize(model_.anim.get_height() * model_.anim.get_width());
+
+  // Bot
+  if (model_.layer_index > 0) {
+    model_.anim.get_flatten(model_.frame_id, 0, model_.layer_index - 1, pixels);
+  }
+  view_.get_bot_texture().set_pixels(pixels.get_data(), model_.anim.get_size());
+
+  // Clear
+  for (i32 i = 0; i < pixels.get_size(); ++i) {
+    pixels[i] = {};
+  }
+
+  // Top
+  if (model_.layer_index < model_.anim.get_layer_count() - 1) {
+    model_.anim.get_flatten(
+        model_.frame_id, model_.layer_index + 1,
+        model_.anim.get_layer_count() - 1, pixels
+    );
+  }
+  view_.get_top_texture().set_pixels(pixels.get_data(), model_.anim.get_size());
+
+  if (model_.anim.is_layer_visible(model_.layer_index)) {
+    view_.get_curr_texture().set_pixels(
+        (rgba8*)model_.img.get_ptr(), model_.anim.get_size()
+    );
+  }
+}
+
+void update_view() noexcept {
+  // Update canvas
+  update_canvas_textures();
+
+  // Update the timeline
+  view_.clear_layers();
+  for (i32 i = model_.anim.get_layer_count() - 1; i >= 0; --i) {
+    auto layer_info = model_.anim.get_layer_info(i);
+    view_.insert_layer(0, model_.anim.get_layer_info(i));
+  }
+
+  view_.set_selected_on_timeline(model_.frame_id, model_.layer_index);
 }
 
 inline void handle_unselect() noexcept {
@@ -111,7 +148,7 @@ void presenter::key_down_event(
       break;
     logger::info("Undo");
     caretaker_.undo().restore(model_);
-    update_canvas_texture();
+    update_view();
     break;
 
   case cfg::ShortcutKey::ACTION_REDO:
@@ -119,7 +156,7 @@ void presenter::key_down_event(
       break;
     logger::info("Redo");
     caretaker_.redo().restore(model_);
-    update_canvas_texture();
+    update_view();
     break;
 
   case cfg::ShortcutKey::ACTION_UNSELECT:
@@ -164,14 +201,17 @@ void presenter::canvas_mouse_event(const event::Input& evt) noexcept {
     return;
   }
 
-  if (!model_.anim.is_layer_visible(model_.layer_index)) {
-    logger::info("Layer is hidden");
-    return;
-  }
-
   if (evt.mouse.wheel.x != 0 || evt.mouse.wheel.y != 0) {
     canvas_mouse_scroll_event(evt);
     // Continue with other mouse events
+  }
+
+  if ((evt.mouse.left.state != input::MouseState::NONE ||
+       evt.mouse.right.state != input::MouseState::NONE ||
+       evt.mouse.middle.state != input::MouseState::NONE) &&
+      !model_.anim.is_layer_visible(model_.layer_index)) {
+    logger::info("Layer is hidden");
+    return;
   }
 
   if (evt.mouse.middle.state != input::MouseState::NONE) {
@@ -303,7 +343,7 @@ void presenter::create_anim() noexcept {
   view_.set_canvas_rect(model_.rect);
   view_.set_draw_size(size);
 
-  view_.insert_layer(0, model_.anim.get_layer_name(0));
+  view_.insert_layer(0, model_.anim.get_layer_info(0));
 
   history::Snapshot snapshot{};
   snapshot.snap(model_);
@@ -317,39 +357,21 @@ void presenter::set_selected(u32 frame_id, i32 layer_index) noexcept {
   model_.img_id = model_.anim.get_image_id(frame_id, layer_index);
   model_.img = model_.anim.get_image(model_.img_id);
 
-  ds::vector<rgba8> pixels{};
-  pixels.resize(model_.anim.get_height() * model_.anim.get_width());
+  update_canvas_textures();
 
-  // Bot
-  if (layer_index > 0) {
-    model_.anim.get_flatten(frame_id, 0, layer_index - 1, pixels);
-  }
-  view_.get_bot_texture().set_pixels(pixels.get_data(), model_.anim.get_size());
-
-  // Clear
-  for (i32 i = 0; i < pixels.get_size(); ++i) {
-    pixels[i] = {};
-  }
-
-  // Top
-  if (layer_index < model_.anim.get_layer_count() - 1) {
-    model_.anim.get_flatten(
-        frame_id, layer_index + 1, model_.anim.get_layer_count() - 1, pixels
-    );
-  }
-  view_.get_top_texture().set_pixels(pixels.get_data(), model_.anim.get_size());
-
-  if (model_.anim.is_layer_visible(model_.layer_index)) {
-    view_.get_curr_texture().set_pixels(
-        (rgba8*)model_.img.get_ptr(), model_.anim.get_size()
-    );
-  }
+  view_.set_selected_on_timeline(frame_id, layer_index);
 }
 
 void presenter::toggle_visibility(i32 layer_index) noexcept {
   logger::info("Toggle visibility (Layer %d)", layer_index);
 
   bool show = model_.anim.toggle_layer_visibility(layer_index);
+  history::Snapshot snapshot{};
+  snapshot.snap(model_);
+  caretaker_.push_snapshot(std::move(snapshot));
+
+  view_.set_layer_visible(layer_index, show);
+
   if (layer_index == model_.layer_index) {
     if (show) {
       auto layer = model_.anim.get_image(model_.img_id);
@@ -390,12 +412,11 @@ void presenter::insert_layer(i32 layer_index) noexcept {
   model_.anim.insert_layer(layer_index);
   presenter::set_selected(model_.frame_id, model_.layer_index);
 
-  // TODO: Undo/Redo - able
-  /* history::Snapshot snapshot{}; */
-  /* snapshot.snap(model_); */
-  /* caretaker_.push_snapshot(std::move(snapshot)); */
+  history::Snapshot snapshot{};
+  snapshot.snap(model_);
+  caretaker_.push_snapshot(std::move(snapshot));
 
-  view_.insert_layer(layer_index, model_.anim.get_layer_name(layer_index));
+  view_.insert_layer(layer_index, model_.anim.get_layer_info(layer_index));
 }
 
 void presenter::push_back_layer() noexcept {
@@ -408,13 +429,12 @@ void presenter::push_back_layer() noexcept {
   model_.anim.insert_layer(model_.layer_index);
   presenter::set_selected(model_.frame_id, model_.layer_index);
 
-  // TODO: Undo/Redo - able
-  /* history::Snapshot snapshot{}; */
-  /* snapshot.snap(model_); */
-  /* caretaker_.push_snapshot(std::move(snapshot)); */
+  history::Snapshot snapshot{};
+  snapshot.snap(model_);
+  caretaker_.push_snapshot(std::move(snapshot));
 
   view_.insert_layer(
-      model_.layer_index, model_.anim.get_layer_name(model_.layer_index)
+      model_.layer_index, model_.anim.get_layer_info(model_.layer_index)
   );
 }
 

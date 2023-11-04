@@ -15,7 +15,7 @@
 inline const i32 LAYER_INIT = 4;
 // User might only create a graphic without an animation
 inline const i32 FRAME_INIT = 1;
-inline const u8 OPACITY_BIT = 0x80;
+inline const u8 VISIBLE_BIT = 0x80;
 
 // NOTE: Can be stores in locale
 c8 layer_prefix[std::strlen("Layer 2147483647") + 1U] = "Layer "; // NOLINT
@@ -58,7 +58,7 @@ void TimelineInfo::init() noexcept {
   // Safe copy
   std::strcpy(this->layer_info->name, "Layer 1");
   // visible bit and 100 opacity
-  this->layer_info->opacity = OPACITY_BIT | 100U;
+  this->layer_info->opacity = VISIBLE_BIT | 100U;
 }
 
 TimelineInfo::TimelineInfo(TimelineInfo&& rhs) noexcept
@@ -216,6 +216,10 @@ i32 TimelineInfo::get_layer_capacity() const noexcept {
   return this->layer_capacity;
 }
 
+const LayerInfo& TimelineInfo::get_layer_info(i32 index) const noexcept {
+  return this->layer_info[index];
+}
+
 const c8* TimelineInfo::get_layer_name(i32 index) const noexcept {
   assert(index >= 0 && index < this->layer_count);
   return this->layer_info[index].name; // NOLINT
@@ -223,7 +227,7 @@ const c8* TimelineInfo::get_layer_name(i32 index) const noexcept {
 
 bool TimelineInfo::is_layer_visible(i32 index) const noexcept {
   assert(index >= 0 && index < this->layer_count);
-  return this->layer_info[index].opacity & OPACITY_BIT;
+  return this->layer_info[index].opacity & VISIBLE_BIT;
 }
 
 i32 TimelineInfo::get_timeline_alloc_size() const noexcept {
@@ -276,7 +280,7 @@ void TimelineInfo::insert_layer(i32 index, u32 layer_id) noexcept {
   std::strcpy(
       this->layer_info[index].name, get_default_name(this->layer_count + 1)
   );
-  this->layer_info[index].opacity = OPACITY_BIT | 100U;
+  this->layer_info[index].opacity = VISIBLE_BIT | 100U;
 
   ++this->layer_count;
 }
@@ -285,8 +289,8 @@ bool TimelineInfo::toggle_layer_visibility(i32 index) noexcept {
   assert(index >= 0 && index < this->layer_count);
 
   auto& info = this->layer_info[index].opacity;
-  info ^= OPACITY_BIT;
-  return info &= OPACITY_BIT;
+  info ^= VISIBLE_BIT;
+  return info & VISIBLE_BIT;
 }
 
 // === Memory === //

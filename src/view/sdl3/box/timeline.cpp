@@ -27,7 +27,7 @@ void TimelineBox::init(const Renderer& renderer) noexcept {
 }
 
 void TimelineBox::insert_layer_info(
-    i32 index, const c8* name, const Renderer& renderer
+    i32 index, const draw::LayerInfo& layer_info, const Renderer& renderer
 ) noexcept {
   assert(index >= 0 && index <= this->layers.get_size());
 
@@ -35,26 +35,38 @@ void TimelineBox::insert_layer_info(
 
   frect text_rect{};
   text_rect.x = this->rect.x + LINE_WIDTH;
-  text_rect.size = renderer.get_text_size(name);
+  text_rect.size = renderer.get_text_size(layer_info.name);
 
   if (this->layers.is_empty()) {
     text_rect.y = this->rect.y + renderer.get_text_height() + LINE_WIDTH;
     this->layers.insert(
-        0, {.tex = renderer.create_text(name), .rect = text_rect}
+        0, {.tex = renderer.create_text(layer_info.name),
+            .rect = text_rect,
+            .visible = (bool)(layer_info.opacity & 0x80)}
     );
     return;
   }
 
-  text_rect.y = index < this->layers.get_size() ? this->layers[index].rect.y
-                                                : this->layers.back().rect.y;
+  text_rect.y = this->rect.y + (renderer.get_text_height() + LINE_WIDTH) *
+                                   (this->layers.get_size() - index + 1);
   this->layers.insert(
-      index, {.tex = renderer.create_text(name), .rect = text_rect}
+      index, {.tex = renderer.create_text(layer_info.name),
+              .rect = text_rect,
+              .visible = (bool)(layer_info.opacity & 0x80)}
   );
 
   for (index = index - 1; index >= 0; --index) {
     text_rect.y += renderer.get_text_height() + LINE_WIDTH;
     this->layers[index].rect.pos = text_rect.pos;
   }
+}
+
+void TimelineBox::set_layer_visible(i32 index, bool visible) noexcept {
+  this->layers[index].visible = visible;
+}
+
+void TimelineBox::clear_layers() noexcept {
+  this->layers.clear();
 }
 
 void TimelineBox::resize(const frect& rect) noexcept {
@@ -102,8 +114,6 @@ void TimelineBox::input(const event::Input& evt, Data& data) noexcept {
   for (i32 i = 0; i < this->layers.get_size(); ++i) {
     if (bounds.has_point(evt.mouse.pos)) {
       presenter::toggle_visibility(i);
-      // TODO: Presenter should set this
-      this->layers[i].visible = !this->layers[i].visible;
       return;
     }
     bounds.y -= height + LINE_WIDTH;
@@ -145,10 +155,6 @@ void TimelineBox::input(const event::Input& evt, Data& data) noexcept {
       this->selected_frame == new_sel_frame) {
     return;
   }
-
-  // TODO: Presenter should set this
-  this->selected_layer = new_sel_layer;
-  this->selected_frame = new_sel_frame;
 
   presenter::set_selected(new_sel_frame, new_sel_layer);
 }

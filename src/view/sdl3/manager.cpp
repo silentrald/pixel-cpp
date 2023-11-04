@@ -160,8 +160,23 @@ Texture& Manager::get_select2_texture() noexcept {
   return this->draw_box.get_select2_texture();
 }
 
-void Manager::insert_layer(i32 index, const c8* name) noexcept {
-  this->timeline_box.insert_layer_info(index, name, this->renderer);
+void Manager::insert_layer(
+    i32 index, const draw::LayerInfo& layer_info
+) noexcept {
+  this->timeline_box.insert_layer_info(index, layer_info, this->renderer);
+}
+
+void Manager::set_layer_visible(i32 index, bool visible) noexcept {
+  this->timeline_box.set_layer_visible(index, visible);
+}
+
+void Manager::clear_layers() noexcept {
+  this->timeline_box.clear_layers();
+}
+
+void Manager::set_selected_on_timeline(u32 frame_id, i32 layer_index) noexcept {
+  this->timeline_box.selected_frame = frame_id;
+  this->timeline_box.selected_layer = layer_index;
 }
 
 void Manager::run() noexcept {

@@ -77,11 +77,15 @@ public:
   ~TimelineInfo() noexcept;
 
   [[nodiscard]] u32 get_image_id(i32 frame_id, i32 layer_index) const noexcept;
+
   [[nodiscard]] i32 get_layer_count() const noexcept;
   [[nodiscard]] i32 get_layer_capacity() const noexcept;
+  [[nodiscard]] const LayerInfo& get_layer_info(i32 index) const noexcept;
   [[nodiscard]] const c8* get_layer_name(i32 index) const noexcept;
   [[nodiscard]] bool is_layer_visible(i32 index) const noexcept;
+
   [[nodiscard]] Frame get_frame(u32 id) const noexcept;
+
   [[nodiscard]] i32 get_timeline_alloc_size() const noexcept;
 
   void insert_layer(i32 index, u32 layer_id) noexcept;
@@ -141,6 +145,8 @@ public:
   [[nodiscard]] Image get_image(u32 id) const noexcept;
   [[nodiscard]] Image get_image(u32 frame_id, i32 layer_index) const noexcept;
   [[nodiscard]] u32 get_image_id(u32 frame_id, i32 layer_index) const noexcept;
+
+  [[nodiscard]] const LayerInfo& get_layer_info(i32 index) const noexcept;
   [[nodiscard]] const c8* get_layer_name(i32 index) const noexcept;
   [[nodiscard]] bool is_layer_visible(i32 index) const noexcept;
   void get_flatten(

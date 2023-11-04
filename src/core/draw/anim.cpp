@@ -100,12 +100,16 @@ u32 Anim::get_image_id(u32 frame_id, i32 layer_index) const noexcept {
   return this->timeline.get_image_id(frame_id, layer_index);
 }
 
-const c8* Anim::get_layer_name(i32 layer_index) const noexcept {
-  return this->timeline.get_layer_name(layer_index);
+const LayerInfo& Anim::get_layer_info(i32 index) const noexcept {
+  return this->timeline.get_layer_info(index);
 }
 
-bool Anim::is_layer_visible(i32 layer_index) const noexcept {
-  return this->timeline.is_layer_visible(layer_index);
+const c8* Anim::get_layer_name(i32 index) const noexcept {
+  return this->timeline.get_layer_name(index);
+}
+
+bool Anim::is_layer_visible(i32 index) const noexcept {
+  return this->timeline.is_layer_visible(index);
 }
 
 void Anim::get_flatten(
