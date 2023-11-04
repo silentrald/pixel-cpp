@@ -2,37 +2,31 @@
  * Author/s:
  *  - silentrald
  * Version: 1.0
- * Created: 2023-10-06
+ * Created: 2023-11-04
  *==========================*/
 
 #include "./frame.hpp"
+#include <cassert>
 
 namespace draw {
 
-Frame::Frame(data_ptr ptr, i32 next_layer, ivec size, ColorType type) noexcept
-    : ptr(ptr), next_layer(next_layer), size(size), type(type) {}
+Frame::Frame(u32* ptr, i32 layer_count, u32 id) noexcept
+    : ptr(ptr), layer_count(layer_count), id(id) {}
 
-ivec Frame::get_size() const noexcept {
-  return this->size;
+u32 Frame::get_id() const noexcept {
+  return this->id;
 }
 
-i32 Frame::get_width() const noexcept {
-  return this->size.x;
-}
-
-i32 Frame::get_height() const noexcept {
-  return this->size.y;
-}
-
-ColorType Frame::get_type() const noexcept {
-  return this->type;
-}
-
-Layer Frame::get_layer(i32 index) noexcept {
+u32 Frame::get_image_id(i32 index) const noexcept {
+  assert(this->ptr != nullptr);
   assert(index >= 0 && index < this->layer_count);
 
-  // NOLINTNEXTLINE
-  return Layer{this->ptr + index * this->next_layer, this->size, this->type};
+  return this->ptr[index];
+}
+
+i32 Frame::get_layer_count() const noexcept {
+  return this->layer_count;
 }
 
 } // namespace draw
+

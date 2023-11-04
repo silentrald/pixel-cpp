@@ -24,15 +24,19 @@ public:
 
   inline void init() noexcept {
     // Create the window
-    this->window = SDL_CreateWindow("Pixel", 1, 1, SDL_WINDOW_RESIZABLE);
+    this->window = SDL_CreateWindow("Pixel", 800, 600, SDL_WINDOW_RESIZABLE);
     if (!this->window) {
       logger::fatal("Window could not be created");
       std::abort();
     }
 
     // Maximize and get the size of the window
+#ifdef NDEBUG
     SDL_MaximizeWindow(this->window);
+#endif
+
     SDL_GetWindowSize(this->window, &this->size.x, &this->size.y);
+    SDL_SetWindowMaximumSize(this->window, this->size.x, this->size.y);
     SDL_SetWindowMinimumSize(this->window, 800, 600);
   }
 

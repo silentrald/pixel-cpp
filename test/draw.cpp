@@ -6,216 +6,91 @@
  *==========================*/
 
 #include "catch2/catch_test_macros.hpp"
-#include "core/draw/anim.hpp"
 #include "core/draw/types.hpp"
+#include "core/logger/logger.hpp"
 #include "types.hpp"
 #include <cstring>
+#include <utility>
 
-const ivec size{2, 2};
-const i32 isize = size.x * size.y;
+/* #define private public */
+#include "core/draw/anim.hpp"
+
+inline const ivec SIZE{2, 2};
+inline const i32 ISIZE = SIZE.x * SIZE.y;
 
 using namespace draw;
 
+void test_color(rgba8 c1, rgba8 c2) {
+  REQUIRE(std::memcmp(&c1, &c2, 4) == 0);
+}
+
+void test_empty_layer(const Image& image, u32 id) noexcept {
+  REQUIRE(image.get_id() == id);
+  REQUIRE(image.get_size().x == SIZE.x);
+  REQUIRE(image.get_width() == SIZE.x);
+  REQUIRE(image.get_size().y == SIZE.y);
+  REQUIRE(image.get_height() == SIZE.y);
+  REQUIRE(image.get_ptr() != nullptr);
+
+  for (i32 i = 0; i < ISIZE; ++i) {
+    test_color(*(rgba8*)image.get_pixel(i), {});
+  }
+}
+
 void test_init_anim(const Anim& anim) noexcept {
-  REQUIRE(anim.get_size().x == size.x);
-  REQUIRE(anim.get_size().y == size.y);
-  REQUIRE(anim.get_frame_count() == 1);
+  REQUIRE(anim.get_size().x == SIZE.x);
+  REQUIRE(anim.get_width() == SIZE.x);
+  REQUIRE(anim.get_size().y == SIZE.y);
+  REQUIRE(anim.get_height() == SIZE.y);
   REQUIRE(anim.get_layer_count() == 1);
+
+  auto image = anim.get_image(1U);
+  test_empty_layer(image, 1U);
 }
 
-TEST_CASE("Anim: init", "[draw]") {
+TEST_CASE("Anim: layers modification", "[draw]") {
   Anim anim{};
 
-  SECTION("rgba8") {
-    anim.init(size, ColorType::RGBA8);
-    test_init_anim(anim);
+  anim.init(SIZE, ColorType::RGBA8);
+  test_init_anim(anim);
 
-    // Layer should be filled with 0
-    auto layer = anim.get_layer(0, 0);
-    REQUIRE(layer.get_size().x == size.x);
-    REQUIRE(layer.get_size().y == size.y);
+  u32 id = 0U;
+  Image image{};
 
-    u32 expected_ptr[] = {0U, 0U, 0U, 0U}; // All zeroes
-    auto* ptr = layer.get_ptr();
-    REQUIRE(std::memcmp(ptr, expected_ptr, isize * sizeof(rgba8)) == 0);
+  const i32 INSERT_COUNT = 6;
+
+  for (i32 i = 1; i < INSERT_COUNT; ++i) {
+    id = anim.insert_layer(0);
+    REQUIRE(id != 1U);
+    REQUIRE(anim.get_layer_count() == i + 1);
+
+    image = std::move(anim.get_image(id));
+    test_empty_layer(image, id);
   }
 
-  SECTION("rgba16") {
-    anim.init(size, ColorType::RGBA16);
-    test_init_anim(anim);
-
-    // Layer should be filled with 0
-    auto layer = anim.get_layer(0, 0);
-    REQUIRE(layer.get_size().x == size.x);
-    REQUIRE(layer.get_size().y == size.y);
-
-    u64 expected_ptr[] = {0U, 0U, 0U, 0U}; // All zeroes
-    auto* ptr = layer.get_ptr();
-    REQUIRE(std::memcmp(ptr, expected_ptr, isize * sizeof(rgba16)) == 0);
-  }
-}
-
-TEST_CASE("Anim: Layer Resizeable", "[draw]") {
-  Anim anim{};
-  anim.init(size, ColorType::RGBA8);
-
-  rgba8 color1{0x11U, 0x11U, 0x11U, 0x11U};
-  rgba8 color2{0x22U, 0x22U, 0x22U, 0x22U};
-  u32 expected_ptr0[] = {0U, 0U, 0U, 0U};
-  u32 expected_ptr1[] = {0x11111111U, 0x11111111U, 0x11111111U, 0x11111111U};
-  u32 expected_ptr2[] = {0x22222222U, 0x22222222U, 0x22222222U, 0x22222222U};
-
-  auto layer = anim.get_layer(0, 0);
-  for (i32 i = 0; i < isize; ++i) {
-    layer.paint(i, color1);
+  // Check ordering
+  for (i32 i = 0; i < INSERT_COUNT; ++i) {
+    id = anim.get_image_id(1, i);
+    REQUIRE(i + id == 6U);
   }
 
-  // Insert after the data
-  anim.insert_layer(1);
-
-  REQUIRE(anim.get_layer_count() == 2);
-  REQUIRE(
-      std::memcmp(
-          anim.get_layer(0, 0).get_ptr(), expected_ptr1, isize * sizeof(rgba8)
-      ) == 0
-  );
-  REQUIRE(
-      std::memcmp(
-          anim.get_layer(0, 1).get_ptr(), expected_ptr0, isize * sizeof(rgba8)
-      ) == 0
-  );
-
-  // Color the new inserted frame
-  layer = anim.get_layer(0, 1);
-  for (i32 i = 0; i < isize; ++i) {
-    layer.paint(i, color2);
+  // Edit the layers
+  const rgba8 expected_colors[] = {
+      {0x11, 0x11, 0x11, 0x11}, {0x22, 0x22, 0x22, 0x22},
+      {0x33, 0x33, 0x33, 0x33}, {0x44, 0x44, 0x44, 0x44},
+      {0x55, 0x55, 0x55, 0x55}, {0x66, 0x66, 0x66, 0x66}};
+  for (id = 1U; id <= 6U; ++id) {
+    image = std::move(anim.get_image(id));
+    for (i32 i = 0; i < ISIZE; ++i) {
+      image.paint(i, expected_colors[id - 1]);
+    }
   }
 
-  // Insert before the data
-  anim.insert_layer(0);
-  REQUIRE(anim.get_layer_count() == 3);
-  REQUIRE(
-      std::memcmp(
-          anim.get_layer(0, 0).get_ptr(), expected_ptr0, isize * sizeof(rgba8)
-      ) == 0
-  );
-  REQUIRE(
-      std::memcmp(
-          anim.get_layer(0, 1).get_ptr(), expected_ptr1, isize * sizeof(rgba8)
-      ) == 0
-  );
-  REQUIRE(
-      std::memcmp(
-          anim.get_layer(0, 2).get_ptr(), expected_ptr2, isize * sizeof(rgba8)
-      ) == 0
-  );
-
-  // Try to resize the container and check if resize is correct
-  auto org_layer_capacity = anim.get_layer_capacity();
-  anim.insert_layers(1, anim.get_layer_capacity());
-  REQUIRE(anim.get_layer_count() == org_layer_capacity + 3);
-  for (i32 i = 0; i <= org_layer_capacity; ++i) {
-    REQUIRE(
-        std::memcmp(
-            anim.get_layer(0, i).get_ptr(), expected_ptr0, isize * sizeof(rgba8)
-        ) == 0
-    );
+  for (id = 1U; id <= INSERT_COUNT; ++id) {
+    image = std::move(anim.get_image(id));
+    for (i32 i = 0; i < ISIZE; ++i) {
+      test_color(*(rgba8*)image.get_pixel(i), expected_colors[id - 1]);
+    }
   }
-  REQUIRE(
-      std::memcmp(
-          anim.get_layer(0, org_layer_capacity + 1).get_ptr(), expected_ptr1,
-          isize * sizeof(rgba8)
-      ) == 0
-  );
-  REQUIRE(
-      std::memcmp(
-          anim.get_layer(0, org_layer_capacity + 2).get_ptr(), expected_ptr2,
-          isize * sizeof(rgba8)
-      ) == 0
-  );
-
-  REQUIRE(anim.get_frame_count() == 1);
-}
-
-TEST_CASE("Anim: Frame Resizeable", "[draw]") {
-  Anim anim{};
-  anim.init(size, ColorType::RGBA8);
-
-  rgba8 color1{0x11U, 0x11U, 0x11U, 0x11U};
-  rgba8 color2{0x22U, 0x22U, 0x22U, 0x22U};
-  u32 expected_ptr0[] = {0U, 0U, 0U, 0U};
-  u32 expected_ptr1[] = {0x11111111U, 0x11111111U, 0x11111111U, 0x11111111U};
-  u32 expected_ptr2[] = {0x22222222U, 0x22222222U, 0x22222222U, 0x22222222U};
-
-  auto layer = anim.get_layer(0, 0);
-  for (i32 i = 0; i < isize; ++i) {
-    layer.paint(i, color1);
-  }
-
-  // Insert after the data
-  anim.insert_frame(1);
-
-  REQUIRE(anim.get_frame_count() == 2);
-  REQUIRE(
-      std::memcmp(
-          anim.get_layer(0, 0).get_ptr(), expected_ptr1, isize * sizeof(rgba8)
-      ) == 0
-  );
-  REQUIRE(
-      std::memcmp(
-          anim.get_layer(1, 0).get_ptr(), expected_ptr0, isize * sizeof(rgba8)
-      ) == 0
-  );
-
-  // Color the new inserted frame
-  layer = anim.get_layer(1, 0);
-  for (i32 i = 0; i < isize; ++i) {
-    layer.paint(i, color2);
-  }
-
-  // Insert before the data
-  anim.insert_frame(0);
-  REQUIRE(anim.get_frame_count() == 3);
-  REQUIRE(
-      std::memcmp(
-          anim.get_layer(0, 0).get_ptr(), expected_ptr0, isize * sizeof(rgba8)
-      ) == 0
-  );
-  REQUIRE(
-      std::memcmp(
-          anim.get_layer(1, 0).get_ptr(), expected_ptr1, isize * sizeof(rgba8)
-      ) == 0
-  );
-  REQUIRE(
-      std::memcmp(
-          anim.get_layer(2, 0).get_ptr(), expected_ptr2, isize * sizeof(rgba8)
-      ) == 0
-  );
-
-  // Try to resize the container and check if resize is correct
-  auto org_layer_capacity = anim.get_layer_capacity();
-  anim.insert_frames(1, anim.get_layer_capacity());
-  REQUIRE(anim.get_frame_count() == org_layer_capacity + 3);
-  for (i32 i = 0; i <= org_layer_capacity; ++i) {
-    REQUIRE(
-        std::memcmp(
-            anim.get_layer(i, 0).get_ptr(), expected_ptr0, isize * sizeof(rgba8)
-        ) == 0
-    );
-  }
-  REQUIRE(
-      std::memcmp(
-          anim.get_layer(org_layer_capacity + 1, 0).get_ptr(), expected_ptr1,
-          isize * sizeof(rgba8)
-      ) == 0
-  );
-  REQUIRE(
-      std::memcmp(
-          anim.get_layer(org_layer_capacity + 2, 0).get_ptr(), expected_ptr2,
-          isize * sizeof(rgba8)
-      ) == 0
-  );
-
-  REQUIRE(anim.get_layer_count() == 1);
 }
 

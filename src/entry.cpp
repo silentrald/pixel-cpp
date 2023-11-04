@@ -22,6 +22,8 @@ int main() {
     return -1;
   }
 
+  SDL_StopTextInput();
+
   {
     presenter::init();
     presenter::run();

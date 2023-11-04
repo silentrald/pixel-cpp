@@ -12,7 +12,7 @@ namespace tool::utils {
 // === Line Drawing Algorithm === //
 // Bresenham's Algo
 void draw_horizontal_line(
-    draw::Layer* layer, Texture& texture, ivec size, i32 start_x, i32 end_x,
+    draw::Image* image, Texture& texture, ivec size, i32 start_x, i32 end_x,
     i32 y, rgba8 color, const std::vector<bool>& mask
 ) noexcept {
   // Check if the line is within bounds
@@ -39,13 +39,13 @@ void draw_horizontal_line(
     }
 
     pixels.paint(i, color);
-    if (layer)
-      layer->paint(i, color);
+    if (image)
+      image->paint(i, color);
   }
 }
 
 void draw_vertical_line(
-    draw::Layer* layer, Texture& texture, ivec size, i32 start_y, i32 end_y,
+    draw::Image* image, Texture& texture, ivec size, i32 start_y, i32 end_y,
     i32 x, rgba8 color, const std::vector<bool>& mask
 ) noexcept {
   // Check if the line is within bounds
@@ -72,13 +72,13 @@ void draw_vertical_line(
     }
 
     pixels.paint(i, color);
-    if (layer)
-      layer->paint(i, color);
+    if (image)
+      image->paint(i, color);
   }
 }
 
 void draw_line_low(
-    draw::Layer* layer, Texture& texture, ivec size, ivec start, ivec end,
+    draw::Image* image, Texture& texture, ivec size, ivec start, ivec end,
     rgba8 color, const std::vector<bool>& mask
 ) noexcept {
   ivec d = end - start;
@@ -107,8 +107,8 @@ void draw_line_low(
   for (; x <= end.x; ++x) {
     if (y >= 0 && y < size.y && mask[x + y * size.x]) {
       pixels.paint(x + y * size.x, color);
-      if (layer)
-        layer->paint(x + y * size.x, color);
+      if (image)
+        image->paint(x + y * size.x, color);
     }
 
     if (error > 0) {
@@ -121,7 +121,7 @@ void draw_line_low(
 }
 
 void draw_line_high(
-    draw::Layer* layer, Texture& texture, ivec size, ivec start, ivec end,
+    draw::Image* image, Texture& texture, ivec size, ivec start, ivec end,
     rgba8 color, const std::vector<bool>& mask
 ) noexcept {
   ivec d = end - start;
@@ -150,8 +150,8 @@ void draw_line_high(
   for (; y <= end.y; ++y) {
     if (x >= 0 && x < size.x && mask[x + y * size.x]) {
       pixels.paint(x + y * size.x, color);
-      if (layer)
-        layer->paint(x + y * size.x, color);
+      if (image)
+        image->paint(x + y * size.x, color);
     }
 
     if (error > 0) {
@@ -164,7 +164,7 @@ void draw_line_high(
 }
 
 void draw_line(
-    draw::Layer* layer, Texture& texture, ivec size, ivec start, ivec end,
+    draw::Image* image, Texture& texture, ivec size, ivec start, ivec end,
     rgba8 color, const std::vector<bool>& mask
 ) noexcept {
   // TEST: Check if the line is within the rect
@@ -172,25 +172,25 @@ void draw_line(
 
   if (start.x == end.x) {
     draw_vertical_line(
-        layer, texture, size, start.y, end.y, start.x, color, mask
+        image, texture, size, start.y, end.y, start.x, color, mask
     );
   } else if (start.y == end.y) {
     draw_horizontal_line(
-        layer, texture, size, start.x, end.x, start.y, color, mask
+        image, texture, size, start.x, end.x, start.y, color, mask
     );
   }
 
   if (std::abs(start.y - end.y) < std::abs(start.x - end.x)) {
     if (start.x > end.x) {
-      draw_line_low(layer, texture, size, end, start, color, mask);
+      draw_line_low(image, texture, size, end, start, color, mask);
     } else {
-      draw_line_low(layer, texture, size, start, end, color, mask);
+      draw_line_low(image, texture, size, start, end, color, mask);
     }
   } else {
     if (start.y > end.y) {
-      draw_line_high(layer, texture, size, end, start, color, mask);
+      draw_line_high(image, texture, size, end, start, color, mask);
     } else {
-      draw_line_high(layer, texture, size, start, end, color, mask);
+      draw_line_high(image, texture, size, start, end, color, mask);
     }
   }
 }

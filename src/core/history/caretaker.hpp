@@ -9,10 +9,11 @@
 #define MODULES_HISTORY_CARETAKER_HPP
 
 #include "./snapshot.hpp"
-#include <vector>
+#include "core/ds/vector.hpp"
 
 namespace history {
 
+// NOTE: Add memory arena here, to better store the animation data
 class Caretaker {
 public:
   Caretaker(const Caretaker&) noexcept = delete;
@@ -42,7 +43,7 @@ public:
 private:
   // NOTE: Can be optimized with using a better datastructure with less overhead
   // Only needs a container that does not grow but can be resized
-  std::vector<Snapshot> snapshots{};
+  ds::vector<Snapshot> snapshots{};
   i32 cursor = -1;
   i32 start_cursor = -1;
   i32 end_cursor = -1;

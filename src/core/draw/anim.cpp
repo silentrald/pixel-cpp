@@ -2,143 +2,73 @@
  * Author/s:
  *  - silentrald
  * Version: 1.0
- * Created: 2023-10-05
+ * Created: 2023-10-29
  *==========================*/
 
 #include "./anim.hpp"
+#include "core/logger/logger.hpp"
 #include "math.hpp"
-#include <cstdio>
+#include <cassert>
 #include <cstdlib>
 #include <cstring>
 
 namespace draw {
 
-const i32 FRAME_CAPACITY_START = 4;
-const i32 LAYER_CAPACITY_START = 4;
+inline const i32 MAX_LENGTH = 1024;
 
-// NOTE: Too many multiplication, chance of having an overflow somewhere
-// TODO: Implement a b+ tree instead for this
 void Anim::init(ivec size, ColorType type) noexcept {
-  this->type = type;
-  this->size = size;
-  this->frame_count = this->layer_count = 1;
-  this->frame_capacity = FRAME_CAPACITY_START;
-  this->layer_capacity = LAYER_CAPACITY_START;
-
-  this->next_layer = size.x * size.y * this->get_datatype_size();
-  this->next_frame = this->next_layer * LAYER_CAPACITY_START;
-  this->max_size =
-      FRAME_CAPACITY_START * LAYER_CAPACITY_START * this->next_layer;
-  // NOLINTNEXTLINE
-  this->ptr = (data_ptr)std::calloc(this->max_size, 1);
-  if (this->ptr == nullptr) {
-    // TODO: return an error instead
+  // NOTE: Size cap can be bigger if datatypes are changed to 64 bit datatypes
+  //   but MAX_LENGTH is sufficient enough
+  if (size.x < 0 || size.y < 0 || size.x > MAX_LENGTH || size.y > MAX_LENGTH) {
+    logger::fatal("Size (%d, %d) is either to big or negative", size.x, size.y);
     std::abort();
   }
+
+  this->size = size;
+  this->type = type;
+
+  // TODO: Compute whether layers_max_bytes or layers_capacity is set
+  this->images.init(size.x * size.y * get_color_type_size(this->type), 64);
+  this->timeline.init();
+
+  this->images_id = 1U;
 }
 
 void Anim::copy(const Anim& other) noexcept {
-  // Reuse the size
-  if (!this->ptr) {
-    // NOLINTNEXTLINE
-    this->ptr = (data_ptr)std::calloc(other.max_size, 1);
-    if (this->ptr == nullptr) {
-      // TODO: return an error instead
-      std::abort();
-    }
-  } else if (this->max_size < other.max_size) {
-    // NOLINTNEXTLINE
-    auto new_ptr = (data_ptr)std::realloc(this->ptr, other.max_size);
-    if (new_ptr == nullptr) {
-      // TODO: return an error instead
-      std::abort();
-    }
-    this->ptr = new_ptr;
+  if (this == &other) {
+    return;
   }
 
-  std::memcpy(this->ptr, other.ptr, other.max_size);
-  this->max_size = other.max_size;
+  this->images.copy(other.images);
+  this->timeline.copy(other.timeline);
 
-  this->frame_capacity = other.frame_capacity;
-  this->frame_count = other.frame_count;
-  this->next_frame = other.next_frame;
-
-  this->layer_capacity = other.layer_capacity;
-  this->layer_count = other.layer_count;
-  this->next_layer = other.next_layer;
-
-  this->type = other.type;
+  this->images_id = other.images_id;
   this->size = other.size;
+  this->type = other.type;
 }
 
-Anim::Anim(Anim&& rhs) noexcept
-    : ptr(rhs.ptr),
-      max_size(rhs.max_size),
-      frame_capacity(rhs.frame_capacity),
-      frame_count(rhs.frame_count),
-      next_frame(rhs.next_frame),
-      layer_capacity(rhs.layer_capacity),
-      layer_count(rhs.layer_count),
-      next_layer(rhs.next_layer),
-      type(rhs.type),
-      size(rhs.size) {
-  rhs.ptr = nullptr;
-}
-
-Anim& Anim::operator=(Anim&& rhs) noexcept {
-  if (this == &rhs) {
-    return *this;
+void Anim::minicopy(const Anim& other) noexcept {
+  if (this == &other) {
+    return;
   }
 
-  this->ptr = rhs.ptr;
-  rhs.ptr = nullptr;
+  this->images.minicopy(other.images);
+  this->timeline.copy(other.timeline);
 
-  this->max_size = rhs.max_size;
-
-  this->frame_capacity = rhs.frame_capacity;
-  this->frame_count = rhs.frame_count;
-  this->next_frame = rhs.next_frame;
-
-  this->layer_capacity = rhs.layer_capacity;
-  this->layer_count = rhs.layer_count;
-  this->next_layer = rhs.next_layer;
-
-  this->type = rhs.type;
-  this->size = rhs.size;
-
-  return *this;
+  this->images_id = other.images_id;
+  this->size = other.size;
+  this->type = other.type;
 }
 
-Anim::~Anim() noexcept {
-  if (this->ptr) {
-    // NOLINTNEXTLINE
-    std::free(this->ptr);
-    this->ptr = nullptr;
-  }
+void Anim::clear() noexcept {
+  // TODO: check if other data is needed to be stored
 }
 
-data_ptr Anim::get_ptr() noexcept {
-  return this->ptr;
-}
+// === Getters === //
 
-ColorType Anim::get_type() const noexcept {
-  return this->type;
-}
-
-i32 Anim::get_frame_count() const noexcept {
-  return this->frame_count;
-}
-
-i32 Anim::get_layer_count() const noexcept {
-  return this->layer_count;
-}
-
-i32 Anim::get_frame_capacity() const noexcept {
-  return this->frame_capacity;
-}
-
-i32 Anim::get_layer_capacity() const noexcept {
-  return this->layer_capacity;
+bool Anim::has_point(ivec pos) const noexcept {
+  return pos.x >= 0 && pos.y >= 0 && pos.x < this->size.x &&
+         pos.y < this->size.y;
 }
 
 ivec Anim::get_size() const noexcept {
@@ -153,181 +83,82 @@ i32 Anim::get_height() const noexcept {
   return this->size.y;
 }
 
-bool Anim::has_point(ivec point) const noexcept {
-  return point.x >= 0 && point.x < this->size.x && point.y >= 0 &&
-         point.y < this->size.y;
+i32 Anim::get_layer_count() const noexcept {
+  return this->timeline.get_layer_count();
 }
 
-void Anim::clear() noexcept {
-  if (this->ptr) {
-    // NOLINTNEXTLINE
-    std::free(this->ptr);
-    this->ptr = nullptr;
-  }
-
-  this->max_size = 0;
-  this->frame_capacity = 0;
-  this->frame_count = 0;
-  this->next_layer = 0;
-  this->layer_capacity = 0;
-  this->layer_count = 0;
-  this->next_layer = 0;
-  this->type = ColorType::NONE;
+Image Anim::get_image(u32 id) const noexcept {
+  return Image{this->images.get_image(id), this->size, this->type, id};
 }
 
-i32 Anim::get_datatype_size() const noexcept {
-  return 0x0000'ffff & this->type;
+Image Anim::get_image(u32 frame_id, i32 layer_index) const noexcept {
+  auto id = this->get_image_id(frame_id, layer_index);
+  return Image{this->images.get_image(id), this->size, this->type, id};
 }
 
-void Anim::insert_frame(i32 index) noexcept {
-  assert(index >= 0 && index <= this->frame_count);
-
-  if (this->frame_count == this->frame_capacity) {
-    // TODO: May fail due to bad alloc
-    this->resize_frame(math::get_next_pow2(this->frame_capacity));
-  }
-
-  // NOLINTNEXTLINE
-  auto* cursor = this->ptr + index * this->next_frame;
-  i32 shift = (this->frame_count - index) * this->next_frame;
-  std::memmove(cursor + this->next_frame, cursor, shift); // Rotate
-  std::memset(cursor, 0, this->next_frame);               // Clear
-
-  ++this->frame_count;
+u32 Anim::get_image_id(u32 frame_id, i32 layer_index) const noexcept {
+  return this->timeline.get_image_id(frame_id, layer_index);
 }
 
-void Anim::insert_layer(i32 index) noexcept {
-  assert(index >= 0 && index <= this->layer_count);
-
-  if (this->layer_count == this->layer_capacity) {
-    // TODO: May fail due to bad alloc
-    this->resize_layer(math::get_next_pow2(this->layer_capacity));
-  }
-
-  // NOLINTNEXTLINE
-  auto* cursor = this->ptr + index * this->next_layer;
-  i32 shift = (this->layer_count - index) * this->next_layer;
-  // Loop thru all the frames to add the layer
-  for (i32 i = 0; i < this->frame_count; ++i) {
-    std::memmove(cursor + this->next_layer, cursor, shift); // Rotate
-    std::memset(cursor, 0, this->next_layer);               // Clear
-    cursor += this->next_frame;
-  }
-
-  ++this->layer_count;
+const LayerInfo& Anim::get_layer_info(i32 index) const noexcept {
+  return this->timeline.get_layer_info(index);
 }
 
-void Anim::insert_frames(i32 index, i32 count) noexcept {
-  assert(index >= 0 && index <= this->frame_count);
-
-  if (this->frame_count + count > this->frame_capacity) {
-    // TODO: May fail due to bad alloc
-    this->resize_frame(math::get_next_pow2(this->frame_count + count));
-  }
-
-  // NOLINTNEXTLINE
-  auto* cursor = this->ptr + index * this->next_frame;
-  i32 shift = (this->frame_count - index) * this->next_frame;
-  i32 size = count * this->next_frame;
-  std::memmove(cursor + size, cursor, shift);
-  std::memset(cursor, 0, size);
-
-  this->frame_count += count;
+const c8* Anim::get_layer_name(i32 index) const noexcept {
+  return this->timeline.get_layer_name(index);
 }
 
-void Anim::insert_layers(i32 index, i32 count) noexcept {
-  assert(index >= 0 && index <= this->layer_count);
-
-  if (this->layer_count + count > this->layer_capacity) {
-    // TODO: May fail due to bad alloc
-    this->resize_layer(math::get_next_pow2(this->layer_count + count));
-  }
-
-  // NOLINTNEXTLINE
-  auto* cursor = this->ptr + index * this->next_layer;
-  i32 shift = (this->layer_count - index) * this->next_layer;
-  i32 size = count * this->next_layer;
-  // Loop thru all the frames to add the layer
-  for (i32 i = 0; i < this->frame_count; ++i) {
-    std::memmove(cursor + size, cursor, shift); // Rotate
-    std::memset(cursor, 0, size);               // Clear
-
-    cursor += this->next_frame;
-  }
-
-  this->layer_count += count;
+bool Anim::is_layer_visible(i32 index) const noexcept {
+  return this->timeline.is_layer_visible(index);
 }
 
-void Anim::resize_frame(i32 new_frame_capacity) noexcept {
-  // NOLINTNEXTLINE
-  auto* new_ptr = (data_ptr)std::realloc(
-      // NOLINTNEXTLINE
-      this->ptr, new_frame_capacity * this->layer_capacity * this->next_layer
-  );
+void Anim::get_flatten(
+    u32 frame_id, i32 start_layer, i32 end_layer, ds::vector<rgba8>& pixels
+) const noexcept {
+  assert(frame_id != 0U);
+  assert(pixels.get_size() == this->size.x * this->size.y);
+  assert(start_layer <= end_layer);
+  assert(start_layer >= 0 && start_layer < this->timeline.get_layer_count());
+  assert(end_layer >= 0 && end_layer < this->timeline.get_layer_count());
 
-  if (!new_ptr) {
-    // TODO: Handle bad alloc
-    return;
-  }
-
-  if (new_ptr != this->ptr) {
-    this->ptr = new_ptr;
-  }
-
-  // No need to shift the data, data is already placed correctly
-
-  this->frame_capacity = new_frame_capacity;
-}
-
-void Anim::resize_layer(i32 new_layer_capacity) noexcept {
-  // NOLINTNEXTLINE
-  auto* new_ptr = (data_ptr)std::realloc(
-      // NOLINTNEXTLINE
-      this->ptr, new_layer_capacity * this->frame_capacity * this->next_layer
-  );
-
-  if (!new_ptr) {
-    // TODO: Handle bad alloc
-    return;
-  }
-
-  if (new_ptr != this->ptr) {
-    this->ptr = new_ptr;
-  }
-
-  // Shift the data
-  i32 shift = this->layer_count * this->next_layer;
-  i32 new_next_frame = this->next_layer * new_layer_capacity;
-  // NOLINTNEXTLINE
-  auto* src_cursor = this->ptr + (this->frame_count - 1) * this->next_frame;
-  // NOLINTNEXTLINE
-  auto* dst_cursor = this->ptr + (this->frame_count - 1) * new_next_frame;
-  while (src_cursor > this->ptr) {
-    std::memmove(dst_cursor, src_cursor, shift);
-    std::memset(src_cursor, 0, shift);
-  }
-
-  this->next_frame = new_next_frame;
-  this->layer_capacity = new_layer_capacity;
-}
-
-void Anim::print() const noexcept {
-  auto* curr_ptr = this->ptr;
-  for (i32 f = 0; f < this->frame_count; ++f) {
-    for (i32 y = 0; y < this->size.y; ++y) {
-      printf("%3dy: ", y);
-      for (i32 x = 0; x < this->size.x; ++x) {
-        printf(
-            "%08X ",
-            // NOLINTNEXTLINE
-            curr_ptr[(x + y * this->size.x) * this->get_datatype_size()]
-        );
-      }
-      printf("\n");
+  rgba8* img_ptr = nullptr;
+  auto frame = this->timeline.get_frame(frame_id);
+  for (i32 i = start_layer; i <= end_layer; ++i) {
+    if (!this->timeline.is_layer_visible(i)) {
+      continue;
     }
-    printf("=== \n");
-    curr_ptr += this->next_frame;
+
+    img_ptr = (rgba8*)this->images.get_image(frame.get_image_id(i));
+    // NOTE: Add blending calculations here
+    for (i32 i = 0; i < pixels.get_size(); ++i) {
+      if (img_ptr[i].a) {
+        pixels[i] = img_ptr[i];
+      }
+    }
   }
+}
+
+Anim::operator bool() const noexcept {
+  return this->images.get_ptr() != nullptr;
+}
+
+// === Modifiers === //
+
+u32 Anim::insert_layer(i32 index) noexcept {
+  assert(index >= 0 && index <= this->timeline.get_layer_count());
+
+  // Create a new layer in the layers data
+  auto id = ++this->images_id;
+  this->images.create_layer(id);
+
+  // Insert it into the first frame
+  this->timeline.insert_layer(index, id);
+
+  return id;
+}
+
+bool Anim::toggle_layer_visibility(i32 layer_index) noexcept {
+  return this->timeline.toggle_layer_visibility(layer_index);
 }
 
 } // namespace draw

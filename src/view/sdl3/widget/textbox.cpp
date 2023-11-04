@@ -27,17 +27,15 @@ c8 Textbox::pop_char() noexcept {
   return c;
 }
 
-void Textbox::update_texture(
-    const Renderer& renderer, const Font& font
-) noexcept {
-  this->tex = std::move(renderer.create_text(font, this->text.c_str()));
+void Textbox::update_texture(const Renderer& renderer) noexcept {
+  this->tex = std::move(renderer.create_text(this->text.c_str()));
 }
 
-void Textbox::reposition_text_rect(const Font& font) noexcept {
-  auto size = font.get_text_size(this->text.c_str());
+void Textbox::reposition_text_rect(const Renderer& renderer) noexcept {
+  auto size = renderer.get_text_size(this->text.c_str());
   this->tex_rect = {
       .pos = {.x = this->rect.x + this->rect.w - size.x, .y = this->rect.y},
-      .size = {.x = (f32)size.x, .y = (f32)size.y}};
+      .size = size};
 }
 
 void Textbox::reset() noexcept {

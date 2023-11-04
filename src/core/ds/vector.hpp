@@ -11,14 +11,20 @@
 #include "types.hpp"
 #include <cassert>
 #include <cstdlib>
+#include <cstring>
 #include <new>
+#include <type_traits>
 #include <utility>
 
 namespace ds {
 
-const i32 VECTOR_INITIAL_SIZE = 4;
-const i32 VECTOR_K = 2;
+inline const i32 VECTOR_INITIAL_SIZE = 4;
+inline const i32 VECTOR_K = 2;
 
+/**
+ * Self implemented vector class, std::vector crashes view data impls.
+ * TODO: Add bool space efficient optimization
+ **/
 template <typename T> class vector {
 private:
   using val = T;
@@ -34,10 +40,16 @@ public:
   vector() noexcept = default;
 
   ~vector() noexcept {
-    if (this->data) {
-      delete[] this->data;
-      this->data = nullptr;
+    if (!this->data) {
+      return;
     }
+
+    if constexpr (std::is_fundamental<T>::value) {
+      std::free(this->data); // NOLINT
+    } else {
+      delete[] this->data;
+    }
+    this->data = nullptr;
   }
 
   vector(vector&& rhs) noexcept
@@ -60,6 +72,10 @@ public:
   }
 
   // === Info === //
+
+  [[nodiscard]] ptr get_data() const noexcept {
+    return this->data;
+  }
 
   /**
    * Number of elements within the vector
@@ -94,6 +110,7 @@ public:
     } else {
       this->allocate(new_size);
     }
+    this->top = new_size;
   }
 
   // TODO: Replace to std::expected
@@ -189,7 +206,14 @@ private:
 
   // TODO: Replace to std::expected
   void allocate(i32 new_size) noexcept {
-    this->data = new (std::nothrow) T[new_size]; // NOLINT
+    if constexpr (std::is_fundamental<T>::value) {
+      // Primitive use calloc
+      this->data = (ptr)std::calloc(new_size, sizeof(T)); // NOLINT
+    } else {
+      // Use memory store for classes
+      this->data = new (std::nothrow) T[new_size]; // NOLINT
+    }
+
     if (this->data == nullptr) {
       std::abort();
     }
@@ -198,16 +222,32 @@ private:
 
   // TODO: Replace to std::expected
   void reallocate(i32 new_size) noexcept {
-    ptr new_data = new (std::nothrow) T[new_size]; // NOLINT
+    ptr new_data = nullptr;
+    if constexpr (std::is_fundamental<T>::value) {
+      new_data = (ptr)std::realloc(this->data, new_size * sizeof(T)); // NOLINT
+    } else {
+      new_data = new (std::nothrow) T[new_size]; // NOLINT
+    }
+
     if (new_data == nullptr) {
       std::abort();
     }
 
-    for (i32 i = 0; i < this->top; ++i) {
-      new_data[i] = std::move(this->data[i]);
+    if constexpr (std::is_fundamental<T>::value) {
+      // For realloc, set the new data to 0
+      std::memset(
+          this->data + this->capacity, 0,
+          (new_size - this->capacity) * sizeof(T)
+      );
+    } else {
+      // For new store, need to transfer the data manually
+      for (i32 i = 0; i < this->top; ++i) {
+        new_data[i] = std::move(this->data[i]);
+      }
+
+      delete[] this->data;
     }
 
-    delete[] this->data;
     this->data = new_data;
     this->capacity = new_size;
   }

@@ -58,11 +58,11 @@ public:
     return this->font;
   }
 
-  [[nodiscard]] inline ivec get_text_size(const c8* str) const noexcept {
+  [[nodiscard]] inline fvec get_text_size(const c8* str) const noexcept {
     assert(this->font != nullptr && str != nullptr);
     ivec size{};
-    TTF_SizeText(this->font, str, &size.x, &size.y);
-    return size;
+    TTF_SizeUTF8(this->font, str, &size.x, &size.y);
+    return {.x = (f32)size.x, .y = (f32)size.y};
   }
 
 private:

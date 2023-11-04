@@ -13,6 +13,7 @@
 #include "../widget/button.hpp"
 #include "../widget/textbox.hpp"
 #include "./modal.hpp"
+#include "view/sdl3/widget/text.hpp"
 
 namespace view::sdl3::widget {
 
@@ -28,7 +29,7 @@ public:
   FileModal& operator=(FileModal&&) noexcept = default;
   ~FileModal() noexcept override = default;
 
-  void init(const Renderer& renderer, const Font& font) noexcept;
+  void init(const Renderer& renderer) noexcept;
 
   [[nodiscard]] void* get_data() const noexcept override;
 
@@ -41,14 +42,9 @@ public:
 
 private:
   // === Texts === //
-  Texture new_file_tex{};
-  frect new_file_rect{};
-
-  Texture width_tex{};
-  frect width_rect{};
-
-  Texture height_tex{};
-  frect height_rect{};
+  Text new_file_text{};
+  Text width_text{};
+  Text height_text{};
 
   Texture px_tex{};
   frect px_rect1{};

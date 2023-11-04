@@ -10,6 +10,12 @@ if (WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
 endif (WIN32)
 
+# Copy files
+file(COPY assets DESTINATION .)
+file(COPY themes DESTINATION .)
+file(COPY locale DESTINATION .)
+file(COPY keys.cfg DESTINATION .)
+
 # Disable assert in release
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
   message("Being released")
@@ -21,9 +27,12 @@ endif()
 
 # Set the srcs
 set(draw_srcs
+  src/core/draw/types.cpp
   src/core/draw/anim.cpp
+  src/core/draw/anim_images.cpp
+  src/core/draw/anim_timeline.cpp
   src/core/draw/frame.cpp
-  src/core/draw/layer.cpp
+  src/core/draw/image.cpp
 )
 
 # NOTE: Can be changed depending on the gui lib
@@ -38,6 +47,7 @@ set(view_srcs src/view/sdl3/manager.cpp
   src/view/sdl3/box/draw.cpp
   src/view/sdl3/box/menu.cpp
   src/view/sdl3/box/status.cpp
+  src/view/sdl3/box/timeline.cpp
   src/view/sdl3/box/tool.cpp
 
   # Modal
@@ -46,6 +56,7 @@ set(view_srcs src/view/sdl3/manager.cpp
   # Widgets
   src/view/sdl3/widget/button.cpp
   src/view/sdl3/widget/menu_btn.cpp
+  src/view/sdl3/widget/text.cpp
   src/view/sdl3/widget/textbox.cpp
 )
 
@@ -66,10 +77,12 @@ set(history_srcs
 )
 
 set(config_srcs
+  src/core/cfg/locale.cpp
   src/core/cfg/shortcut.cpp
   src/core/cfg/theme.cpp)
 
 set(srcs src/entry.cpp
+  src/presenter/presenter_var.cpp
   src/presenter/presenter.cpp
   src/colors.cpp
   src/math.cpp
@@ -82,7 +95,6 @@ set(srcs src/entry.cpp
   ${config_srcs}
 )
 
-add_executable(${PROJECT_NAME} ${srcs})
 include_directories(src)
 
 # SDL3 stuff
@@ -96,7 +108,12 @@ add_subdirectory(${SDL3_IMG_DIR})
 
 # Unit testing
 add_subdirectory(external/catch2)
-add_executable(pixel_draw test/draw.cpp src/math.cpp ${draw_srcs})
+add_executable(pixel_draw test/draw.cpp
+  src/math.cpp
+  src/colors.cpp
+  ${draw_srcs}
+  ${logger_srcs}
+)
 target_link_libraries(pixel_draw PRIVATE Catch2::Catch2WithMain)
 
 add_executable(pixel_vector test/vector.cpp)
@@ -118,5 +135,6 @@ elseif (WIN32)
   )
 endif (UNIX)
 
+add_executable(${PROJECT_NAME} ${srcs})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${pxl_lib})
 

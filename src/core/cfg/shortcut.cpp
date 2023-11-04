@@ -102,8 +102,8 @@ i32 inline get_first_non_whitespace_index(
 
 // Create test cases for this, might create a class for this
 void Shortcut::load_config(const c8* path) noexcept {
-  std::ifstream ofs{path};
-  if (!ofs.is_open()) {
+  std::ifstream ifs{path};
+  if (!ifs.is_open()) {
     logger::error("Could not read file %s", path);
     return;
   }
@@ -113,7 +113,7 @@ void Shortcut::load_config(const c8* path) noexcept {
   std::size_t equal_index = 0;
   i32 left_cursor = 0;
   i32 right_cursor = 0;
-  while (std::getline(ofs, line, '\n')) {
+  while (std::getline(ifs, line, '\n')) {
     // left trim
     left_cursor = get_first_non_whitespace_index(line.c_str(), 0);
     if (line[left_cursor] == '#' ||
@@ -151,7 +151,7 @@ void Shortcut::load_config(const c8* path) noexcept {
     this->map.insert({equal_index, key_map});
   }
 
-  ofs.close();
+  ifs.close();
 }
 
 void Shortcut::save_config(const c8* path) const noexcept {

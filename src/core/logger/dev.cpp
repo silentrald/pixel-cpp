@@ -55,8 +55,7 @@ const char* const TEXT_YELLOW = "\x1B[33m";
 const char* const TEXT_BLUE = "\x1B[34m";
 const char* const TEXT_VIOLET = "\x1B[93m";
 const char* const TEXT_MAGENTA = "\e[95m";
-const char* const BG_WHITE = "\e[107m";
-const char* const BG_RED = "\e[41m";
+const char* const BG_RED = "\e[31m";
 const char* const TEXT_BOLD = "\033[1m";
 const char* const TEXT_NORMAL = "\033[0m";
 const char* const RESET = "\x1B[0m";
@@ -115,7 +114,7 @@ void fatal(const c8* msg, ...) noexcept {
     return;
   }
 
-  print_header(FATAL_LBL, TEXT_WHITE, BG_WHITE);
+  print_header(FATAL_LBL, TEXT_BLACK, BG_RED);
 
   va_list args;
   va_start(args, msg);

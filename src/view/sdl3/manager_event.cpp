@@ -62,6 +62,9 @@ void Manager::input() noexcept {
       break;
 
     case SDL_EVENT_TEXT_INPUT:
+      if (!SDL_TextInputActive()) {
+        break;
+      }
       this->data.sel_textbox->push_text(event.text.text);
       this->is_text_input_changed = true;
       break;
@@ -99,7 +102,7 @@ void Manager::input() noexcept {
   this->input_evt.mouse.wheel = {};
 
   if (this->is_text_input_changed && this->data.sel_textbox) {
-    this->data.sel_textbox->reposition_text_rect(this->font);
+    this->data.sel_textbox->reposition_text_rect(this->renderer);
   }
 }
 
@@ -115,14 +118,14 @@ void Manager::handle_input_event() noexcept {
     if (this->data.new_sel_textbox) {
       if (this->data.sel_textbox) {
         this->data.sel_textbox->focused = false;
-        this->data.sel_textbox->update_texture(this->renderer, this->font);
+        this->data.sel_textbox->update_texture(this->renderer);
       }
       this->data.sel_textbox = this->data.new_sel_textbox;
       this->data.new_sel_textbox = nullptr;
       SDL_StartTextInput();
     } else if (this->input_evt.mouse.left.state == input::MouseState::UP && this->data.sel_textbox) {
       this->data.sel_textbox->focused = false;
-      this->data.sel_textbox->update_texture(this->renderer, this->font);
+      this->data.sel_textbox->update_texture(this->renderer);
       this->data.sel_textbox = nullptr;
       SDL_StopTextInput();
     }
@@ -258,15 +261,15 @@ void Manager::handle_key_down_text_input(i32 keycode) noexcept {
 
   case SDLK_RETURN:
     this->data.sel_textbox->focused = false;
-    this->data.sel_textbox->update_texture(this->renderer, this->font);
+    this->data.sel_textbox->update_texture(this->renderer);
     this->data.sel_textbox = nullptr;
     this->is_text_input_changed = false;
     SDL_StopTextInput();
     break;
 
-  case SDLK_TAB:
+    /* case SDLK_TAB: */
     // TODO: Refocus to another input
-    break;
+    /* break; */
 
   default:
     break;
@@ -303,18 +306,27 @@ void Manager::handle_key_up_input(i32 keycode) noexcept { // NOLINT
 void Manager::handle_resize(ivec new_size) noexcept {
   this->window.size = new_size;
 
-  f32 text_height = (f32)this->font.get_text_size("A").y;
+  f32 text_height = this->renderer.get_text_height();
   f32 menu_box_height = text_height + 4.0F;
 
-  this->menu_box.rect = {0.0F, 0.0F, (f32)new_size.x, menu_box_height};
-  this->status_box.rect = {
-      0.0F, (f32)new_size.y - text_height, (f32)new_size.x, text_height};
-  this->tool_box.rect = {
-      0.0F, menu_box_height, 32.0F,
-      (f32)new_size.y - menu_box_height - text_height};
-  this->draw_box.rect = {
-      32.0F, menu_box_height, (f32)new_size.x - 32.0F,
-      (f32)new_size.y - menu_box_height - text_height};
+  this->menu_box.resize({0.0F, 0.0F, (f32)new_size.x, menu_box_height});
+  this->status_box.resize(
+      {0.0F, (f32)new_size.y - text_height, (f32)new_size.x, text_height}
+  );
+  this->tool_box.resize(
+      {0.0F, menu_box_height, 32.0F,
+       (f32)new_size.y - menu_box_height - text_height}
+  );
+
+  this->timeline_box.resize(
+      {32.0F, status_box.rect.y - 200.0F, (f32)new_size.x - 32.0F, 200.0F}
+  );
+
+  this->draw_box.resize(
+      {32.0F, menu_box_height, (f32)new_size.x - 32.0F,
+       (f32)new_size.y - menu_box_height - text_height -
+           this->timeline_box.rect.h}
+  );
 
   presenter::window_resized();
 }

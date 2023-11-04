@@ -15,6 +15,7 @@
 #include "SDL_oldnames.h"
 #include "SDL_rect.h"
 #include "SDL_timer.h"
+#include "core/cfg/locale.hpp"
 #include "core/logger/logger.hpp"
 #include "presenter/presenter.hpp"
 #include <cmath>
@@ -29,13 +30,12 @@ const u64 SPF = 1000 / FPS;
 
 void Manager::init() noexcept {
   this->window.init();
-
-  this->font.init("../assets/fonts/PixeloidSans.ttf", 18);
-  this->renderer.init(this->window.get_window(), this->font);
+  this->renderer.init(this->window.get_window());
 
   this->handle_resize(this->window.size);
 
   this->boxes.push_back(&this->draw_box);
+  this->boxes.push_back(&this->timeline_box);
   this->boxes.push_back(&this->tool_box);
   this->boxes.push_back(&this->status_box);
   this->boxes.push_back(&this->menu_box);
@@ -44,54 +44,59 @@ void Manager::init() noexcept {
   widget::Button btn{};
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(this->renderer.load_img("../assets/tools/pencil.png"));
+  btn.set_texture(this->renderer.load_img("assets/tools/pencil.png"));
   btn.set_left_click_listener(presenter::set_pencil_tool);
   this->tool_box.push_btn(std::move(btn));
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(this->renderer.load_img("../assets/tools/eraser.png"));
+  btn.set_texture(this->renderer.load_img("assets/tools/eraser.png"));
   btn.set_left_click_listener(presenter::set_eraser_tool);
   this->tool_box.push_btn(std::move(btn));
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(this->renderer.load_img("../assets/tools/line.png"));
+  btn.set_texture(this->renderer.load_img("assets/tools/line.png"));
   btn.set_left_click_listener(presenter::set_line_tool);
   this->tool_box.push_btn(std::move(btn));
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(this->renderer.load_img("../assets/tools/fill.png"));
+  btn.set_texture(this->renderer.load_img("assets/tools/fill.png"));
   btn.set_left_click_listener(presenter::set_fill_tool);
   this->tool_box.push_btn(std::move(btn));
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(this->renderer.load_img("../assets/tools/fill.png"));
+  btn.set_texture(this->renderer.load_img("assets/tools/fill.png"));
   btn.set_left_click_listener(presenter::set_select_tool);
   this->tool_box.push_btn(std::move(btn));
 
   // Menu box
-  ivec size{};
+  fvec size{};
   widget::MenuBtn menu_btn{};
 
-  menu_btn.set_texture(this->renderer.create_text(this->font, "File"));
-  size = this->font.get_text_size("File");
+  const c8* text = cfg::locale::get_text(cfg::locale::TextId::FILE_MENU_ITEM);
+  menu_btn.set_texture(this->renderer.create_text(text));
+  size = this->renderer.get_text_size(text);
   menu_btn.tex_rect.size = {(f32)size.x, (f32)size.y};
   menu_btn.rect.size = {(f32)size.x + 16.0F, (f32)size.y + 4.0F};
   menu_btn.set_left_click_listener(presenter::new_file_clicked);
   this->menu_box.push_menu_btn(std::move(menu_btn));
 
-  menu_btn.set_texture(this->renderer.create_text(this->font, "Edit"));
-  size = this->font.get_text_size("Edit");
+  text = cfg::locale::get_text(cfg::locale::TextId::EDIT_MENU_ITEM);
+  menu_btn.set_texture(this->renderer.create_text(text));
+  size = this->renderer.get_text_size(text);
   menu_btn.tex_rect.size = {(f32)size.x, (f32)size.y};
   menu_btn.rect.size = {(f32)size.x + 16.0F, (f32)size.y + 4.0F};
   menu_btn.set_left_click_listener(presenter::debug_callback); // TODO:
   this->menu_box.push_menu_btn(std::move(menu_btn));
 
-  menu_btn.set_texture(this->renderer.create_text(this->font, "View"));
-  size = this->font.get_text_size("View");
+  text = cfg::locale::get_text(cfg::locale::TextId::VIEW_MENU_ITEM);
+  menu_btn.set_texture(this->renderer.create_text(text));
+  size = this->renderer.get_text_size(text);
   menu_btn.tex_rect.size = {(f32)size.x, (f32)size.y};
   menu_btn.rect.size = {(f32)size.x + 16.0F, (f32)size.y + 4.0F};
   menu_btn.set_left_click_listener(presenter::debug_callback); // TODO:
   this->menu_box.push_menu_btn(std::move(menu_btn));
+
+  this->timeline_box.init(this->renderer);
 }
 
 Manager::~Manager() noexcept {
@@ -155,6 +160,25 @@ Texture& Manager::get_select2_texture() noexcept {
   return this->draw_box.get_select2_texture();
 }
 
+void Manager::insert_layer(
+    i32 index, const draw::LayerInfo& layer_info
+) noexcept {
+  this->timeline_box.insert_layer_info(index, layer_info, this->renderer);
+}
+
+void Manager::set_layer_visible(i32 index, bool visible) noexcept {
+  this->timeline_box.set_layer_visible(index, visible);
+}
+
+void Manager::clear_layers() noexcept {
+  this->timeline_box.clear_layers();
+}
+
+void Manager::set_selected_on_timeline(u32 frame_id, i32 layer_index) noexcept {
+  this->timeline_box.selected_frame = frame_id;
+  this->timeline_box.selected_layer = layer_index;
+}
+
 void Manager::run() noexcept {
   u64 start = SDL_GetTicks();
   u64 duration = 0U;
@@ -176,6 +200,8 @@ void Manager::run() noexcept {
 void Manager::reset_data() noexcept {
   this->data.sel_textbox = nullptr;
   this->data.new_sel_textbox = nullptr;
+
+  SDL_StopTextInput();
 }
 
 void Manager::update() noexcept {

@@ -27,7 +27,7 @@ void Caretaker::push_snapshot(Snapshot&& snapshot) noexcept {
 
   // Move the cursor and move the new snapshot
   ++this->cursor;
-  if (this->cursor == this->snapshots.size()) {
+  if (this->cursor == this->snapshots.get_size()) {
     this->cursor = 0;
   }
   this->snapshots[this->cursor] = std::move(snapshot);
@@ -36,8 +36,8 @@ void Caretaker::push_snapshot(Snapshot&& snapshot) noexcept {
 }
 
 void Caretaker::clear() noexcept {
-  for (auto& snapshot : this->snapshots) {
-    snapshot.reset();
+  for (i32 i = 0; i < this->snapshots.get_size(); ++i) {
+    this->snapshots[i].reset();
   }
 }
 
@@ -57,9 +57,9 @@ void Caretaker::remove_future_snapshots() noexcept {
 
   logger::debug(
       "Clearing 0 -> %d & %d -> %d", this->end_cursor, this->cursor + 2,
-      this->snapshots.size()
+      this->snapshots.get_size()
   );
-  for (i32 i = this->cursor + 2; i < this->snapshots.size(); ++i) {
+  for (i32 i = this->cursor + 2; i < this->snapshots.get_size(); ++i) {
     this->snapshots[i].reset();
   }
 
@@ -85,7 +85,7 @@ bool Caretaker::can_undo() const noexcept {
 const Snapshot& Caretaker::undo() noexcept {
   assert(this->can_undo());
   if (this->cursor == 0) {
-    this->cursor = this->snapshots.size() - 1;
+    this->cursor = this->snapshots.get_size() - 1;
   } else {
     --this->cursor;
   }
@@ -100,7 +100,7 @@ bool Caretaker::can_redo() const noexcept {
 const Snapshot& Caretaker::redo() noexcept {
   assert(this->can_redo());
   ++this->cursor;
-  if (this->cursor == this->snapshots.size()) {
+  if (this->cursor == this->snapshots.get_size()) {
     this->cursor = 0;
   }
   logger::debug("Cursor at %d", this->cursor);

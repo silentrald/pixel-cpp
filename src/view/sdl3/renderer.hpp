@@ -24,7 +24,7 @@ public:
   Renderer& operator=(Renderer&& rhs) noexcept;
   ~Renderer() noexcept;
 
-  void init(SDL_Window* window, const Font& font) noexcept;
+  void init(SDL_Window* window) noexcept;
 
   // Clears the screen
   void clear() noexcept;
@@ -39,8 +39,11 @@ public:
 
   // NOTE: Only supports rgba8 for now
   [[nodiscard]] Texture create_texture(ivec size) const noexcept;
-  [[nodiscard]] Texture
-  create_text(const Font& font, const c8* str) const noexcept;
+
+  [[nodiscard]] fvec get_text_size(const c8* str) const noexcept;
+  [[nodiscard]] f32 get_text_height() const noexcept;
+  [[nodiscard]] Texture create_text(const c8* str) const noexcept;
+
   [[nodiscard]] Texture load_img(const c8* path) const noexcept;
 
   void render_texture(const Texture& texture, const frect& rect) const noexcept;
@@ -67,6 +70,7 @@ public:
 
 private:
   SDL_Renderer* renderer = nullptr;
+  Font font{};
   CachedTextures textures{};
 };
 

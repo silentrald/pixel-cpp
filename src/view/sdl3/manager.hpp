@@ -13,6 +13,7 @@
 #include "./box/draw.hpp"
 #include "./box/menu.hpp"
 #include "./box/status.hpp"
+#include "./box/timeline.hpp"
 #include "./box/tool.hpp"
 #include "./font.hpp"
 #include "./modal/file.hpp"
@@ -25,6 +26,7 @@
 #include "SDL_events.h"
 #include "SDL_render.h"
 #include "SDL_video.h"
+#include "core/draw/anim.hpp"
 #include "core/ds/vector.hpp"
 #include "types.hpp"
 #include "view/event.hpp"
@@ -65,6 +67,12 @@ public:
   [[nodiscard]] void* get_modal_data(modal::Id id) const noexcept;
 
   // === Modifiers === //
+
+  void insert_layer(i32 index, const draw::LayerInfo& layer_info) noexcept;
+  void set_layer_visible(i32 index, bool visible) noexcept;
+  void clear_layers() noexcept;
+  void set_selected_on_timeline(u32 frame_id, i32 layer_index) noexcept;
+
   void push_modal(modal::Id id) noexcept;
   modal::Id pop_modal() noexcept;
   void clear_modals() noexcept;
@@ -75,10 +83,9 @@ private:
   Window window{};
   Renderer renderer{};
 
-  Font font{};
-
   // NOTE: There can be multiple drawbox
   widget::DrawBox draw_box{};
+  widget::TimelineBox timeline_box{};
   widget::ToolBox tool_box{};
   widget::StatusBox status_box{};
   widget::MenuBox menu_box{};

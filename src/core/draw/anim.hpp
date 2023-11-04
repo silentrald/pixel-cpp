@@ -2,106 +2,177 @@
  * Author/s:
  *  - silentrald
  * Version: 1.0
- * Created: 2023-10-05
+ * Created: 2023-10-29
  *==========================*/
 
 #ifndef PXL_DRAW_ANIM_HPP
 #define PXL_DRAW_ANIM_HPP
 
 #include "./frame.hpp"
+#include "./image.hpp"
 #include "./types.hpp"
+#include "core/ds/vector.hpp"
 #include "types.hpp"
-#include <cassert>
 
 namespace draw {
 
-// NOTE: have a file cache in the future
+// SOA Images Db
+class ImageDb {
+public:
+  ImageDb() noexcept = default;
+  ImageDb(const ImageDb&) noexcept = delete;
+  ImageDb& operator=(const ImageDb&) noexcept = delete;
+
+  void init(i32 bytes, i32 capacity) noexcept;
+  ImageDb(ImageDb&& rhs) noexcept;
+  ImageDb& operator=(ImageDb&& rhs) noexcept;
+  void copy(const ImageDb& other) noexcept;
+  void minicopy(const ImageDb& other) noexcept;
+  ~ImageDb() noexcept;
+
+  [[nodiscard]] data_ptr get_ptr() const noexcept;
+  [[nodiscard]] data_ptr get_image(u32 id) const noexcept;
+
+  void create_layer(u32 new_id) noexcept;
+
+private:
+  // TODO: Change datatypes (64 bit) to support higher sizes
+  data_ptr ptr = nullptr;
+  i32 insert = 0;
+  i32 last = 0;
+  i32 capacity = 0;
+  i32 size = 0;
+
+  i32 bytes = 0;
+  i32 alloc_size = 0;
+
+  // === Copy Helpers === //
+  void copy_empty(const ImageDb& other) noexcept;
+  void copy_normal(const ImageDb& other) noexcept;
+  void copy_overfit(const ImageDb& other) noexcept;
+  void copy_grow(const ImageDb& other) noexcept;
+
+  // === Memory === //
+  void allocate(i32 timeline_alloc_size) noexcept;
+  void reallocate(i32 new_timeline_alloc_size) noexcept;
+};
+
+struct LayerInfo {
+  c8 name[51]{}; // NOLINT
+  u8 opacity = 0U;
+};
+
+// SOA Timeline / AOS Images Info
+class TimelineInfo {
+public:
+  TimelineInfo() noexcept = default;
+  TimelineInfo(const TimelineInfo&) noexcept = delete;
+  TimelineInfo& operator=(const TimelineInfo&) noexcept = delete;
+
+  void init() noexcept;
+  TimelineInfo(TimelineInfo&& rhs) noexcept;
+  TimelineInfo& operator=(TimelineInfo&& rhs) noexcept;
+  void copy(const TimelineInfo& other) noexcept;
+  /* void minicopy(const TimelineInfo& other) noexcept; */
+  ~TimelineInfo() noexcept;
+
+  [[nodiscard]] u32 get_image_id(i32 frame_id, i32 layer_index) const noexcept;
+
+  [[nodiscard]] i32 get_layer_count() const noexcept;
+  [[nodiscard]] i32 get_layer_capacity() const noexcept;
+  [[nodiscard]] const LayerInfo& get_layer_info(i32 index) const noexcept;
+  [[nodiscard]] const c8* get_layer_name(i32 index) const noexcept;
+  [[nodiscard]] bool is_layer_visible(i32 index) const noexcept;
+
+  [[nodiscard]] Frame get_frame(u32 id) const noexcept;
+
+  [[nodiscard]] i32 get_timeline_alloc_size() const noexcept;
+
+  void insert_layer(i32 index, u32 layer_id) noexcept;
+  bool toggle_layer_visibility(i32 index) noexcept;
+
+private:
+  u32* timeline = nullptr;
+  LayerInfo* layer_info = nullptr;
+  i32 layer_count = 0;
+  i32 frame_count = 0;
+  i32 layer_capacity = 0;
+  i32 frame_capacity = 0;
+  i32 timeline_alloc_size = 0;
+  i32 layer_info_alloc_size = 0;
+
+  // === Copy Helpers === //
+  void copy_empty(const TimelineInfo& other) noexcept;
+  void copy_normal(const TimelineInfo& other) noexcept;
+  void copy_overfit(const TimelineInfo& other) noexcept;
+  void copy_grow(const TimelineInfo& other) noexcept;
+
+  // === Memory === //
+  void allocate_timeline(i32 new_size) noexcept;
+  void reallocate_timeline_on_layer(i32 new_layer_capacity) noexcept;
+
+  void allocate_layer_info(i32 new_size) noexcept;
+  void reallocate_layer_info(i32 new_size) noexcept;
+};
+
 /**
- * Contains the animation data
+ * Animation data containing the image information for frames/layers
  **/
 class Anim {
 public:
   Anim() noexcept = default;
   Anim(const Anim&) noexcept = delete;
   Anim& operator=(const Anim&) noexcept = delete;
-  Anim(Anim&& rhs) noexcept;
-  Anim& operator=(Anim&& rhs) noexcept;
-
-  ~Anim() noexcept;
+  Anim(Anim&& rhs) noexcept = default;
+  Anim& operator=(Anim&& rhs) noexcept = default;
+  ~Anim() noexcept = default;
 
   void init(ivec size, ColorType type) noexcept;
-  void copy(const Anim& other) noexcept;
+  /* void load(const c8* str) noexcept; // For file loading */
 
-  [[nodiscard]] data_ptr get_ptr() noexcept;
-  [[nodiscard]] ColorType get_type() const noexcept;
-  [[nodiscard]] i32 get_frame_count() const noexcept;
-  [[nodiscard]] i32 get_layer_count() const noexcept;
-  [[nodiscard]] i32 get_frame_capacity() const noexcept;
-  [[nodiscard]] i32 get_layer_capacity() const noexcept;
+  void copy(const Anim& other) noexcept;
+  void minicopy(const Anim& other) noexcept;
+  void clear() noexcept;
+
+  [[nodiscard]] bool has_point(ivec pos) const noexcept;
+
   [[nodiscard]] ivec get_size() const noexcept;
   [[nodiscard]] i32 get_width() const noexcept;
   [[nodiscard]] i32 get_height() const noexcept;
 
+  [[nodiscard]] i32 get_layer_count() const noexcept;
+
+  [[nodiscard]] Image get_image(u32 id) const noexcept;
+  [[nodiscard]] Image get_image(u32 frame_id, i32 layer_index) const noexcept;
+  [[nodiscard]] u32 get_image_id(u32 frame_id, i32 layer_index) const noexcept;
+
+  [[nodiscard]] const LayerInfo& get_layer_info(i32 index) const noexcept;
+  [[nodiscard]] const c8* get_layer_name(i32 index) const noexcept;
+  [[nodiscard]] bool is_layer_visible(i32 index) const noexcept;
+  void get_flatten(
+      u32 frame_id, i32 start_layer, i32 end_layer, ds::vector<rgba8>& pixels
+  ) const noexcept;
+
   /**
-   * Check if the pixel position is within the dimension
+   * @param index - where to insert the new layer
+   * @returns id of the newly created image on the layer
    **/
-  [[nodiscard]] bool has_point(ivec point) const noexcept;
+  u32 insert_layer(i32 index) noexcept;
+  bool toggle_layer_visibility(i32 index) noexcept;
 
-  void clear() noexcept;
-
-  void insert_frame(i32 index) noexcept;
-  void insert_layer(i32 index) noexcept;
-
-  // Inserts (count) number of frames at the index
-  void insert_frames(i32 index, i32 count) noexcept;
-  // Inserts (count) number of layers at the index
-  void insert_layers(i32 index, i32 count) noexcept;
-
-  [[nodiscard]] Frame get_frame(i32 index) noexcept {
-    assert(index >= 0 && index < this->frame_count);
-
-    return Frame{// NOLINTNEXTLINE
-                 this->ptr + index * this->next_frame, this->next_layer,
-                 this->size, this->type};
-  }
-
-  [[nodiscard]] Layer get_layer(i32 frame, i32 layer) noexcept {
-    assert(frame >= 0 && frame < this->frame_count);
-    assert(layer >= 0 && layer < this->layer_count);
-
-    return Layer{
-        // NOLINTNEXTLINE
-        this->ptr + frame * this->next_frame + layer * this->next_layer,
-        this->size, this->type};
-  }
-
-  // === Debugging === //
-  void print() const noexcept;
+  [[nodiscard]] explicit operator bool() const noexcept;
 
 private:
-  // NOTE: check if there is a need for multiple data pointers
-  data_ptr ptr = nullptr;
-  i32 max_size = 0;
-  // how many frames can fit in the total allocated memory
-  i32 frame_capacity = 0;
-  i32 frame_count = 0;
-  // what to add to get the next frame data
-  i32 next_frame = 0;
-  // how many layers can fit in the total allocated memory
-  i32 layer_capacity = 0;
-  i32 layer_count = 0;
-  // what to add to get the next layer data
-  i32 next_layer = 0;
-  ColorType type = ColorType::NONE;
+  ImageDb images{};
+  TimelineInfo timeline{};
+
+  u32 images_id = 0U;
+
+  // Dimension size of the animation
   ivec size{};
 
-  [[nodiscard]] i32 get_datatype_size() const noexcept;
-
-  // === Resize Logic === //
-  // TODO: May error, bad alloc
-  void resize_frame(i32 new_frame_capacity) noexcept;
-  // TODO: May error, bad alloc
-  void resize_layer(i32 new_layer_capacity) noexcept;
+  // What color depth is being used
+  ColorType type = ColorType::NONE;
 };
 
 } // namespace draw
