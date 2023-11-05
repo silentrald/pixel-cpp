@@ -25,6 +25,7 @@ public:
   ~Textbox() noexcept override = default;
 
   [[nodiscard]] const std::string& get_text() const noexcept;
+  void set_text(const c8* str, const Renderer& renderer) noexcept;
   void push_text(const c8* str) noexcept;
   c8 pop_char() noexcept;
   void update_texture(const Renderer& renderer) noexcept;

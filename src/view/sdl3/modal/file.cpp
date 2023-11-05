@@ -16,7 +16,7 @@
 namespace view::sdl3::widget {
 
 void FileModal::init(const Renderer& renderer) noexcept {
-  this->rect = {20.0F, 20.0F, 320.0F, 120.0F};
+  this->rect = {20.0F, 20.0F, 320.0F, 140.0F};
   fvec off = {24.0F, 24.0F};
 
   this->new_file_text.rect.pos = off;
@@ -94,11 +94,16 @@ void FileModal::locale_updated(const Renderer& renderer) noexcept {
   // Other texts
   // PX
   text = cfg::locale::get_text(cfg::locale::TextId::PX);
+  this->px_tex = renderer.create_text(text);
   size = renderer.get_text_size(text);
 
   off.x = this->rect.x + this->rect.w - size.x - 4.0F;
   this->px_rect1 = {off.x, this->width_text.rect.y, size.x, size.y};
   this->px_rect2 = {off.x, this->height_text.rect.y, size.x, size.y};
+
+  // Textboxes
+  this->width_textbox.locale_updated(renderer);
+  this->height_textbox.locale_updated(renderer);
 
   // Buttons
   text = cfg::locale::get_text(cfg::locale::TextId::NEW);

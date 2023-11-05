@@ -10,6 +10,7 @@
 
 #include "../texture.hpp"
 #include "../widget/button.hpp"
+#include "../widget/textbox.hpp"
 #include "./box.hpp"
 #include "core/draw/anim.hpp"
 #include "core/ds/vector.hpp"
@@ -47,8 +48,7 @@ public:
 
 private:
   struct Layer {
-    Texture tex{};
-    frect rect{};
+    Textbox textbox{};
     bool visible = true;
   };
 
