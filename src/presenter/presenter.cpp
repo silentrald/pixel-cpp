@@ -10,6 +10,7 @@
 #include "core/cfg/shortcut.hpp"
 #include "core/draw/types.hpp"
 #include "core/ds/vector.hpp"
+#include "core/file/png.hpp"
 #include "core/history/caretaker.hpp"
 #include "core/history/snapshot.hpp"
 #include "core/logger/logger.hpp"
@@ -447,6 +448,16 @@ void presenter::push_back_layer() noexcept {
   view_.insert_layer(
       model_.layer_index, model_.anim.get_layer_info(model_.layer_index)
   );
+}
+
+void presenter::export_to_png() noexcept {
+  if (!model_.anim) {
+    return;
+  }
+
+  logger::info("Export to \"%s\"", "sample.png");
+  png_.export_frame(model_.anim, model_.frame_id, "sample.png");
+  logger::info("Export successfully");
 }
 
 void presenter::debug_callback() noexcept {

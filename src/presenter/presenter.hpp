@@ -60,6 +60,10 @@ void toggle_visibility(i32 layer_index) noexcept;
 void insert_layer(i32 layer_index) noexcept;
 void push_back_layer() noexcept;
 
+// === Exports / Writers === //
+
+void export_to_png() noexcept;
+
 // NOTE: For debugging purposes
 void debug_callback() noexcept;
 
@@ -90,6 +94,12 @@ class Caretaker;
 
 } // namespace history
 
+namespace file {
+
+class Png;
+
+} // namespace file
+
 extern Model model_;
 extern View view_;
 
@@ -105,6 +115,8 @@ extern tool::Zoom zoom_;
 extern cfg::Shortcut shortcut_;
 
 extern history::Caretaker caretaker_;
+
+extern file::Png png_;
 
 #endif
 

@@ -79,7 +79,12 @@ set(history_srcs
 set(config_srcs
   src/core/cfg/locale.cpp
   src/core/cfg/shortcut.cpp
-  src/core/cfg/theme.cpp)
+  src/core/cfg/theme.cpp
+)
+
+set(file_srcs
+  src/core/file/png.cpp
+)
 
 set(srcs src/entry.cpp
   src/presenter/presenter_var.cpp
@@ -93,6 +98,7 @@ set(srcs src/entry.cpp
   ${tool_srcs}
   ${history_srcs}
   ${config_srcs}
+  ${file_srcs}
 )
 
 include_directories(src)
@@ -105,6 +111,15 @@ set(SDL_TEST OFF)
 add_subdirectory(${SDL3_DIR})
 add_subdirectory(${SDL3_TTF_DIR})
 add_subdirectory(${SDL3_IMG_DIR})
+
+# Png Lib
+set(PNG_SHARED ON CACHE BOOL "" FORCE)
+set(PNG_STATIC OFF CACHE BOOL "" FORCE)
+set(PNG_EXECUTABLES OFF CACHE BOOL "" FORCE)
+set(PNG_TESTS OFF CACHE BOOL "" FORCE)
+set(SKIP_INSTALL_ALL OFF CACHE BOOL "" FORCE)
+set(PNG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/libpng)
+add_subdirectory(${PNG_DIR})
 
 # Unit testing
 add_subdirectory(external/catch2)
@@ -124,14 +139,14 @@ if (UNIX)
     SDL3::SDL3
     SDL3_ttf-shared
     SDL3_image-shared
-    # png
+    png
   )
 elseif (WIN32)
   set(pxl_lib
     SDL3::SDL3
     SDL3_ttf-shared
     SDL3_image-shared
-    # png z
+    png z
   )
 endif (UNIX)
 
