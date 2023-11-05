@@ -77,7 +77,7 @@ void Manager::init() noexcept {
   this->menu_box.push_menu_btn(std::move(menu_btn));
 
   menu_btn.set_text(cfg::locale::TextId::EDIT_MENU_ITEM, this->renderer);
-  menu_btn.set_left_click_listener(presenter::debug_callback); // TODO:
+  menu_btn.set_left_click_listener(presenter::export_to_png); // TODO:
   this->menu_box.push_menu_btn(std::move(menu_btn));
 
   menu_btn.set_text(cfg::locale::TextId::VIEW_MENU_ITEM, this->renderer);

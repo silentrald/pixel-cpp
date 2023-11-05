@@ -7,6 +7,7 @@
 
 #include "./presenter.hpp"
 #include "core/cfg/shortcut.hpp"
+#include "core/file/png.hpp"
 #include "core/history/caretaker.hpp"
 #include "core/tool/enum.hpp"
 #include "core/tool/eraser.hpp"
@@ -17,6 +18,9 @@
 #include "core/tool/select.hpp"
 #include "core/tool/zoom.hpp"
 #include "model/model.hpp"
+
+Model model_{};
+View view_{};
 
 tool::Pencil pencil_{};
 tool::Eraser eraser_{};
@@ -31,6 +35,5 @@ cfg::Shortcut shortcut_{};
 
 history::Caretaker caretaker_{};
 
-Model model_{};
-View view_{};
+file::Png png_{};
 
