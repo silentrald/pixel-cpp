@@ -29,8 +29,8 @@ endif()
 set(draw_srcs
   src/core/draw/types.cpp
   src/core/draw/anim.cpp
-  src/core/draw/anim_images.cpp
-  src/core/draw/anim_timeline.cpp
+  src/core/draw/image_db.cpp
+  src/core/draw/timeline_info.cpp
   src/core/draw/frame.cpp
   src/core/draw/image.cpp
 )
@@ -83,6 +83,7 @@ set(config_srcs
 )
 
 set(file_srcs
+  src/core/file/pxl.cpp
   src/core/file/png.cpp
 )
 

@@ -16,48 +16,21 @@
 
 namespace cfg {
 
-// NOLINTNEXTLINE
-struct StrHash {
-  // Simple hash, get the first 4 characters
-  u32 operator()(const c8* str) const noexcept {
-    u32 hash = 0U;
-    for (i32 i = 0; i < 4; ++i) {
-      if (str[i] == '\0')
-        break;
-      hash = (hash << 8) | (u32)str[i];
+inline bool compare_string(const c8* str1, const c8* str2) noexcept {
+  return std::strncmp(str1, str2, std::strlen(str2)) == 0;
+}
+
+// Hash
+ShortcutKey parse_key_map(const c8* key) noexcept {
+  u32 out = 0U;
+  for (i32 i = 0; i < 4; ++i) {
+    if (key[i] == '\0') {
+      break;
     }
-    return hash;
+
+    out |= key[i] << (i * 4);
   }
-};
-
-struct StrCmp {
-  bool operator()(const c8* lhs, const c8* rhs) const noexcept {
-    return std::strcmp(lhs, rhs) == 0;
-  }
-};
-
-const std::unordered_map<const c8*, ShortcutKey, StrHash, StrCmp>
-    // NOLINTNEXTLINE
-    str_to_key_map{
-        {"pencil", ShortcutKey::TOOL_PENCIL},
-        //
-        {"eraser", ShortcutKey::TOOL_ERASER},
-        //
-        {"line", ShortcutKey::TOOL_LINE},
-        //
-        {"fill", ShortcutKey::TOOL_FILL},
-        //
-        {"select", ShortcutKey::TOOL_SELECT},
-        //
-        {"undo", ShortcutKey::ACTION_UNDO},
-        //
-        {"redo", ShortcutKey::ACTION_REDO},
-        //
-        {"unselect", ShortcutKey::ACTION_UNSELECT}};
-
-ShortcutKey inline convert_str_to_key_map(const c8* str) noexcept {
-  auto it = str_to_key_map.find(str);
-  return it == str_to_key_map.end() ? ShortcutKey::NONE : it->second;
+  return (ShortcutKey)out;
 }
 
 u32 convert_str_to_key(const c8* str) noexcept {
@@ -133,7 +106,7 @@ void Shortcut::load_config(const c8* path) noexcept {
     while (right_cursor > 0 && is_white_space(right_cursor))
       --right_cursor;
     line[right_cursor] = '\0';
-    key_map = convert_str_to_key_map(line.c_str() + left_cursor);
+    key_map = parse_key_map(line.c_str() + left_cursor);
     if (key_map == ShortcutKey::NONE) {
       continue;
     }

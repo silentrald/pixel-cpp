@@ -8,6 +8,7 @@
 #include "./presenter.hpp"
 #include "core/cfg/shortcut.hpp"
 #include "core/file/png.hpp"
+#include "core/file/pxl.hpp"
 #include "core/history/caretaker.hpp"
 #include "core/tool/enum.hpp"
 #include "core/tool/eraser.hpp"
@@ -35,5 +36,6 @@ cfg::Shortcut shortcut_{};
 
 history::Caretaker caretaker_{};
 
+file::Pxl pxl_{};
 file::Png png_{};
 

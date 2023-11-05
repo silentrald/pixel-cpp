@@ -11,6 +11,7 @@
 #include "core/draw/types.hpp"
 #include "core/ds/vector.hpp"
 #include "core/file/png.hpp"
+#include "core/file/pxl.hpp"
 #include "core/history/caretaker.hpp"
 #include "core/history/snapshot.hpp"
 #include "core/logger/logger.hpp"
@@ -153,6 +154,10 @@ void presenter::key_down_event(
 
   case cfg::ShortcutKey::TOOL_SELECT:
     presenter::set_select_tool();
+    break;
+
+  case cfg::ShortcutKey::ACTION_SAVE:
+    presenter::save_file();
     break;
 
   case cfg::ShortcutKey::ACTION_UNDO:
@@ -448,6 +453,18 @@ void presenter::push_back_layer() noexcept {
   view_.insert_layer(
       model_.layer_index, model_.anim.get_layer_info(model_.layer_index)
   );
+}
+
+void presenter::save_file() noexcept {
+  if (!model_.anim) {
+    return;
+  }
+
+  // TODO: If no file name set, ask the user for a file to save to
+
+  logger::info("Saving");
+  pxl_.save(model_.anim, "save.pxl");
+  logger::info("Save successful");
 }
 
 void presenter::export_to_png() noexcept {
