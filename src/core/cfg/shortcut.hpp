@@ -14,18 +14,31 @@
 
 namespace cfg {
 
+constexpr u32 hash_shortcut_string(const c8* str) noexcept {
+  u32 out = 0U;
+  for (i32 i = 0; i < 4; ++i) {
+    if (str[i] == '\0') {
+      break;
+    }
+
+    out |= str[i] << (i * 4);
+  }
+  return out;
+}
+
 enum class ShortcutKey {
-  NONE,
+  NONE = 0U,
 
-  TOOL_ERASER,
-  TOOL_FILL,
-  TOOL_LINE,
-  TOOL_PENCIL,
-  TOOL_SELECT,
+  TOOL_PENCIL = hash_shortcut_string("pencil"),
+  TOOL_ERASER = hash_shortcut_string("eraser"),
+  TOOL_FILL = hash_shortcut_string("fill"),
+  TOOL_LINE = hash_shortcut_string("line"),
+  TOOL_SELECT = hash_shortcut_string("select"),
 
-  ACTION_UNDO,
-  ACTION_REDO,
-  ACTION_UNSELECT,
+  ACTION_SAVE = hash_shortcut_string("save"),
+  ACTION_UNDO = hash_shortcut_string("undo"),
+  ACTION_REDO = hash_shortcut_string("redo"),
+  ACTION_UNSELECT = hash_shortcut_string("unselect"),
 };
 
 class Shortcut {

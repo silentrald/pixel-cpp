@@ -62,6 +62,7 @@ void push_back_layer() noexcept;
 
 // === Exports / Writers === //
 
+void save_file() noexcept;
 void export_to_png() noexcept;
 
 // NOTE: For debugging purposes
@@ -96,6 +97,7 @@ class Caretaker;
 
 namespace file {
 
+class Pxl;
 class Png;
 
 } // namespace file
@@ -116,6 +118,7 @@ extern cfg::Shortcut shortcut_;
 
 extern history::Caretaker caretaker_;
 
+extern file::Pxl pxl_;
 extern file::Png png_;
 
 #endif

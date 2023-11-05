@@ -5,7 +5,7 @@
  * Created: 2023-10-31
  *==========================*/
 
-#include "./anim.hpp"
+#include "./timeline_info.hpp"
 #include "core/logger/logger.hpp"
 #include "math.hpp"
 #include <cassert>
@@ -212,6 +212,10 @@ i32 TimelineInfo::get_layer_count() const noexcept {
   return this->layer_count;
 }
 
+i32 TimelineInfo::get_frame_count() const noexcept {
+  return this->frame_count;
+}
+
 i32 TimelineInfo::get_layer_capacity() const noexcept {
   return this->layer_capacity;
 }
@@ -252,6 +256,12 @@ Frame TimelineInfo::get_frame(u32 id) const noexcept {
   return Frame{// NOLINTNEXTLINE
                this->timeline + this->frame_capacity + this->layer_capacity * i,
                this->layer_count, this->timeline[i]};
+}
+
+FrameIter TimelineInfo::get_frame_iter() const noexcept {
+  return {
+      this->timeline, this->frame_count, this->frame_capacity,
+      this->layer_capacity};
 }
 
 // === Modifiers === //
@@ -355,6 +365,43 @@ void TimelineInfo::reallocate_layer_info(i32 new_size) noexcept {
     std::abort();
   }
   this->layer_info = new_ptr;
+}
+
+// === Iterators === //
+
+FrameIter::FrameIter(
+    u32* ptr, i32 frame_count, i32 frame_capacity, i32 layer_capacity
+) noexcept
+    : id_ptr(ptr),
+      frame_ptr(ptr + frame_capacity),
+      size(frame_count),
+      capacity(layer_capacity) {}
+
+FrameIter& FrameIter::operator++() noexcept {
+  assert(this->id_ptr != nullptr);
+
+  --this->size;
+  if (this->size == 0) {
+    id_ptr = nullptr;
+    return *this;
+  }
+
+  ++id_ptr;
+  frame_ptr += this->capacity;
+
+  return *this;
+}
+
+u32 FrameIter::get_id() const noexcept {
+  return *this->id_ptr;
+}
+
+u32 FrameIter::get_image_id(i32 layer_index) const noexcept {
+  return this->frame_ptr[layer_index];
+}
+
+FrameIter::operator bool() const noexcept {
+  return this->id_ptr != nullptr;
 }
 
 } // namespace draw

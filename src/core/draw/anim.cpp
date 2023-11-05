@@ -66,6 +66,14 @@ void Anim::clear() noexcept {
 
 // === Getters === //
 
+const ImageDb& Anim::get_image_db() const noexcept {
+  return this->images;
+}
+
+const TimelineInfo& Anim::get_timeline_info() const noexcept {
+  return this->timeline;
+}
+
 bool Anim::has_point(ivec pos) const noexcept {
   return pos.x >= 0 && pos.y >= 0 && pos.x < this->size.x &&
          pos.y < this->size.y;
@@ -85,6 +93,10 @@ i32 Anim::get_height() const noexcept {
 
 i32 Anim::get_layer_count() const noexcept {
   return this->timeline.get_layer_count();
+}
+
+i32 Anim::get_frame_count() const noexcept {
+  return this->timeline.get_frame_count();
 }
 
 Image Anim::get_image(u32 id) const noexcept {

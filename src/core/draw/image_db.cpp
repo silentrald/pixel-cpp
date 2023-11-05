@@ -5,8 +5,9 @@
  * Created: 2023-10-29
  *==========================*/
 
-#include "./anim.hpp"
+#include "core/draw/image_db.hpp"
 #include "core/logger/logger.hpp"
+#include <cassert>
 #include <cstdlib>
 #include <cstring>
 
@@ -212,6 +213,22 @@ data_ptr ImageDb::get_image(u32 id) const noexcept {
   return nullptr;
 }
 
+i32 ImageDb::get_size() const noexcept {
+  return this->size;
+}
+
+i32 ImageDb::get_capacity() const noexcept {
+  return this->capacity;
+}
+
+i32 ImageDb::get_bytes_size() const noexcept {
+  return this->bytes;
+}
+
+ImageDbIter ImageDb::get_iter() const noexcept {
+  return {this->ptr, this->size, this->capacity, this->bytes};
+}
+
 // === Modifiers === //
 
 void ImageDb::create_layer(u32 new_id) noexcept {
@@ -254,6 +271,52 @@ void ImageDb::allocate(i32 alloc_size) noexcept {
       this->ptr + LAYER_HEADER_SIZE * this->capacity, 0,
       this->alloc_size - LAYER_HEADER_SIZE * this->capacity
   );
+}
+
+// === Iterators === //
+
+ImageDbIter::ImageDbIter(
+    data_ptr ptr, i32 size, i32 capacity, i32 bytes
+) noexcept
+    : id_ptr((u32*)ptr),
+      image_ptr(ptr + capacity * LAYER_HEADER_SIZE), // NOLINT
+      size(size),
+      bytes(bytes) {
+  while (*this->id_ptr == 0) {
+    ++this->id_ptr;
+    this->image_ptr += this->bytes;
+  }
+}
+
+ImageDbIter& ImageDbIter::operator++() {
+  assert(this->id_ptr != nullptr);
+
+  --this->size;
+  if (this->size == 0) {
+    this->id_ptr = nullptr;
+    return *this;
+  }
+
+  ++this->id_ptr;
+  this->image_ptr += this->bytes;
+  while (*this->id_ptr == 0) {
+    ++this->id_ptr;
+    this->image_ptr += this->bytes;
+  }
+
+  return *this;
+}
+
+u32 ImageDbIter::get_id() const noexcept {
+  return *this->id_ptr;
+}
+
+data_ptr ImageDbIter::get_data() const noexcept {
+  return this->image_ptr;
+}
+
+ImageDbIter::operator bool() const noexcept {
+  return this->id_ptr != nullptr;
 }
 
 } // namespace draw
