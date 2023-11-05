@@ -10,8 +10,11 @@
 
 namespace view::sdl3::widget {
 
-void MenuBtn::set_texture(Texture&& tex) noexcept {
-  this->tex = std::move(tex);
+void MenuBtn::set_text(
+    cfg::locale::TextId id, const Renderer& renderer
+) noexcept {
+  this->id = id;
+  this->locale_updated(renderer);
 }
 
 void MenuBtn::set_left_click_listener(void (*left_click_listener)()) noexcept {
@@ -24,6 +27,14 @@ void MenuBtn::reset() noexcept {
   }
 
   this->state = input::BtnState::NORMAL;
+}
+
+void MenuBtn::locale_updated(const Renderer& renderer) noexcept {
+  const auto* str = cfg::locale::get_text(this->id);
+  this->tex = renderer.create_text(str);
+  this->tex_rect.size = renderer.get_text_size(str);
+  // TODO: Get this from themes
+  this->rect.size = {this->tex_rect.w + 16.0F, this->tex_rect.h + 4.0F};
 }
 
 void MenuBtn::input(const event::Input& evt, Data& _data) noexcept {

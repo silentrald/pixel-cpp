@@ -112,6 +112,12 @@ void Manager::handle_input_event() noexcept {
   }
   this->is_input_evt = false;
 
+  if (this->locale_btn.rect.has_point(this->input_evt.mouse.pos)) {
+    this->locale_btn.input(this->input_evt, this->data);
+    return;
+  }
+  this->locale_btn.reset();
+
   if (this->modals.get_size() > 0) {
     // NOTE: Check if only handle inputs on the top
     this->modals.back()->input(this->input_evt, this->data);
@@ -132,6 +138,18 @@ void Manager::handle_input_event() noexcept {
     return;
   }
 
+  // Only handle inputs on draw box when it was initially clicked
+  if (this->is_draw_box_clicked) {
+    this->draw_box.input(this->input_evt, this->data);
+    if (this->input_evt.is_mouse_state(input::MouseState::UP)) {
+      this->is_draw_box_clicked = false;
+      /* this->draw_box.reset(); */
+      this->mouse_box_id = -1;
+    }
+    return;
+  }
+  //
+
   i32 i = 0;
   for (; i < this->boxes.get_size(); ++i) {
     if (this->boxes[i]->rect.has_point(this->input_evt.mouse.pos)) {
@@ -147,7 +165,10 @@ void Manager::handle_input_event() noexcept {
     }
   }
 
-  if (i == this->boxes.get_size()) {
+  if (i == 0) { // Draw box index
+    this->is_draw_box_clicked =
+        this->input_evt.is_mouse_state(input::MouseState::DOWN);
+  } else if (i == this->boxes.get_size()) {
     this->boxes[this->mouse_box_id]->reset();
     this->mouse_box_id = -1;
   }
@@ -329,6 +350,23 @@ void Manager::handle_resize(ivec new_size) noexcept {
   );
 
   presenter::window_resized();
+}
+
+// Other events
+
+void Manager::locale_updated() noexcept {
+  this->renderer.locale_updated();
+
+  for (i32 i = 0; i < this->boxes.get_size(); ++i) {
+    this->boxes[i]->locale_updated(this->renderer);
+  }
+
+  for (i32 i = 0; i < this->modals.get_size(); ++i) {
+    this->modals[i]->locale_updated(this->renderer);
+  }
+
+  // NOTE: boxes may have changed dimensions
+  this->handle_resize(this->window.size);
 }
 
 } // namespace view::sdl3

@@ -26,12 +26,31 @@ void MenuBox::push_menu_btn(MenuBtn&& btn) noexcept {
 void MenuBox::resize(const frect& rect) noexcept {
   this->rect = rect;
 
-  // TODO: UwU
+  if (this->btns.is_empty()) {
+    return;
+  }
+
+  fvec off{this->rect.pos};
+  fvec pad = {8.0F, 2.0F}; // NOTE: Get this from themes
+  for (i32 i = 0; i < this->btns.get_size(); ++i) {
+    this->btns[i].rect.pos = off;
+    this->btns[i].tex_rect.pos = {
+        off.x + pad.x,
+        off.y + pad.y,
+    };
+    off.x += this->btns[i].rect.w;
+  }
 }
 
 void MenuBox::reset() noexcept {
   for (i32 i = 0; i < this->btns.get_size(); ++i) {
     this->btns[i].reset();
+  }
+}
+
+void MenuBox::locale_updated(const Renderer& renderer) noexcept {
+  for (i32 i = 0; i < this->btns.get_size(); ++i) {
+    this->btns[i].locale_updated(renderer);
   }
 }
 

@@ -13,6 +13,12 @@ const std::string& Textbox::get_text() const noexcept {
   return this->text;
 }
 
+void Textbox::set_text(const c8* str, const Renderer& renderer) noexcept {
+  this->text = str;
+  this->tex = renderer.create_text(this->text.c_str());
+  this->reposition_text_rect(renderer);
+}
+
 void Textbox::push_text(const c8* str) noexcept {
   this->text.append(str);
 }
@@ -33,13 +39,18 @@ void Textbox::update_texture(const Renderer& renderer) noexcept {
 
 void Textbox::reposition_text_rect(const Renderer& renderer) noexcept {
   auto size = renderer.get_text_size(this->text.c_str());
-  this->tex_rect = {
-      .pos = {.x = this->rect.x + this->rect.w - size.x, .y = this->rect.y},
-      .size = size};
+  this->tex_rect.pos = {
+      .x = this->rect.x + this->rect.w - size.x, .y = this->rect.y};
+  this->tex_rect.size = size;
 }
 
 void Textbox::reset() noexcept {
   this->focused = false;
+}
+
+void Textbox::locale_updated(const Renderer& renderer) noexcept {
+  this->tex = renderer.create_text(this->text.c_str());
+  this->reposition_text_rect(renderer);
 }
 
 void Textbox::input(const event::Input& evt, Data& data) noexcept {

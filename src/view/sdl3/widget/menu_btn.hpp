@@ -10,9 +10,11 @@
 
 #include "../texture.hpp"
 #include "./widget.hpp"
+#include "core/cfg/locale.hpp"
 
 namespace view::sdl3::widget {
 
+// TODO: Mostly text, get a locale here instead
 class MenuBtn final : public Widget {
 public:
   MenuBtn() noexcept = default;
@@ -22,10 +24,11 @@ public:
   MenuBtn& operator=(MenuBtn&&) noexcept = default;
   ~MenuBtn() noexcept override = default;
 
-  void set_texture(Texture&& tex) noexcept;
+  void set_text(cfg::locale::TextId id, const Renderer& renderer) noexcept;
   void set_left_click_listener(void (*left_click_listener)()) noexcept;
 
   void reset() noexcept override;
+  void locale_updated(const Renderer& renderer) noexcept override;
   void input(const event::Input& evt, Data& data) noexcept override;
   void update() noexcept override;
   void render(const Renderer& renderer) const noexcept override;
@@ -39,6 +42,7 @@ public:
 private:
   // NOLINTNEXTLINE
   input::BtnState state = input::BtnState::NORMAL;
+  cfg::locale::TextId id{};
   bool highlight = false;
   /* bool focus = false; */
 

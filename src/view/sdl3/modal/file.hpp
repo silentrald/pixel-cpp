@@ -34,6 +34,7 @@ public:
   [[nodiscard]] void* get_data() const noexcept override;
 
   void resize(const frect& rect) noexcept override;
+  void locale_updated(const Renderer& renderer) noexcept override;
   void drag(fvec pos) noexcept override;
   void reset() noexcept override;
   void input(const event::Input& evt, Data& data) noexcept override;

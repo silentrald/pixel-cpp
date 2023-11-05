@@ -26,6 +26,9 @@ void run() noexcept;
 
 // Events
 
+// TODO: Add the param of the new value
+void set_locale() noexcept;
+
 void window_resized() noexcept;
 
 /**

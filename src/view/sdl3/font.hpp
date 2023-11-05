@@ -38,7 +38,19 @@ public:
   }
 
   // TODO: std::expected
-  void init(const c8* path, i32 size = 12) noexcept {
+  void init(const c8* path, i32 size) noexcept {
+    this->font = TTF_OpenFont(path, size);
+    if (this->font == nullptr) {
+      logger::fatal("Could not load font");
+      std::abort();
+    }
+  }
+
+  void set(const c8* path, i32 size) noexcept {
+    if (this->font) {
+      TTF_CloseFont(this->font);
+    }
+
     this->font = TTF_OpenFont(path, size);
     if (this->font == nullptr) {
       logger::fatal("Could not load font");

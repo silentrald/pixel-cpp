@@ -10,6 +10,7 @@
 
 #include "../texture.hpp"
 #include "../widget/button.hpp"
+#include "../widget/textbox.hpp"
 #include "./box.hpp"
 #include "core/draw/anim.hpp"
 #include "core/ds/vector.hpp"
@@ -35,6 +36,7 @@ public:
 
   void resize(const frect& rect) noexcept override;
   void reset() noexcept override;
+  void locale_updated(const Renderer& renderer) noexcept override;
   void input(const event::Input& evt, Data& data) noexcept override;
   void update() noexcept override;
   void render(const Renderer& renderer) const noexcept override;
@@ -46,8 +48,7 @@ public:
 
 private:
   struct Layer {
-    Texture tex{};
-    frect rect{};
+    Textbox textbox{};
     bool visible = true;
   };
 

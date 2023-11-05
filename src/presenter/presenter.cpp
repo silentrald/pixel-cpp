@@ -31,7 +31,7 @@
 
 void presenter::init() noexcept {
   // TODO: make this changeable while app is running
-  cfg::locale::load_locale(cfg::locale::Locale::ENGLISH);
+  cfg::locale::load_locale(model_.locale);
   shortcut_.load_config("keys.cfg");
 
   view_.init();
@@ -45,6 +45,17 @@ void presenter::run() noexcept {
 }
 
 // === Events === //
+
+void presenter::set_locale() noexcept {
+  logger::info("Language Change");
+
+  using namespace cfg::locale;
+  model_.locale =
+      model_.locale == Locale::ENGLISH ? Locale::JAPANESE : Locale::ENGLISH;
+
+  load_locale(model_.locale);
+  view_.locale_updated();
+}
 
 void presenter::window_resized() noexcept {
   model_.bounds = view_.get_draw_rect();

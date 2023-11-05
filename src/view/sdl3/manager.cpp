@@ -72,31 +72,30 @@ void Manager::init() noexcept {
   fvec size{};
   widget::MenuBtn menu_btn{};
 
-  const c8* text = cfg::locale::get_text(cfg::locale::TextId::FILE_MENU_ITEM);
-  menu_btn.set_texture(this->renderer.create_text(text));
-  size = this->renderer.get_text_size(text);
-  menu_btn.tex_rect.size = {(f32)size.x, (f32)size.y};
-  menu_btn.rect.size = {(f32)size.x + 16.0F, (f32)size.y + 4.0F};
+  menu_btn.set_text(cfg::locale::TextId::FILE_MENU_ITEM, this->renderer);
   menu_btn.set_left_click_listener(presenter::new_file_clicked);
   this->menu_box.push_menu_btn(std::move(menu_btn));
 
-  text = cfg::locale::get_text(cfg::locale::TextId::EDIT_MENU_ITEM);
-  menu_btn.set_texture(this->renderer.create_text(text));
-  size = this->renderer.get_text_size(text);
-  menu_btn.tex_rect.size = {(f32)size.x, (f32)size.y};
-  menu_btn.rect.size = {(f32)size.x + 16.0F, (f32)size.y + 4.0F};
+  menu_btn.set_text(cfg::locale::TextId::EDIT_MENU_ITEM, this->renderer);
   menu_btn.set_left_click_listener(presenter::debug_callback); // TODO:
   this->menu_box.push_menu_btn(std::move(menu_btn));
 
-  text = cfg::locale::get_text(cfg::locale::TextId::VIEW_MENU_ITEM);
-  menu_btn.set_texture(this->renderer.create_text(text));
-  size = this->renderer.get_text_size(text);
-  menu_btn.tex_rect.size = {(f32)size.x, (f32)size.y};
-  menu_btn.rect.size = {(f32)size.x + 16.0F, (f32)size.y + 4.0F};
+  menu_btn.set_text(cfg::locale::TextId::VIEW_MENU_ITEM, this->renderer);
   menu_btn.set_left_click_listener(presenter::debug_callback); // TODO:
   this->menu_box.push_menu_btn(std::move(menu_btn));
 
   this->timeline_box.init(this->renderer);
+
+  // NOTE: Locale
+  const auto* text = "Change Language";
+  this->locale_btn.set_theme(input::BtnTheme::TOOL_BTN); // TODO:
+  this->locale_btn.set_texture(this->renderer.create_text(text));
+  size = this->renderer.get_text_size(text);
+  this->locale_btn.rect.pos = {this->window.size.x - size.x, 0.0F};
+  this->locale_btn.tex_rect.pos = {this->window.size.x - size.x, 0.0F};
+  this->locale_btn.rect.size = size;
+  this->locale_btn.tex_rect.size = size;
+  this->locale_btn.set_left_click_listener(presenter::set_locale);
 }
 
 Manager::~Manager() noexcept {
@@ -225,6 +224,8 @@ void Manager::render() noexcept {
   for (i32 i = 0; i < this->modals.get_size(); ++i) {
     this->modals[i]->render(this->renderer);
   }
+
+  this->locale_btn.render(renderer);
 
   this->renderer.present();
 }

@@ -10,18 +10,20 @@
 
 namespace view::sdl3::widget {
 
+inline const f32 TOOL_BTN_SIZE = 32.0F;
+
 void ToolBox::push_btn(Button&& btn) noexcept {
   fvec off{this->rect.pos};
   if (!this->btns.is_empty()) {
     off = this->btns.back().rect.pos;
-    if (off.x + 32.0F >= this->rect.x) {
-      off.y += 32.0F;
+    if (off.x + TOOL_BTN_SIZE >= this->rect.x) {
+      off.y += TOOL_BTN_SIZE;
     } else {
-      off.x += 32.0F;
+      off.x += TOOL_BTN_SIZE;
     }
   }
-  btn.rect = {.pos = off, .size = {32.0F, 32.0F}};
-  btn.tex_rect = {.pos = off, .size = {32.0F, 32.0F}};
+  btn.rect = {.pos = off, .size = {TOOL_BTN_SIZE, TOOL_BTN_SIZE}};
+  btn.tex_rect = {.pos = off, .size = {TOOL_BTN_SIZE, TOOL_BTN_SIZE}};
   btn.set_theme(input::BtnTheme::TOOL_BTN);
   this->btns.push_back(std::move(btn));
 }
@@ -29,13 +31,32 @@ void ToolBox::push_btn(Button&& btn) noexcept {
 void ToolBox::resize(const frect& rect) noexcept {
   this->rect = rect;
 
-  // TODO: UwU
+  if (this->btns.is_empty()) {
+    return;
+  }
+
+  fvec off{this->rect.pos};
+  for (i32 i = 0; i < this->btns.get_size(); ++i) {
+    this->btns[i].rect.pos = this->btns[i].tex_rect.pos = off;
+
+    if (off.x + TOOL_BTN_SIZE >= this->rect.x) {
+      off.x = this->rect.x;
+      off.y += TOOL_BTN_SIZE;
+    } else {
+      off.x += TOOL_BTN_SIZE;
+    }
+  }
 }
 
 void ToolBox::reset() noexcept {
   for (i32 i = 0; i < this->btns.get_size(); ++i) {
     this->btns[i].reset();
   }
+}
+
+void ToolBox::locale_updated(const Renderer& renderer) noexcept {
+  // NOTE: Do nothing for now UwU, just add logic here once tool tips/hints are
+  // created
 }
 
 void ToolBox::input(const event::Input& evt, Data& data) noexcept {

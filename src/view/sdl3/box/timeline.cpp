@@ -15,6 +15,7 @@ inline const f32 LAYERS_NAME_WIDTH = 160.0F;
 inline const f32 LAYERS_VISIBILITY_WIDTH = 40.0F;
 inline const f32 LAYERS_WIDTH = LAYERS_NAME_WIDTH + LAYERS_VISIBILITY_WIDTH;
 inline const f32 LINE_WIDTH = 4.0F;
+inline const f32 LAYERS_NAME_PADDING_X = 4.0F;
 
 void TimelineBox::init(const Renderer& renderer) noexcept {
   this->add_btn.rect.pos = this->rect.pos;
@@ -34,14 +35,21 @@ void TimelineBox::insert_layer_info(
   this->selected_layer = index;
 
   frect text_rect{};
-  text_rect.x = this->rect.x + LINE_WIDTH;
+  text_rect.x = this->rect.x;
   text_rect.size = renderer.get_text_size(layer_info.name);
+
+  Textbox textbox{};
+  textbox.set_text(layer_info.name, renderer);
 
   if (this->layers.is_empty()) {
     text_rect.y = this->rect.y + renderer.get_text_height() + LINE_WIDTH;
+    textbox.rect.pos = text_rect.pos;
+    textbox.rect.size = {LAYERS_NAME_WIDTH, text_rect.h};
+    textbox.tex_rect.pos = {text_rect.x + LAYERS_NAME_PADDING_X, text_rect.y};
+    textbox.tex_rect.size = text_rect.size;
+
     this->layers.insert(
-        0, {.tex = renderer.create_text(layer_info.name),
-            .rect = text_rect,
+        0, {.textbox = std::move(textbox),
             .visible = (bool)(layer_info.opacity & 0x80)}
     );
     return;
@@ -49,15 +57,21 @@ void TimelineBox::insert_layer_info(
 
   text_rect.y = this->rect.y + (renderer.get_text_height() + LINE_WIDTH) *
                                    (this->layers.get_size() - index + 1);
+  textbox.rect.pos = text_rect.pos;
+  textbox.rect.size = {LAYERS_NAME_WIDTH, text_rect.h};
+  textbox.tex_rect.pos = {text_rect.x + LAYERS_NAME_PADDING_X, text_rect.y};
+  textbox.tex_rect.size = text_rect.size;
+
   this->layers.insert(
-      index, {.tex = renderer.create_text(layer_info.name),
-              .rect = text_rect,
+      index, {.textbox = std::move(textbox),
               .visible = (bool)(layer_info.opacity & 0x80)}
   );
 
   for (index = index - 1; index >= 0; --index) {
     text_rect.y += renderer.get_text_height() + LINE_WIDTH;
-    this->layers[index].rect.pos = text_rect.pos;
+    this->layers[index].textbox.rect.pos = text_rect.pos;
+    this->layers[index].textbox.tex_rect.pos = {
+        text_rect.pos.x + LAYERS_NAME_PADDING_X, text_rect.pos.y};
   }
 }
 
@@ -80,16 +94,24 @@ void TimelineBox::resize(const frect& rect) noexcept {
     return;
   }
 
-  off.x += LINE_WIDTH;
-  auto height = this->layers.front().rect.h + LINE_WIDTH;
+  auto height = this->layers.front().textbox.rect.h + LINE_WIDTH;
   for (i32 i = this->layers.get_size() - 1; i >= 0; --i) {
     off.y += height;
-    this->layers[i].rect.pos = off;
+    this->layers[i].textbox.rect.pos = off;
+    this->layers[i].textbox.tex_rect.pos = {
+        off.x + LAYERS_NAME_PADDING_X, off.y};
   }
 }
 
 void TimelineBox::reset() noexcept {
   this->add_btn.reset();
+}
+
+void TimelineBox::locale_updated(const Renderer& renderer) noexcept {
+  for (i32 i = 0; i < this->layers.get_size(); ++i) {
+    this->layers[i].textbox.locale_updated(renderer);
+    this->layers[i].textbox.rect.h = this->layers[i].textbox.tex_rect.h;
+  }
 }
 
 void TimelineBox::input(const event::Input& evt, Data& data) noexcept {
@@ -101,7 +123,7 @@ void TimelineBox::input(const event::Input& evt, Data& data) noexcept {
     return;
   }
 
-  f32 height = this->layers.front().rect.h;
+  f32 height = this->layers.front().textbox.rect.h;
   frect bounds{};
 
   // Toggle visibility
@@ -133,7 +155,7 @@ void TimelineBox::input(const event::Input& evt, Data& data) noexcept {
   bounds.size = {this->rect.w - LAYERS_WIDTH, height};
 
   for (u32 i = 0; i < this->layers.get_size(); ++i) {
-    bounds.pos = this->layers[i].rect.pos;
+    bounds.pos = this->layers[i].textbox.rect.pos;
     bounds.x -= LAYERS_WIDTH;
     if (bounds.has_point(evt.mouse.pos)) {
       new_sel_layer = i;
@@ -227,15 +249,15 @@ void TimelineBox::render_layers(const Renderer& renderer) const noexcept {
     return;
   }
 
-  f32 height = this->layers.front().rect.h;
+  f32 height = this->layers.front().textbox.rect.h;
   frect vis_rect{};
   vis_rect.x = this->rect.x + LAYERS_NAME_WIDTH + 4.0F;
-  vis_rect.y = this->layers.front().rect.y + 4.0F;
+  vis_rect.y = this->layers.front().textbox.rect.y + 4.0F;
   vis_rect.w = LAYERS_VISIBILITY_WIDTH - 8.0F;
   vis_rect.h = height - 8.0F;
 
   for (i32 i = 0; i < this->layers.get_size(); ++i) {
-    renderer.render_texture(this->layers[i].tex, this->layers[i].rect);
+    this->layers[i].textbox.render(renderer);
 
     renderer.set_color(
         this->layers[i].visible ? rgba8{0x00, 0xff, 0x00, 0xff}
