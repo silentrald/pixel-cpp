@@ -25,6 +25,7 @@ public:
   ~Renderer() noexcept;
 
   void init(SDL_Window* window) noexcept;
+  void locale_updated() noexcept;
 
   // Clears the screen
   void clear() noexcept;

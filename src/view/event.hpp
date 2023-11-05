@@ -48,6 +48,13 @@ struct Input {
     std::array<c8, 8> pressed{}; // limit to only 8 chars
     input::KeyMod mods{};
   } key;
+
+  [[nodiscard]] inline bool is_mouse_state(input::MouseState state
+  ) const noexcept {
+    return this->mouse.left.state == state ||
+           this->mouse.right.state == state ||
+           this->mouse.middle.state == state;
+  }
 };
 
 } // namespace event

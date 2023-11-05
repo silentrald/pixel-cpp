@@ -68,6 +68,8 @@ public:
 
   // === Modifiers === //
 
+  void locale_updated() noexcept;
+
   void insert_layer(i32 index, const draw::LayerInfo& layer_info) noexcept;
   void set_layer_visible(i32 index, bool visible) noexcept;
   void clear_layers() noexcept;
@@ -94,6 +96,9 @@ private:
   // NOTE: Better to use a stack here
   ds::vector<widget::Modal*> modals{};
 
+  // TODO: Change to dropdown, and store it in a box
+  widget::Button locale_btn{};
+
   event::Input input_evt{};
   Data data{};
 
@@ -103,6 +108,7 @@ private:
   bool running = false;
   bool is_input_evt = false;
   bool is_text_input_changed = false;
+  bool is_draw_box_clicked = false;
 
   void input() noexcept;
   void handle_input_event() noexcept;

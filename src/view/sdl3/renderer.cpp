@@ -37,6 +37,11 @@ void Renderer::init(SDL_Window* window) noexcept {
   this->textures.init(*this);
 }
 
+void Renderer::locale_updated() noexcept {
+  this->font.set(cfg::locale::get_font(), cfg::locale::get_size());
+  this->textures.locale_updated(*this);
+}
+
 Renderer::~Renderer() noexcept {
   if (this->renderer) {
     SDL_DestroyRenderer(this->renderer);

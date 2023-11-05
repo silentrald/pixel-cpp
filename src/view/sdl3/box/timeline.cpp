@@ -92,6 +92,10 @@ void TimelineBox::reset() noexcept {
   this->add_btn.reset();
 }
 
+void TimelineBox::locale_updated(const Renderer& renderer) noexcept {
+  // NOTE: Do nothing for now UwU
+}
+
 void TimelineBox::input(const event::Input& evt, Data& data) noexcept {
   this->add_btn.input(evt, data);
 

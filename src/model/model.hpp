@@ -8,6 +8,7 @@
 #ifndef PXL_MODEL_HPP
 #define PXL_MODEL_HPP
 
+#include "core/cfg/locale.hpp"
 #include "core/draw/anim.hpp"
 #include "core/draw/image.hpp"
 #include "core/tool/enum.hpp"
@@ -33,6 +34,7 @@ struct Model {
   rgba8 color{};
 
   //
+  cfg::locale::Locale locale = cfg::locale::Locale::ENGLISH;
   tool::Type tool = tool::Type::PENCIL;
   u32 frame_id = 1U;
   i32 layer_index = 0;

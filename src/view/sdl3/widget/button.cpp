@@ -47,6 +47,10 @@ void Button::reset() noexcept {
   this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::NORMAL;
 }
 
+void Button::locale_updated(const Renderer& renderer) noexcept {
+  // Do nothing UwU
+}
+
 void Button::input(const event::Input& evt, Data& _data) noexcept {
   if ((this->info & input::BtnMask::STATES) == input::BtnState::DISABLED) {
     return;

@@ -36,8 +36,8 @@ void FileModal::init(const Renderer& renderer) noexcept {
   auto size = renderer.get_text_size(text);
 
   off.x = this->rect.x + this->rect.w - size.x - 4.0F;
-  this->px_rect1 = {off.x, this->width_text.rect.y, (f32)size.x, (f32)size.y};
-  this->px_rect2 = {off.x, this->height_text.rect.y, (f32)size.x, (f32)size.y};
+  this->px_rect1 = {off.x, this->width_text.rect.y, size.x, size.y};
+  this->px_rect2 = {off.x, this->height_text.rect.y, size.x, size.y};
 
   off.x = 32.0F + std::max(this->width_text.rect.w, this->height_text.rect.w);
   this->width_textbox.rect = {
@@ -78,11 +78,48 @@ void FileModal::resize(const frect& rect) noexcept {
   //
 }
 
-void FileModal::drag(fvec pos) noexcept {
+void FileModal::reset() noexcept {
   //
 }
 
-void FileModal::reset() noexcept {
+void FileModal::locale_updated(const Renderer& renderer) noexcept {
+  this->new_file_text.locale_updated(renderer);
+  this->width_text.locale_updated(renderer);
+  this->height_text.locale_updated(renderer);
+
+  const c8* text = nullptr;
+  fvec size{};
+  fvec off{};
+
+  // Other texts
+  // PX
+  text = cfg::locale::get_text(cfg::locale::TextId::PX);
+  size = renderer.get_text_size(text);
+
+  off.x = this->rect.x + this->rect.w - size.x - 4.0F;
+  this->px_rect1 = {off.x, this->width_text.rect.y, size.x, size.y};
+  this->px_rect2 = {off.x, this->height_text.rect.y, size.x, size.y};
+
+  // Buttons
+  text = cfg::locale::get_text(cfg::locale::TextId::NEW);
+  this->new_btn.set_texture(renderer.create_text(text));
+  size = renderer.get_text_size(text);
+  off.x = this->rect.x + this->rect.w - size.x - 8.0F;
+  off.y = this->rect.y + this->rect.h - size.y - 8.0F;
+  this->new_btn.rect = {
+      off.x - 4.0F, off.y - 4.0F, (f32)size.x + 8.0F, (f32)size.y + 8.0F};
+  this->new_btn.tex_rect = {off.x, off.y, (f32)size.x, (f32)size.y};
+
+  text = cfg::locale::get_text(cfg::locale::TextId::CANCEL);
+  this->cancel_btn.set_texture(renderer.create_text(text));
+  size = renderer.get_text_size(text);
+  off.x -= size.x + 12.0F;
+  this->cancel_btn.rect = {
+      off.x - 4.0F, off.y - 4.0F, (f32)size.x + 8.0F, (f32)size.y + 8.0F};
+  this->cancel_btn.tex_rect = {off.x, off.y, (f32)size.x, (f32)size.y};
+}
+
+void FileModal::drag(fvec pos) noexcept {
   //
 }
 

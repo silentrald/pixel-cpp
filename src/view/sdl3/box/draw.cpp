@@ -6,12 +6,15 @@
  *==========================*/
 
 #include "./draw.hpp"
+#include "core/ds/vector.hpp"
 #include "presenter/presenter.hpp"
 
 namespace view::sdl3::widget {
 
 void DrawBox::init_textures(const Renderer& renderer, ivec size) noexcept {
-  rgba8 pixels[size.x * size.y]; // NOLINT
+  ds::vector<rgba8> pixels{};
+  pixels.resize(size.x * size.y);
+
   for (i32 y = 0; y < size.y; ++y) {
     for (i32 x = 0; x < size.x; ++x) {
       pixels[x + y * size.x] = (x & 0b1000) ^ (y & 0b1000)
@@ -23,7 +26,7 @@ void DrawBox::init_textures(const Renderer& renderer, ivec size) noexcept {
   for (i32 i = 0; i <= 6; ++i) {
     this->textures[i] = renderer.create_texture(size);
   }
-  this->textures[0].set_pixels(pixels, size);
+  this->textures[0].set_pixels(pixels.get_data(), size);
 }
 
 Texture& DrawBox::get_bg_texture() noexcept {
@@ -64,11 +67,11 @@ void DrawBox::reset() noexcept {
   //
 }
 
-void DrawBox::input(const event::Input& evt, Data& data) noexcept {
-  if (!this->rect.has_point(evt.mouse.pos)) {
-    return;
-  }
+void DrawBox::locale_updated(const Renderer& renderer) noexcept {
+  // Do nothing UwU
+}
 
+void DrawBox::input(const event::Input& evt, Data& data) noexcept {
   presenter::canvas_mouse_event(evt);
 }
 

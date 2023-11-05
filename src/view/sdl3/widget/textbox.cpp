@@ -42,6 +42,10 @@ void Textbox::reset() noexcept {
   this->focused = false;
 }
 
+void Textbox::locale_updated(const Renderer& renderer) noexcept {
+  // Do nothing UwU
+}
+
 void Textbox::input(const event::Input& evt, Data& data) noexcept {
   if (evt.mouse.left.state == input::MouseState::UP &&
       this->rect.has_point(evt.mouse.pos)) {
