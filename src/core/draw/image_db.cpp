@@ -8,23 +8,35 @@
 #include "core/draw/image_db.hpp"
 #include "core/logger/logger.hpp"
 #include <cassert>
-#include <cstdlib>
-#include <cstring>
 
 namespace draw {
 
-inline const i32 ID_SIZE = sizeof(u32);
-inline const i32 NEXT_ELEM_SIZE = sizeof(i32);
-inline const i32 LAYER_HEADER_SIZE = ID_SIZE + NEXT_ELEM_SIZE;
+inline const usize ID_SIZE = sizeof(usize);
+inline const usize NEXT_ELEM_SIZE = sizeof(usize);
+inline const usize PREV_ELEM_SIZE = sizeof(usize);
+inline const usize LAYER_HEADER_SIZE =
+    ID_SIZE + NEXT_ELEM_SIZE + PREV_ELEM_SIZE;
+
+inline const usize ID_SENTINEL = 0U;
+inline const usize INDEX_SENTINEL = UINT32_MAX;
+
+ImageDb::ImageDb() noexcept
+    : insert_index(INDEX_SENTINEL),
+      head_index(INDEX_SENTINEL),
+      tail_index(INDEX_SENTINEL) {}
 
 ImageDb::ImageDb(ImageDb&& rhs) noexcept
     : ptr(rhs.ptr),
-      insert(rhs.insert),
-      last(rhs.last),
+      insert_index(rhs.insert_index),
+      head_index(rhs.head_index),
+      tail_index(rhs.tail_index),
       capacity(rhs.capacity),
       size(rhs.size),
       bytes(rhs.bytes),
-      alloc_size(rhs.alloc_size) {
+      alloc_size(rhs.alloc_size),
+      disk(std::move(rhs.disk)),
+      disk_size(rhs.disk_size),
+      disk_capacity(rhs.disk_capacity) {
   rhs.ptr = nullptr;
 }
 
@@ -36,20 +48,28 @@ ImageDb& ImageDb::operator=(ImageDb&& rhs) noexcept {
   this->ptr = rhs.ptr;
   rhs.ptr = nullptr;
 
-  this->insert = rhs.insert;
-  this->last = rhs.last;
+  this->insert_index = rhs.insert_index;
+  this->head_index = rhs.head_index;
+  this->tail_index = rhs.tail_index;
   this->capacity = rhs.capacity;
   this->size = rhs.size;
   this->bytes = rhs.bytes;
   this->alloc_size = rhs.alloc_size;
 
+  this->disk = std::move(rhs.disk);
+  this->disk_size = rhs.disk_size;
+  this->disk_capacity = rhs.disk_capacity;
+
   return *this;
 }
 
-void ImageDb::init(i32 bytes, i32 capacity) noexcept {
+void ImageDb::init(usize bytes, usize capacity) noexcept {
   this->bytes = bytes;
   this->capacity = capacity;
   this->allocate(capacity * (bytes + LAYER_HEADER_SIZE));
+
+  this->disk.open_file(".image_db", "w+");
+  this->create_image();
 }
 
 // === Copy Functions === //
@@ -84,8 +104,9 @@ void ImageDb::copy_empty(const ImageDb& other) noexcept {
 void ImageDb::copy_normal(const ImageDb& other) noexcept {
   std::memcpy(this->ptr, other.ptr, other.alloc_size);
 
-  this->insert = other.insert;
-  this->last = other.last;
+  this->insert_index = other.insert_index;
+  this->head_index = other.head_index;
+  this->tail_index = other.tail_index;
   this->capacity = other.capacity;
   this->size = other.size;
   this->bytes = other.bytes;
@@ -101,27 +122,28 @@ void ImageDb::copy_overfit(const ImageDb& other) noexcept {
   std::memset(this->ptr, 0, this->alloc_size);
 
   // Set the values of the next id
-  for (i32 i = this->size; i < this->capacity; ++i) {
-    ((i32*)this->ptr)[i + this->capacity] = i + 1;
+  for (usize i = this->size; i < this->capacity; ++i) {
+    this->get_index_ptr()[i].next = i + 1U;
   }
-  ((i32*)this->ptr)[this->capacity * 2 - 1] = -1;
-  this->insert = this->size;
-  this->last = this->capacity - 1;
+  this->get_index_ptr()[this->capacity - 1U].next = ID_SENTINEL;
+  this->insert_index = this->size;
+  this->head_index = 0U;
+  this->tail_index = this->capacity - 1U;
 
   // Manual copy
-  auto* src_cursor = other.ptr + LAYER_HEADER_SIZE * other.capacity; // NOLINT
-  auto* dst_cursor = this->ptr + LAYER_HEADER_SIZE * this->capacity; // NOLINT
+  auto* src_cursor = other.get_pixels_ptr();
+  auto* dst_cursor = this->get_pixels_ptr();
 
-  for (i32 i = 0, count = 0; count < this->size;
+  for (usize i = 0U, count = 0U; count < this->size;
        ++i, src_cursor += other.bytes) {
     // NOTE: Way to check for inf loops
     assert(src_cursor - other.ptr <= other.alloc_size);
 
-    if (((u32*)other.ptr)[i] == 0U) {
+    if (other.get_id_ptr()[i] == ID_SENTINEL) {
       continue;
     }
 
-    ((u32*)this->ptr)[count] = ((u32*)other.ptr)[i];
+    this->get_id_ptr()[count] = other.get_id_ptr()[i];
     std::memcpy(dst_cursor, src_cursor, other.bytes);
 
     dst_cursor += this->bytes;
@@ -152,7 +174,9 @@ void ImageDb::minicopy(const ImageDb& other) noexcept {
   }
 
   // Create the minified copy of the layer arena class
-  this->insert = this->last = -1;
+  this->insert_index = INDEX_SENTINEL;
+  this->head_index = 0U;
+  this->tail_index = other.size - 1U;
   this->size = this->capacity = other.size;
   this->bytes = other.bytes;
   this->alloc_size = other.size * (other.bytes + LAYER_HEADER_SIZE);
@@ -165,19 +189,19 @@ void ImageDb::minicopy(const ImageDb& other) noexcept {
   }
 
   // Manual Copy
-  auto* src_cursor = other.ptr + LAYER_HEADER_SIZE * other.capacity; // NOLINT
-  auto* dst_cursor = this->ptr + LAYER_HEADER_SIZE * this->size;     // NOLINT
+  auto* src_cursor = other.get_pixels_ptr();
+  auto* dst_cursor = this->get_pixels_ptr();
 
   for (i32 i = 0, count = 0; count < this->size;
        ++i, src_cursor += other.bytes) {
     // NOTE: Way to check for inf loops
     assert(src_cursor - other.ptr <= other.alloc_size);
 
-    if (((u32*)other.ptr)[i] == 0U) {
+    if (other.get_id_ptr()[i] == 0U) {
       continue;
     }
 
-    ((u32*)this->ptr)[count] = ((u32*)other.ptr)[i];
+    this->get_id_ptr()[count] = other.get_id_ptr()[i];
     std::memcpy(dst_cursor, src_cursor, other.bytes);
 
     dst_cursor += this->bytes;
@@ -198,31 +222,91 @@ data_ptr ImageDb::get_ptr() const noexcept {
   return this->ptr;
 }
 
-data_ptr ImageDb::get_image(u32 id) const noexcept {
+data_ptr ImageDb::get_pixels(usize id) noexcept {
   assert(this->ptr != nullptr);
+  assert(id <= this->disk_capacity);
 
-  for (i32 i = 0; i < this->capacity; ++i) {
-    if (((u32*)this->ptr)[i] != id) {
+  if (id == ID_SENTINEL) {
+    return nullptr;
+  }
+
+  for (usize i = 0; i < this->capacity; ++i) {
+    if (this->get_id_ptr()[i] != id) {
       continue;
     }
 
     // NOLINTNEXTLINE
-    return this->ptr + this->capacity * LAYER_HEADER_SIZE + i * this->bytes;
+    return this->get_pixels_ptr() + i * this->bytes;
   }
 
-  return nullptr;
+  // TODO: Helper function
+
+  // Replace the head with the data stored in the disk
+  auto index = this->head_index;
+  this->get_id_ptr()[index] = id;
+
+  // Update the indices
+  auto* index_ptr = this->get_index_ptr();
+  index_ptr[index_ptr[index].prev].next = this->tail_index;
+  index_ptr[index_ptr[index].next].prev = INDEX_SENTINEL;
+  index_ptr[index].prev = this->tail_index;
+  this->head_index = index_ptr[index].next;
+  index_ptr[index].next = INDEX_SENTINEL;
+  this->tail_index = index;
+
+  // Write memory from disk and return the data
+  // NOLINTNEXTLINE
+  auto* pixels_ptr = this->get_pixels_ptr() + index * this->bytes;
+  this->disk.seek((id - 1U) * (4U + this->bytes) + 4U);
+  this->disk.read(pixels_ptr, this->bytes);
+
+  return pixels_ptr;
 }
 
-i32 ImageDb::get_size() const noexcept {
+data_ptr ImageDb::get_pixels_fast(usize id) const noexcept {
+  assert(this->ptr != nullptr);
+  assert(id <= this->disk_capacity);
+
+  if (id == ID_SENTINEL) {
+    return nullptr;
+  }
+
+  for (usize i = 0; i < this->capacity; ++i) {
+    if (this->get_id_ptr()[i] != id) {
+      continue;
+    }
+
+    // NOLINTNEXTLINE
+    return this->get_pixels_ptr() + i * this->bytes;
+  }
+
+  std::abort();
+}
+
+void ImageDb::get_pixels_slow(usize id, data_ptr pixels) const noexcept {
+  assert(id != 0U && id <= this->disk_capacity);
+  this->disk.seek((id - 1U) * (4U + this->bytes) + 4U);
+  this->disk.read(pixels, this->bytes);
+}
+
+usize ImageDb::get_size() const noexcept {
   return this->size;
 }
 
-i32 ImageDb::get_capacity() const noexcept {
+usize ImageDb::get_capacity() const noexcept {
   return this->capacity;
 }
 
-i32 ImageDb::get_bytes_size() const noexcept {
+usize ImageDb::get_bytes_size() const noexcept {
   return this->bytes;
+}
+
+usize ImageDb::get_disk_size() const noexcept {
+  return this->disk_size;
+}
+
+usize ImageDb::get_disk_capacity() const noexcept {
+  return this->disk_capacity;
 }
 
 ImageDbIter ImageDb::get_iter() const noexcept {
@@ -231,19 +315,69 @@ ImageDbIter ImageDb::get_iter() const noexcept {
 
 // === Modifiers === //
 
-void ImageDb::create_layer(u32 new_id) noexcept {
-  // TODO: Try to invalidate a frame
+usize ImageDb::create_image() noexcept {
   assert(this->ptr != nullptr);
-  assert(this->insert != -1);
+  assert(this->size <= this->capacity);
 
-  ((u32*)this->ptr)[this->insert] = new_id;
-  this->insert = ((i32*)this->ptr)[this->capacity + this->insert];
+  if (this->size == this->capacity) {
+    // Replace the item at the head
+    --this->size;
+    this->insert_index = this->head_index;
+  }
+
+  assert(this->insert_index != INDEX_SENTINEL);
+  assert(this->disk_size <= this->disk_capacity);
+
+  usize id = this->next_id;
+  this->disk.seek((id - 1U) * (4U + this->bytes));
+  if (this->disk_size == this->disk_capacity) {
+    ++this->next_id;
+    ++this->disk_capacity;
+  } else {
+    this->next_id = this->disk.read_u32();
+    this->disk.move(-4);
+  }
+
+  // Memory write
+  this->get_id_ptr()[this->insert_index] = id;
+  auto new_index = this->get_index_ptr()[this->insert_index].next;
+  this->get_index_ptr()[this->insert_index] = {
+      .next = INDEX_SENTINEL, .prev = this->tail_index};
+  this->insert_index = new_index;
+
+  // Disk Write, already moved the disk pointer
+  this->disk.write_u32(INDEX_SENTINEL);
+
+  // Set the data before writing it into disk
+  // NOLINTNEXTLINE
+  auto* pixels = this->get_pixels_ptr() + (id - 1U) * this->bytes;
+  std::memset(pixels, 0U, this->bytes);
+  this->disk.write(pixels, this->bytes);
+  this->disk.flush();
+
+  // Update both sizes
   ++this->size;
+  ++this->disk_size;
+
+  this->tail_index = id;
+  if (this->head_index == INDEX_SENTINEL) {
+    this->head_index = id;
+  }
+
+  return id;
+}
+
+void ImageDb::write_pixels_to_disk(usize id) const noexcept {
+  auto* pixels = this->get_pixels_fast(id);
+  this->disk.seek((id - 1U) * (4U + this->bytes));
+  this->disk.write_u32(ID_SENTINEL);
+  this->disk.write(pixels, this->bytes);
+  this->disk.flush();
 }
 
 // === Memory === //
 
-void ImageDb::allocate(i32 alloc_size) noexcept {
+void ImageDb::allocate(usize alloc_size) noexcept {
   // NOLINTNEXTLINE
   this->ptr = (data_ptr)std::malloc(alloc_size);
   if (this->ptr == nullptr) {
@@ -253,36 +387,44 @@ void ImageDb::allocate(i32 alloc_size) noexcept {
   this->alloc_size = alloc_size;
 
   // Set all ids to 0
-  std::memset(this->ptr, 0, this->capacity * sizeof(u32));
-  *(u32*)this->ptr = 1U;
-  this->size = 1;
+  std::memset(this->ptr, 0U, this->capacity * sizeof(usize));
 
   // Set the values of the next id
-  for (i32 i = 0; i < this->capacity; ++i) {
-    ((i32*)this->ptr)[i + this->capacity] = i + 1;
+  for (usize i = 0U; i < this->capacity; ++i) {
+    this->get_index_ptr()[i].next = i + 1U;
   }
-  ((i32*)this->ptr)[this->capacity * 2 - 1] = -1;
-  this->insert = 1;
-  this->last = this->capacity - 1;
+  this->get_index_ptr()[this->capacity - 1U].next = INDEX_SENTINEL;
+  this->insert_index = 0U;
+  this->head_index = INDEX_SENTINEL;
+  this->tail_index = INDEX_SENTINEL;
+}
 
-  // Set the layer data values to 0
-  std::memset(
-      // NOLINTNEXTLINE
-      this->ptr + LAYER_HEADER_SIZE * this->capacity, 0,
-      this->alloc_size - LAYER_HEADER_SIZE * this->capacity
-  );
+// === Private Accessors === //
+
+usize* ImageDb::get_id_ptr() const noexcept {
+  return (usize*)this->ptr;
+}
+
+ImageDb::Indexing* ImageDb::get_index_ptr() const noexcept {
+  // NOLINTNEXTLINE
+  return (Indexing*)(this->ptr + this->capacity * ID_SIZE);
+}
+
+data_ptr ImageDb::get_pixels_ptr() const noexcept {
+  // NOLINTNEXTLINE
+  return this->ptr + this->capacity * LAYER_HEADER_SIZE;
 }
 
 // === Iterators === //
 
 ImageDbIter::ImageDbIter(
-    data_ptr ptr, i32 size, i32 capacity, i32 bytes
+    data_ptr ptr, usize size, usize capacity, usize bytes
 ) noexcept
-    : id_ptr((u32*)ptr),
+    : id_ptr((usize*)ptr),
       image_ptr(ptr + capacity * LAYER_HEADER_SIZE), // NOLINT
       size(size),
       bytes(bytes) {
-  while (*this->id_ptr == 0) {
+  while (*this->id_ptr == ID_SENTINEL) {
     ++this->id_ptr;
     this->image_ptr += this->bytes;
   }
@@ -292,14 +434,14 @@ ImageDbIter& ImageDbIter::operator++() {
   assert(this->id_ptr != nullptr);
 
   --this->size;
-  if (this->size == 0) {
+  if (this->size == 0U) {
     this->id_ptr = nullptr;
     return *this;
   }
 
   ++this->id_ptr;
   this->image_ptr += this->bytes;
-  while (*this->id_ptr == 0) {
+  while (*this->id_ptr == ID_SENTINEL) {
     ++this->id_ptr;
     this->image_ptr += this->bytes;
   }
@@ -307,7 +449,7 @@ ImageDbIter& ImageDbIter::operator++() {
   return *this;
 }
 
-u32 ImageDbIter::get_id() const noexcept {
+usize ImageDbIter::get_id() const noexcept {
   return *this->id_ptr;
 }
 

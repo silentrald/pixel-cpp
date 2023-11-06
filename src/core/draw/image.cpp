@@ -38,6 +38,7 @@ u32 Image::get_id() const noexcept {
 }
 
 data_ptr Image::get_pixel(ivec pos) const noexcept {
+  assert(this->ptr != nullptr);
   assert(
       pos.x >= 0 && pos.y >= 0 && pos.x < this->size.x && pos.y < this->size.y
   );
@@ -46,12 +47,14 @@ data_ptr Image::get_pixel(ivec pos) const noexcept {
 }
 
 data_ptr Image::get_pixel(i32 index) const noexcept {
+  assert(this->ptr != nullptr);
   assert(index >= 0 && index < this->size.x * this->size.y);
   // NOLINTNEXTLINE
   return this->ptr + index * get_color_type_size(this->type);
 }
 
 void Image::paint(ivec pos, rgba8 color) noexcept {
+  assert(this->ptr != nullptr);
   assert(
       pos.x >= 0 && pos.y >= 0 && pos.x < this->size.x && pos.y < this->size.y
   );
@@ -62,6 +65,10 @@ void Image::paint(ivec pos, rgba8 color) noexcept {
 void Image::paint(i32 index, rgba8 color) noexcept {
   assert(index >= 0 && index < this->size.x * this->size.y);
   ((rgba8*)this->ptr)[index] = color;
+}
+
+Image::operator bool() const noexcept {
+  return this->ptr != nullptr;
 }
 
 } // namespace draw

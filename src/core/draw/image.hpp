@@ -31,6 +31,8 @@ public:
   void paint(ivec pos, rgba8 color) noexcept;
   void paint(i32 index, rgba8 color) noexcept;
 
+  [[nodiscard]] explicit operator bool() const noexcept;
+
 private:
   data_ptr ptr = nullptr;
   ivec size{};

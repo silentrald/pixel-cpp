@@ -63,6 +63,7 @@ void push_back_layer() noexcept;
 // === Exports / Writers === //
 
 void save_file() noexcept;
+void open_file() noexcept;
 void export_to_png() noexcept;
 
 // NOTE: For debugging purposes

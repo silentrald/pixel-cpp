@@ -16,7 +16,7 @@ namespace file {
 class Pxl {
 public:
   void save(const draw::Anim& anim, const c8* path) const noexcept;
-  /* draw::Anim load(const c8* path) const noexcept; */
+  draw::Anim load(const c8* path) const noexcept;
 
 private:
 };
