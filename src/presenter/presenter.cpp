@@ -32,7 +32,6 @@
 #include <cstring>
 
 void presenter::init() noexcept {
-  // TODO: make this changeable while app is running
   cfg::locale::load_locale(model_.locale);
   shortcut_.load_config("keys.cfg");
 
@@ -160,10 +159,15 @@ void presenter::key_down_event(
     presenter::save_file();
     break;
 
+  case cfg::ShortcutKey::ACTION_OPEN:
+    presenter::open_file();
+    break;
+
   case cfg::ShortcutKey::ACTION_UNDO:
     if (!caretaker_.can_undo())
       break;
     logger::info("Undo");
+    // BUG: breaks saving
     caretaker_.undo().restore(model_);
     update_view();
     break;
@@ -172,6 +176,8 @@ void presenter::key_down_event(
     if (!caretaker_.can_redo())
       break;
     logger::info("Redo");
+
+    // BUG: breaks saving
     caretaker_.redo().restore(model_);
     update_view();
     break;
@@ -371,7 +377,11 @@ void presenter::set_selected(u32 frame_id, i32 layer_index) noexcept {
   logger::info("Selected (Frame %u, Layer %d)", frame_id, layer_index);
   model_.frame_id = frame_id;
   model_.layer_index = layer_index;
-  model_.img_id = model_.anim.get_image_id(frame_id, layer_index);
+  auto id = model_.anim.get_image_id(frame_id, layer_index);
+  if (id != model_.img_id) {
+    model_.anim.write_pixels_to_disk(model_.img_id);
+    model_.img_id = id;
+  }
   model_.img = model_.anim.get_image(model_.img_id);
 
   update_canvas_textures();
@@ -463,8 +473,19 @@ void presenter::save_file() noexcept {
   // TODO: If no file name set, ask the user for a file to save to
 
   logger::info("Saving");
+  model_.anim.write_pixels_to_disk(model_.img_id);
   pxl_.save(model_.anim, "save.pxl");
   logger::info("Save successful");
+}
+
+void presenter::open_file() noexcept {
+  /* if (model_.anim) { */
+  /*   return; */
+  /* } */
+
+  logger::info("Open");
+  pxl_.load("save.pxl");
+  logger::info("Open successful");
 }
 
 void presenter::export_to_png() noexcept {

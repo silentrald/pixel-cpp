@@ -29,6 +29,7 @@ endif()
 set(draw_srcs
   src/core/draw/types.cpp
   src/core/draw/anim.cpp
+  src/core/draw/disk_backup.cpp
   src/core/draw/image_db.cpp
   src/core/draw/timeline_info.cpp
   src/core/draw/frame.cpp
@@ -127,6 +128,7 @@ add_subdirectory(external/catch2)
 add_executable(pixel_draw test/draw.cpp
   src/math.cpp
   src/colors.cpp
+
   ${draw_srcs}
   ${logger_srcs}
 )

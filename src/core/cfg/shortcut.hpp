@@ -36,6 +36,7 @@ enum class ShortcutKey {
   TOOL_SELECT = hash_shortcut_string("select"),
 
   ACTION_SAVE = hash_shortcut_string("save"),
+  ACTION_OPEN = hash_shortcut_string("open"),
   ACTION_UNDO = hash_shortcut_string("undo"),
   ACTION_REDO = hash_shortcut_string("redo"),
   ACTION_UNSELECT = hash_shortcut_string("unselect"),

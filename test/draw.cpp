@@ -44,7 +44,7 @@ void test_init_anim(const Anim& anim) noexcept {
   REQUIRE(anim.get_height() == SIZE.y);
   REQUIRE(anim.get_layer_count() == 1);
 
-  auto image = anim.get_image(1U);
+  auto image = anim.get_image_fast(1U);
   test_empty_layer(image, 1U);
 }
 

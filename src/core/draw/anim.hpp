@@ -15,6 +15,7 @@
 #include "./types.hpp"
 #include "core/ds/vector.hpp"
 #include "types.hpp"
+#include <string>
 
 namespace draw {
 
@@ -31,7 +32,6 @@ public:
   ~Anim() noexcept = default;
 
   void init(ivec size, ColorType type) noexcept;
-  /* void load(const c8* str) noexcept; // For file loading */
 
   void copy(const Anim& other) noexcept;
   void minicopy(const Anim& other) noexcept;
@@ -46,26 +46,45 @@ public:
   [[nodiscard]] i32 get_width() const noexcept;
   [[nodiscard]] i32 get_height() const noexcept;
 
-  [[nodiscard]] i32 get_layer_count() const noexcept;
-  [[nodiscard]] i32 get_frame_count() const noexcept;
+  [[nodiscard]] usize get_layer_count() const noexcept;
+  [[nodiscard]] usize get_frame_count() const noexcept;
 
-  [[nodiscard]] Image get_image(u32 id) const noexcept;
-  [[nodiscard]] Image get_image(u32 frame_id, i32 layer_index) const noexcept;
-  [[nodiscard]] u32 get_image_id(u32 frame_id, i32 layer_index) const noexcept;
+  [[nodiscard]] Image get_image(usize id) noexcept;
+  [[nodiscard]] Image get_image(usize frame_id, usize layer_index) noexcept;
+  [[nodiscard]] Image get_image_fast(usize id) const noexcept;
+  [[nodiscard]] Image
+  get_image_fast(usize frame_id, usize layer_index) const noexcept;
 
-  [[nodiscard]] const LayerInfo& get_layer_info(i32 index) const noexcept;
-  [[nodiscard]] const c8* get_layer_name(i32 index) const noexcept;
-  [[nodiscard]] bool is_layer_visible(i32 index) const noexcept;
+  [[nodiscard]] data_ptr get_pixels(usize id) noexcept;
+  [[nodiscard]] data_ptr get_pixels(usize frame_id, usize layer_index) noexcept;
+  [[nodiscard]] data_ptr get_pixels_fast(usize id) const noexcept;
+  [[nodiscard]] data_ptr
+  get_pixels_fast(usize frame_id, usize layer_index) const noexcept;
+  void get_pixels_slow(usize id, data_ptr pixels) const noexcept;
+  void get_pixels_slow(usize frame_id, usize layer_index, data_ptr pixels)
+      const noexcept;
+
+  [[nodiscard]] usize
+  get_image_id(usize frame_id, usize layer_index) const noexcept;
+
+  [[nodiscard]] const LayerInfo& get_layer_info(usize index) const noexcept;
+  [[nodiscard]] const c8* get_layer_name(usize index) const noexcept;
+  [[nodiscard]] bool is_layer_visible(usize index) const noexcept;
   void get_flatten(
-      u32 frame_id, i32 start_layer, i32 end_layer, ds::vector<rgba8>& pixels
+      usize frame_id, usize start_layer, usize end_layer,
+      ds::vector<rgba8>& pixels
   ) const noexcept;
+
+  const std::string& get_name() noexcept;
 
   /**
    * @param index - where to insert the new layer
    * @returns id of the newly created image on the layer
    **/
-  u32 insert_layer(i32 index) noexcept;
-  bool toggle_layer_visibility(i32 index) noexcept;
+  usize insert_layer(usize index) noexcept;
+  bool toggle_layer_visibility(usize index) noexcept;
+
+  void write_pixels_to_disk(usize id) const noexcept;
 
   [[nodiscard]] explicit operator bool() const noexcept;
 
@@ -73,13 +92,16 @@ private:
   ImageDb images{};
   TimelineInfo timeline{};
 
-  u32 images_id = 0U;
-
   // Dimension size of the animation
   ivec size{};
 
   // What color depth is being used
   ColorType type = ColorType::NONE;
+
+  usize frame_end = 0U;
+
+  /* std::string filepath{}; */
+  std::string name{};
 };
 
 } // namespace draw
