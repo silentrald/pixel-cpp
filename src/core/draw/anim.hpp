@@ -19,6 +19,8 @@
 
 namespace draw {
 
+class AnimLoader;
+
 /**
  * Animation data containing the image information for frames/layers
  **/
@@ -32,6 +34,14 @@ public:
   ~Anim() noexcept = default;
 
   void init(ivec size, ColorType type) noexcept;
+
+  void load_init(
+      ivec size, usize image_count, usize layer_count, usize frame_count
+  ) noexcept;
+  void load_layer(usize index, LayerInfo layer_info) noexcept;
+  void load_frame(usize index, usize id, usize* image_ids) noexcept;
+  void load_image(usize index, usize id, data_ptr pixels) noexcept;
+  void load_finish() noexcept;
 
   void copy(const Anim& other) noexcept;
   void minicopy(const Anim& other) noexcept;

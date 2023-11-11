@@ -8,6 +8,7 @@
 #ifndef PXL_DRAW_FRAME_HPP
 #define PXL_DRAW_FRAME_HPP
 
+#include "./types.hpp"
 #include "types.hpp"
 
 namespace draw {
@@ -15,7 +16,7 @@ namespace draw {
 class Frame {
 public:
   Frame() noexcept = default;
-  Frame(u32* ptr, i32 layer_count, u32 id) noexcept;
+  Frame(usize* ptr, usize layer_count, usize id) noexcept;
   Frame(const Frame&) noexcept = default;
   Frame& operator=(const Frame&) noexcept = default;
   Frame(Frame&&) noexcept = default;
@@ -23,7 +24,7 @@ public:
   ~Frame() noexcept = default;
 
   [[nodiscard]] u32 get_id() const noexcept;
-  [[nodiscard]] u32 get_image_id(i32 index) const noexcept;
+  [[nodiscard]] u32 get_image_id(usize index) const noexcept;
   [[nodiscard]] i32 get_layer_count() const noexcept;
 
 private:

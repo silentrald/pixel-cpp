@@ -347,7 +347,7 @@ void presenter::create_anim() noexcept {
 
   model_.anim.init(size, draw::RGBA8);
   model_.frame_id = 1U;
-  model_.layer_index = 0;
+  model_.layer_index = 0U;
   model_.img_id = 1U;
   auto id = model_.anim.get_image_id(model_.frame_id, model_.layer_index);
   model_.img = model_.anim.get_image(id);
@@ -479,12 +479,41 @@ void presenter::save_file() noexcept {
 }
 
 void presenter::open_file() noexcept {
-  /* if (model_.anim) { */
-  /*   return; */
-  /* } */
+  if (model_.anim) {
+    return;
+  }
 
   logger::info("Open");
-  pxl_.load("save.pxl");
+  model_.anim = std::move(pxl_.load("save.pxl"));
+  model_.frame_id = 1U;
+  model_.layer_index = 0U;
+  model_.img_id = 1U;
+  auto id = model_.anim.get_image_id(model_.frame_id, model_.layer_index);
+  model_.img = model_.anim.get_image(id);
+  model_.select_mask.resize(
+      // NOLINTNEXTLINE
+      model_.anim.get_width() * model_.anim.get_height()
+  );
+  std::fill(model_.select_mask.begin(), model_.select_mask.end(), true);
+
+  model_.tex1 = &view_.get_curr_texture();
+  model_.tex2 = &view_.get_empty_texture();
+  model_.bounds = view_.get_draw_rect();
+
+  model_.rect = {
+      .x = model_.bounds.x + 10.0F,
+      .y = model_.bounds.y + 10.0F,
+      .w = model_.anim.get_width() * model_.scale,
+      .h = model_.anim.get_height() * model_.scale};
+  view_.set_canvas_rect(model_.rect);
+  view_.set_draw_size(model_.anim.get_size());
+
+  history::Snapshot snapshot{};
+  snapshot.snap(model_);
+  caretaker_.push_snapshot(std::move(snapshot));
+
+  update_view();
+
   logger::info("Open successful");
 }
 

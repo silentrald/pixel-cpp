@@ -25,6 +25,11 @@ public:
   ImageDb& operator=(const ImageDb&) noexcept = delete;
 
   void init(usize bytes, usize capacity) noexcept;
+
+  void load_init(usize image_count, usize bytes) noexcept;
+  void load_image(usize index, usize id, data_ptr pixels) noexcept;
+  void load_finish() noexcept;
+
   ImageDb(ImageDb&& rhs) noexcept;
   ImageDb& operator=(ImageDb&& rhs) noexcept;
   void copy(const ImageDb& other) noexcept;
@@ -92,8 +97,7 @@ private:
   void copy_grow(const ImageDb& other) noexcept;
 
   // === Memory === //
-  void allocate(usize timeline_alloc_size) noexcept;
-  /* void reallocate(i32 new_timeline_alloc_size) noexcept; */
+  void allocate(usize alloc_size) noexcept;
 
   // === Private Accessors === //
 
@@ -105,6 +109,11 @@ private:
   [[nodiscard]] inline usize* get_id_ptr() const noexcept;
   [[nodiscard]] inline Indexing* get_index_ptr() const noexcept;
   [[nodiscard]] inline data_ptr get_pixels_ptr() const noexcept;
+
+  // === Disk Helper === //
+
+  inline void seek_disk_id(usize id) const noexcept;
+  inline void seek_disk_pixels(usize id) const noexcept;
 };
 
 // Forward iterator for ImageDb

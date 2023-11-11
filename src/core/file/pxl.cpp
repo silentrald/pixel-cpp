@@ -36,7 +36,7 @@ void Pxl::save(const draw::Anim& anim, const c8* path) const noexcept {
 
   // Layers Section
   fprintf(fp, "LYR\n"); // NOLINT
-  for (i32 i = 0; i < anim.get_layer_count(); ++i) {
+  for (draw::usize i = 0U; i < anim.get_layer_count(); ++i) {
     const auto& layer_info = anim.get_layer_info(i);
     // NOLINTNEXTLINE
     fprintf(fp, "%02x %s\n", layer_info.opacity, layer_info.name);
@@ -82,69 +82,74 @@ draw::Anim Pxl::load(const c8* path) const noexcept {
     return {};
   }
 
-  // Metadata
-  ivec size{};
-  i32 image_count = 0;
-  i32 layer_count = 0;
-  i32 frame_count = 0;
-  // NOLINTNEXTLINE
-  fscanf(
-      fp, "%*s %d %d %d %d %d", &size.x, &size.y, &image_count, &layer_count,
-      &frame_count
-  );
+  draw::Anim anim{};
 
-  logger::debug(
-      "metadata: %d %d %d %d %d", size.x, size.y, image_count, layer_count,
-      frame_count
-  );
+  // Metadata
+  draw::usize image_count = 0U;
+  {
+    ivec size{};
+    draw::usize layer_count = 0U;
+    draw::usize frame_count = 0U;
+    // NOLINTNEXTLINE
+    fscanf(
+        fp, "%*s %d %d %u %u %u", &size.x, &size.y, &image_count, &layer_count,
+        &frame_count
+    );
+
+    anim.load_init(size, image_count, layer_count, frame_count);
+  }
 
   // Layer Section
-  fscanf(fp, "%*s"); // NOLINT
-  draw::LayerInfo layer_info{};
+  {
+    fscanf(fp, "%*s"); // NOLINT
+    draw::LayerInfo layer_info{};
 
-  for (i32 i = 0; i < layer_count; ++i) {
-    fscanf(fp, "%02x %51[^\n]", &layer_info.opacity, layer_info.name); // NOLINT
-
-    logger::debug("Layer: %s %02x", layer_info.name, layer_info.opacity);
+    for (draw::usize i = 0U; i < anim.get_layer_count(); ++i) {
+      // NOLINTNEXTLINE
+      fscanf(fp, "%02x %51[^\n]", &layer_info.opacity, layer_info.name);
+      anim.load_layer(i, layer_info);
+    }
   }
 
   // Frame Section
   {
     fscanf(fp, "%*s"); // NOLINT
-    u32 id = 0U;
 
-    fscanf(fp, "%u ", &id); // NOLINT
-    logger::debug("%u", id);
+    draw::usize id = 0U;
+    ds::vector<draw::usize> image_ids{};
+    image_ids.resize(anim.get_width() * anim.get_height());
 
-    for (i32 i = 0; i < layer_count; ++i) {
+    for (draw::usize i = 0U; i < anim.get_frame_count(); ++i) {
       fscanf(fp, "%u ", &id); // NOLINT
-      printf("%u ", id);
+
+      for (draw::usize j = 0U; j < anim.get_layer_count(); ++j) {
+        // NOLINTNEXTLINE
+        fscanf(fp, "%u ", image_ids.get_data() + j);
+      }
+
+      anim.load_frame(i, id, image_ids.get_data());
     }
-    printf("\n");
   }
 
   // Image Section
   {
     fscanf(fp, "%*s"); // NOLINT
-    ds::vector<u8> data{};
-    data.resize(size.x * size.y * sizeof(rgba8));
-    u32 id = 0U;
-    for (i32 i = 0; i < image_count; ++i) {
-      fscanf(fp, "%u ", &id);                         // NOLINT
-      fread(data.get_data(), 1, data.get_size(), fp); // NOLINT
 
-      // Store this in memory
-      logger::debug("%u", id);
-      for (i32 i = 0; i < data.get_size(); ++i) {
-        printf("%02x ", data[i]);
-      }
-      printf("\n");
+    ds::vector<u8> pixels{};
+    // NOLINTNEXTLINE
+    pixels.resize(anim.get_width() * anim.get_height() * sizeof(rgba8));
+    u32 id = 0U;
+
+    for (i32 i = 0; i < image_count; ++i) {
+      fscanf(fp, "%u ", &id);                              // NOLINT
+      fread(pixels.get_data(), 1U, pixels.get_size(), fp); // NOLINT
+
+      anim.load_image(i, id, pixels.get_data());
     }
   }
 
   fclose(fp); // NOLINT
 
-  draw::Anim anim{};
   return anim;
 }
 
