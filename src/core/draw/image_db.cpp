@@ -7,6 +7,7 @@
 
 #include "core/draw/image_db.hpp"
 #include "core/logger/logger.hpp"
+#include <algorithm>
 #include <cassert>
 
 namespace draw {
@@ -70,6 +71,47 @@ void ImageDb::init(usize bytes, usize capacity) noexcept {
 
   this->disk.open_file(".image_db", "w+");
   this->create_image();
+}
+
+void ImageDb::load_init(usize image_count, usize bytes) noexcept {
+  // NOTE: INIT start with 60U
+  this->capacity = this->size = std::min(60U, image_count);
+  this->bytes = bytes;
+  this->allocate(this->capacity * (bytes * LAYER_HEADER_SIZE));
+
+  this->disk_size = image_count;
+  this->disk_capacity = image_count;
+
+  this->disk.open_file(".image_db", "w+");
+}
+
+void ImageDb::load_image(usize index, usize id, data_ptr pixels) noexcept {
+  if (index <= this->capacity) {
+    // Memory Write
+    this->get_id_ptr()[index] = id;
+    this->get_index_ptr()[index].next = INDEX_SENTINEL;
+
+    if (index == 0U) {
+      this->get_index_ptr()[index].prev = INDEX_SENTINEL;
+    } else {
+      this->get_index_ptr()[index].prev = this->get_id_ptr()[index - 1U];
+      this->get_index_ptr()[index - 1U].next = index;
+    }
+
+    std::memcpy(
+        // NOLINTNEXTLINE
+        this->get_pixels_ptr() + index * this->bytes, pixels, this->bytes
+    );
+  }
+
+  // Disk Write
+  this->seek_disk_id(id);
+  this->disk.write_u32(INDEX_SENTINEL);
+  this->disk.write(pixels, this->bytes);
+}
+
+void ImageDb::load_finish() noexcept {
+  this->disk.flush();
 }
 
 // === Copy Functions === //
@@ -257,7 +299,7 @@ data_ptr ImageDb::get_pixels(usize id) noexcept {
   // Write memory from disk and return the data
   // NOLINTNEXTLINE
   auto* pixels_ptr = this->get_pixels_ptr() + index * this->bytes;
-  this->disk.seek((id - 1U) * (4U + this->bytes) + 4U);
+  this->seek_disk_pixels(id);
   this->disk.read(pixels_ptr, this->bytes);
 
   return pixels_ptr;
@@ -285,7 +327,7 @@ data_ptr ImageDb::get_pixels_fast(usize id) const noexcept {
 
 void ImageDb::get_pixels_slow(usize id, data_ptr pixels) const noexcept {
   assert(id != 0U && id <= this->disk_capacity);
-  this->disk.seek((id - 1U) * (4U + this->bytes) + 4U);
+  this->seek_disk_pixels(id);
   this->disk.read(pixels, this->bytes);
 }
 
@@ -329,7 +371,7 @@ usize ImageDb::create_image() noexcept {
   assert(this->disk_size <= this->disk_capacity);
 
   usize id = this->next_id;
-  this->disk.seek((id - 1U) * (4U + this->bytes));
+  this->seek_disk_id(id);
   if (this->disk_size == this->disk_capacity) {
     ++this->next_id;
     ++this->disk_capacity;
@@ -369,7 +411,7 @@ usize ImageDb::create_image() noexcept {
 
 void ImageDb::write_pixels_to_disk(usize id) const noexcept {
   auto* pixels = this->get_pixels_fast(id);
-  this->disk.seek((id - 1U) * (4U + this->bytes));
+  this->seek_disk_id(id);
   this->disk.write_u32(ID_SENTINEL);
   this->disk.write(pixels, this->bytes);
   this->disk.flush();
@@ -413,6 +455,16 @@ ImageDb::Indexing* ImageDb::get_index_ptr() const noexcept {
 data_ptr ImageDb::get_pixels_ptr() const noexcept {
   // NOLINTNEXTLINE
   return this->ptr + this->capacity * LAYER_HEADER_SIZE;
+}
+
+// === Disk Helper === //
+
+void ImageDb::seek_disk_id(usize id) const noexcept {
+  this->disk.seek((id - 1U) * (sizeof(usize) + this->bytes));
+}
+
+void ImageDb::seek_disk_pixels(usize id) const noexcept {
+  this->disk.seek((id - 1U) * (sizeof(usize) + this->bytes) + sizeof(usize));
 }
 
 // === Iterators === //

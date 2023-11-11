@@ -20,7 +20,13 @@ inline const f32 PI = 3.142857F;
  * Returns the power of 2 that is bigger than the given number.
  * eg. 2 -> 4; 3 -> 4; 5 -> 8; 9 -> 16
  */
-i32 get_next_pow2(i32 num) noexcept;
+u32 get_next_pow2(u32 num) noexcept;
+
+/**
+ * Returns the power of 2 that is bigger than the given number.
+ * eg. 2 -> 4; 3 -> 4; 5 -> 8; 9 -> 16
+ */
+u64 get_next_pow2(u64 num) noexcept;
 
 [[nodiscard]] bool is_nearly_equal(f32 f1, f32 f2) noexcept;
 

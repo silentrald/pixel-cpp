@@ -10,16 +10,16 @@
 
 namespace draw {
 
-Frame::Frame(u32* ptr, i32 layer_count, u32 id) noexcept
+Frame::Frame(usize* ptr, usize layer_count, usize id) noexcept
     : ptr(ptr), layer_count(layer_count), id(id) {}
 
 u32 Frame::get_id() const noexcept {
   return this->id;
 }
 
-u32 Frame::get_image_id(i32 index) const noexcept {
+u32 Frame::get_image_id(usize index) const noexcept {
   assert(this->ptr != nullptr);
-  assert(index >= 0 && index < this->layer_count);
+  assert(index >= 0U && index < this->layer_count);
 
   return this->ptr[index];
 }

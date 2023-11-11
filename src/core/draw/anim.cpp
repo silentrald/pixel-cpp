@@ -32,6 +32,34 @@ void Anim::init(ivec size, ColorType type) noexcept {
   this->timeline.init();
 }
 
+void Anim::load_init(
+    ivec size, usize image_count, usize layer_count, usize frame_count
+) noexcept {
+  this->size = size;
+
+  this->images.load_init(
+      // NOLINTNEXTLINE
+      image_count, (usize)size.x * (usize)size.y * sizeof(usize)
+  );
+  this->timeline.load_init(layer_count, frame_count);
+}
+
+void Anim::load_layer(usize index, LayerInfo layer_info) noexcept {
+  this->timeline.load_layer(index, layer_info);
+}
+
+void Anim::load_frame(usize index, usize id, usize* image_ids) noexcept {
+  this->timeline.load_frame(index, id, image_ids);
+}
+
+void Anim::load_image(usize index, usize id, data_ptr pixels) noexcept {
+  this->images.load_image(index, id, pixels);
+}
+
+void Anim::load_finish() noexcept {
+  this->images.load_finish();
+}
+
 void Anim::copy(const Anim& other) noexcept {
   if (this == &other) {
     return;
