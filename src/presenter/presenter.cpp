@@ -34,6 +34,7 @@
 void presenter::init() noexcept {
   cfg::locale::load_locale(model_.locale);
   shortcut_.load_config("keys.cfg");
+  pxl_.set_auto_save(50U);
 
   view_.init();
 }
@@ -196,6 +197,12 @@ void handle_flags(u32 flags) {
   using namespace presenter;
   if (flags & Flag::SNAPSHOT) {
     caretaker_.snap_model(model_);
+
+    if (pxl_.will_auto_save()) {
+      logger::info("Auto-save");
+      model_.anim.write_pixels_to_disk(model_.img_id);
+      pxl_.force_auto_save(model_.anim);
+    }
   }
 }
 
@@ -432,6 +439,8 @@ void presenter::insert_layer(i32 layer_index) noexcept {
   }
 
   model_.anim.insert_layer(layer_index);
+  pxl_.try_auto_save(model_.anim);
+
   presenter::set_selected(model_.frame_id, model_.layer_index);
 
   view_.insert_layer(layer_index, model_.anim.get_layer_info(layer_index));
@@ -445,6 +454,8 @@ void presenter::push_back_layer() noexcept {
 
   model_.layer_index = model_.anim.get_layer_count();
   model_.anim.insert_layer(model_.layer_index);
+  pxl_.try_auto_save(model_.anim);
+
   presenter::set_selected(model_.frame_id, model_.layer_index);
 
   view_.insert_layer(

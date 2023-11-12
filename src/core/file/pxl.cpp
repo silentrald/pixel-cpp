@@ -14,6 +14,38 @@
 
 namespace file {
 
+void Pxl::set_auto_save(u32 auto_save) noexcept {
+  this->auto_save = auto_save;
+}
+
+bool Pxl::will_auto_save() noexcept {
+  if (this->auto_save == 0U) {
+    return false;
+  }
+
+  ++this->actions;
+  return this->actions == this->auto_save;
+}
+
+void Pxl::force_auto_save(const draw::Anim& anim) noexcept {
+  this->actions = 0;
+  this->save(anim, "save.pxl");
+}
+
+void Pxl::try_auto_save(const draw::Anim& anim) noexcept {
+  if (this->auto_save == 0U) {
+    return;
+  }
+
+  ++this->actions;
+  if (this->actions < this->auto_save) {
+    return;
+  }
+
+  this->actions = 0;
+  this->save(anim, "save.pxl");
+}
+
 // BUG: May crash if the file is getting deleted, handle the fprintf error when
 // expected is impl
 // NOTE: Caching is not supported here yet, assuming the whole
