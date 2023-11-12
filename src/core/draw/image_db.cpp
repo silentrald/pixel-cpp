@@ -31,6 +31,7 @@ ImageDb::ImageDb(ImageDb&& rhs) noexcept
       insert_index(rhs.insert_index),
       head_index(rhs.head_index),
       tail_index(rhs.tail_index),
+      next_id(rhs.next_id),
       capacity(rhs.capacity),
       size(rhs.size),
       bytes(rhs.bytes),
@@ -52,6 +53,7 @@ ImageDb& ImageDb::operator=(ImageDb&& rhs) noexcept {
   this->insert_index = rhs.insert_index;
   this->head_index = rhs.head_index;
   this->tail_index = rhs.tail_index;
+  this->next_id = rhs.next_id;
   this->capacity = rhs.capacity;
   this->size = rhs.size;
   this->bytes = rhs.bytes;
@@ -74,10 +76,16 @@ void ImageDb::init(usize bytes, usize capacity) noexcept {
 }
 
 void ImageDb::load_init(usize image_count, usize bytes) noexcept {
-  // NOTE: INIT start with 60U
-  this->capacity = this->size = std::min(60U, image_count);
+  // NOTE: INIT start with 64U
+  this->capacity = 64U;
+  this->size = std::min(this->capacity, image_count);
   this->bytes = bytes;
   this->allocate(this->capacity * (bytes * LAYER_HEADER_SIZE));
+
+  this->head_index = 0U;
+  this->tail_index = this->size - 1U;
+  this->insert_index = image_count == this->size ? image_count : INDEX_SENTINEL;
+  this->next_id = image_count + 1U; // BUG: Does not account deleted id's yet
 
   this->disk_size = image_count;
   this->disk_capacity = image_count;
@@ -130,6 +138,9 @@ void ImageDb::copy(const ImageDb& other) noexcept {
   } else {
     this->copy_grow(other);
   }
+
+  this->disk_size = other.disk_size;
+  this->disk_capacity = other.disk_capacity;
 }
 
 void ImageDb::copy_empty(const ImageDb& other) noexcept {
@@ -149,6 +160,7 @@ void ImageDb::copy_normal(const ImageDb& other) noexcept {
   this->insert_index = other.insert_index;
   this->head_index = other.head_index;
   this->tail_index = other.tail_index;
+  this->next_id = other.next_id;
   this->capacity = other.capacity;
   this->size = other.size;
   this->bytes = other.bytes;
@@ -171,6 +183,7 @@ void ImageDb::copy_overfit(const ImageDb& other) noexcept {
   this->insert_index = this->size;
   this->head_index = 0U;
   this->tail_index = this->capacity - 1U;
+  this->next_id = other.next_id; // TODO: Check when deletion is created
 
   // Manual copy
   auto* src_cursor = other.get_pixels_ptr();
@@ -219,9 +232,13 @@ void ImageDb::minicopy(const ImageDb& other) noexcept {
   this->insert_index = INDEX_SENTINEL;
   this->head_index = 0U;
   this->tail_index = other.size - 1U;
+  this->next_id = other.next_id;
   this->size = this->capacity = other.size;
   this->bytes = other.bytes;
   this->alloc_size = other.size * (other.bytes + LAYER_HEADER_SIZE);
+
+  this->disk_size = other.disk_size;
+  this->disk_capacity = other.disk_capacity;
 
   // NOLINTNEXTLINE
   this->ptr = (data_ptr)std::malloc(this->alloc_size);
@@ -322,6 +339,7 @@ data_ptr ImageDb::get_pixels_fast(usize id) const noexcept {
     return this->get_pixels_ptr() + i * this->bytes;
   }
 
+  logger::fatal("Image data of id `%u` is not in memory", id);
   std::abort();
 }
 
@@ -410,6 +428,11 @@ usize ImageDb::create_image() noexcept {
 }
 
 void ImageDb::write_pixels_to_disk(usize id) const noexcept {
+  if (id > this->disk_size) {
+    // Means that the data is removed
+    return;
+  }
+
   auto* pixels = this->get_pixels_fast(id);
   this->seek_disk_id(id);
   this->disk.write_u32(ID_SENTINEL);

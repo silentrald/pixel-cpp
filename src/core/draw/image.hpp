@@ -33,6 +33,12 @@ public:
 
   [[nodiscard]] explicit operator bool() const noexcept;
 
+#ifndef NDEBUG
+
+  void print() const noexcept;
+
+#endif
+
 private:
   data_ptr ptr = nullptr;
   ivec size{};

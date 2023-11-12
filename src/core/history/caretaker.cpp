@@ -8,7 +8,7 @@
 #include "./caretaker.hpp"
 #include "core/logger/logger.hpp"
 #include "types.hpp"
-#include <cassert>
+#include <utility>
 
 namespace history {
 
@@ -20,6 +20,16 @@ void Caretaker::init(Snapshot&& snapshot) noexcept {
   this->clear();
   this->snapshots[0] = std::move(snapshot);
   this->cursor = this->start_cursor = this->end_cursor = 0;
+}
+
+void Caretaker::snap_model(const Model& model) noexcept {
+  history::Snapshot snapshot{};
+
+  // TODO: Optimize logic here, for compact memory storage
+  snapshot.snap_default(model);
+  snapshot.snap_anim(model);
+
+  this->push_snapshot(std::move(snapshot));
 }
 
 void Caretaker::push_snapshot(Snapshot&& snapshot) noexcept {
@@ -82,29 +92,40 @@ bool Caretaker::can_undo() const noexcept {
   return this->cursor != this->start_cursor;
 }
 
-const Snapshot& Caretaker::undo() noexcept {
-  assert(this->can_undo());
+bool Caretaker::undo(Model& model) noexcept {
+  if (!this->can_undo()) {
+    return false;
+  }
   if (this->cursor == 0) {
     this->cursor = this->snapshots.get_size() - 1;
   } else {
     --this->cursor;
   }
+
   logger::debug("Cursor at %d", this->cursor);
-  return this->snapshots[this->cursor];
+  this->snapshots[this->cursor].restore(model);
+
+  return true;
 }
 
 bool Caretaker::can_redo() const noexcept {
   return this->cursor != this->end_cursor;
 }
 
-const Snapshot& Caretaker::redo() noexcept {
-  assert(this->can_redo());
+bool Caretaker::redo(Model& model) noexcept {
+  if (!this->can_redo()) {
+    return false;
+  }
+
   ++this->cursor;
   if (this->cursor == this->snapshots.get_size()) {
     this->cursor = 0;
   }
+
   logger::debug("Cursor at %d", this->cursor);
-  return this->snapshots[this->cursor];
+  this->snapshots[this->cursor].restore(model);
+
+  return true;
 }
 
 } // namespace history

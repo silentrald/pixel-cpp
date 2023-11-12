@@ -36,6 +36,7 @@ void Anim::load_init(
     ivec size, usize image_count, usize layer_count, usize frame_count
 ) noexcept {
   this->size = size;
+  this->type = ColorType::RGBA8;
 
   this->images.load_init(
       // NOLINTNEXTLINE
@@ -243,6 +244,100 @@ bool Anim::toggle_layer_visibility(usize layer_index) noexcept {
 void Anim::write_pixels_to_disk(usize id) const noexcept {
   this->images.write_pixels_to_disk(id);
 }
+
+// === Debugging === //
+
+#ifndef NDEBUG
+
+void Anim::print_metadata() const noexcept {
+  if (!logger::lock(logger::Level::DEBUG_LVL, "Animation Medata")) {
+    return;
+  }
+
+  logger::print("  Size: (%d, %d)\n", size.x, size.y);
+  logger::print("  Image Count: %u\n", this->images.get_disk_size());
+  logger::print("  Layer Count: %u\n", this->timeline.get_layer_count());
+  logger::print("  Frame Count: %u\n", this->timeline.get_frame_count());
+
+  logger::unlock();
+}
+
+void Anim::print_timeline_info_metadata() const noexcept {
+  this->timeline.print_metadata();
+}
+
+void Anim::print_images_memory() const noexcept {
+  if (!logger::lock(logger::Level::DEBUG_LVL, "Animation Images Memory")) {
+    return;
+  }
+
+  usize mod = this->size.x * get_color_type_size(this->type);
+  usize psize = mod * this->size.y;
+  for (auto it = this->images.get_iter(); it; ++it) {
+    logger::print("  Image Id: %u ; Ptr: %p", it.get_id(), it.get_data());
+    for (usize i = 0U; i < psize; ++i) {
+      if (i % mod == 0U) {
+        logger::print("\n");
+      }
+      logger::print("%02x", it.get_data()[i]);
+    }
+    logger::print("\n");
+  }
+
+  logger::unlock();
+}
+
+void Anim::print_images_disk() const noexcept {
+  if (!logger::lock(logger::Level::DEBUG_LVL, "Animation Images Disk")) {
+    return;
+  }
+
+  ds::vector<u8> pixels{};
+  pixels.resize(this->size.x * this->size.y * get_color_type_size(this->type));
+
+  usize mod = this->size.x * get_color_type_size(this->type);
+  for (usize id = 1U; id < this->images.get_disk_capacity(); ++id) {
+    this->images.get_pixels_slow(id, pixels.get_data());
+
+    logger::print("  Image Id: %u", id);
+    for (usize i = 0U; i < pixels.get_size(); ++i) {
+      if (i % mod == 0U) {
+        logger::print("\n");
+      }
+      logger::print("%02x", pixels[i]);
+    }
+    logger::print("\n");
+  }
+
+  logger::unlock();
+}
+
+void Anim::print_timeline_info() const noexcept {
+  if (!logger::lock(logger::Level::DEBUG_LVL, "Animation Timeline Info")) {
+    return;
+  }
+
+  logger::print("=== Layers ===\n");
+  for (usize i = 0U; i < this->timeline.get_layer_count(); ++i) {
+    auto layer_info = this->timeline.get_layer_info(i);
+    logger::print(
+        "  Name: %s ; Opacity: %02x\n", layer_info.name, layer_info.opacity
+    );
+  }
+
+  logger::print("=== Frames ===\n");
+  for (auto it = this->timeline.get_frame_iter(); it; ++it) {
+    logger::print("  Id: %u ; Images:\n ", it.get_id());
+    for (usize i = 0U; i < this->timeline.get_layer_count(); ++i) {
+      logger::print(" %3u", it.get_image_id(i));
+    }
+    logger::print("\n");
+  }
+
+  logger::unlock();
+}
+
+#endif
 
 } // namespace draw
 

@@ -98,6 +98,16 @@ public:
 
   [[nodiscard]] explicit operator bool() const noexcept;
 
+  // === Debugging === //
+
+#ifndef NDEBUG
+  void print_metadata() const noexcept;
+  void print_timeline_info_metadata() const noexcept;
+  void print_images_memory() const noexcept;
+  void print_images_disk() const noexcept;
+  void print_timeline_info() const noexcept;
+#endif
+
 private:
   ImageDb images{};
   TimelineInfo timeline{};

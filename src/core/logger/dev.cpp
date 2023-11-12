@@ -8,6 +8,7 @@
 #include "./logger.hpp"
 #include <cstdarg>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <ctime>
 /* #include <mutex> */
@@ -28,7 +29,7 @@ typedef struct tv {
   i64 tv_usec;
 } tv;
 
-const u64 EPOCH = (uint64_t)116444736000000000ULL;
+const u64 EPOCH = 116444736000000000ULL;
 void gettimeofday(struct tv* tp, struct timezone* tzp) {
   SYSTEMTIME system_time;
   FILETIME file_time;
@@ -45,6 +46,13 @@ void gettimeofday(struct tv* tp, struct timezone* tzp) {
 #endif
 
 namespace logger {
+
+inline Level level = Level::DEBUG_LVL;
+
+// NOTE: No multi-threading is done, yet
+/* std::mutex mutex{}; */
+
+} // namespace logger
 
 // === Consts === //
 const char* const TEXT_WHITE = "\e[97m";
@@ -70,11 +78,7 @@ const char* const TIMESTAMP_FMT = "YYYY-MM-DDTHH:mm:ss.SSS";
 const i32 TIMESTAMP_LENGTH = sizeof "YYYY-MM-DDTHH:mm:ss.SSS";
 char timestamp[TIMESTAMP_LENGTH]; // NOLINT
 
-inline Level level = Level::DEBUG_LVL;
-// NOTE: No multi-threading is done
-/* std::mutex mutex{}; */
-
-void set_level(Level lvl) noexcept {
+void logger::set_level(Level lvl) noexcept {
   level = lvl;
 }
 
@@ -109,7 +113,7 @@ inline void print_header(const char* level, const char* level_fg) noexcept {
 
 // === Fatal === //
 // NOLINTNEXTLINE
-void fatal(const c8* msg, ...) noexcept {
+void logger::fatal(const c8* msg, ...) noexcept {
   if (level < Level::FATAL_LVL) {
     return;
   }
@@ -125,7 +129,7 @@ void fatal(const c8* msg, ...) noexcept {
 
 // === Error === //
 // NOLINTNEXTLINE
-void error(const c8* msg, ...) noexcept {
+void logger::error(const c8* msg, ...) noexcept {
   if (level < Level::ERROR_LVL) { // ERROR is defined in Windows
     return;
   }
@@ -141,7 +145,7 @@ void error(const c8* msg, ...) noexcept {
 
 // === WARN === //
 // NOLINTNEXTLINE
-void warn(const c8* msg, ...) noexcept {
+void logger::warn(const c8* msg, ...) noexcept {
   if (level < Level::WARN_LVL) {
     return;
   }
@@ -157,7 +161,7 @@ void warn(const c8* msg, ...) noexcept {
 
 // === INFO === //
 // NOLINTNEXTLINE
-void info(const c8* msg, ...) noexcept {
+void logger::info(const c8* msg, ...) noexcept {
   if (level < Level::INFO_LVL) {
     return;
   }
@@ -173,7 +177,7 @@ void info(const c8* msg, ...) noexcept {
 
 // === DEBUG === //
 // NOLINTNEXTLINE
-void debug(const c8* msg, ...) noexcept {
+void logger::debug(const c8* msg, ...) noexcept {
   if (level < Level::DEBUG_LVL) {
     return;
   }
@@ -187,4 +191,62 @@ void debug(const c8* msg, ...) noexcept {
   printf("\n");
 }
 
-} // namespace logger
+// === LOCKS === //
+
+// NOLINTNEXTLINE
+bool logger::lock(Level lvl, const c8* msg, ...) noexcept {
+  if (level < lvl) {
+    return false;
+  }
+
+  switch (lvl) {
+  case Level::SILENT_LVL:
+    return false;
+
+  case Level::FATAL_LVL:
+    print_header(FATAL_LBL, TEXT_BLACK, BG_RED);
+    break;
+
+  case Level::ERROR_LVL:
+    print_header(ERROR_LBL, TEXT_RED);
+    break;
+
+  case Level::WARN_LVL:
+    print_header(WARN_LBL, TEXT_YELLOW);
+    break;
+
+  case Level::INFO_LVL:
+    print_header(INFO_LBL, TEXT_GREEN);
+    break;
+
+  case Level::DEBUG_LVL:
+    print_header(DEBUG_LBL, TEXT_VIOLET);
+    break;
+
+  default:
+    std::abort();
+  }
+
+  // TODO: Lock the mutex once multi-threading is created
+
+  va_list args;
+  va_start(args, msg);
+  vprintf(msg, args);
+  va_end(args);
+  printf("\n");
+
+  return true;
+}
+
+// NOLINTNEXTLINE
+void logger::print(const c8* msg, ...) noexcept {
+  va_list args;
+  va_start(args, msg);
+  vprintf(msg, args);
+  va_end(args);
+}
+
+void logger::unlock() noexcept {
+  // TODO: Unlock the mutex once multi-threading is created
+}
+

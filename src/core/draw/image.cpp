@@ -6,6 +6,7 @@
  *==========================*/
 
 #include "./image.hpp"
+#include "core/logger/logger.hpp"
 #include <cassert>
 
 namespace draw {
@@ -70,5 +71,32 @@ void Image::paint(i32 index, rgba8 color) noexcept {
 Image::operator bool() const noexcept {
   return this->ptr != nullptr;
 }
+
+#ifndef NDEBUG
+
+void Image::print() const noexcept {
+  if (!logger::lock(logger::Level::DEBUG_LVL, "Image Info")) {
+    return;
+  }
+
+  logger::print(
+      "  Image Id: %u ; Size (%d, %d) ; Ptr: %p", this->id, this->size.x,
+      this->size.y, this->ptr
+  );
+
+  usize mod = this->size.x * get_color_type_size(this->type);
+  usize psize = mod * this->size.y;
+  for (usize i = 0U; i < psize; ++i) {
+    if (i % mod == 0U) {
+      logger::print("\n");
+    }
+    logger::print("%02x", this->ptr[i]);
+  }
+  logger::print("\n");
+
+  logger::unlock();
+}
+
+#endif
 
 } // namespace draw
