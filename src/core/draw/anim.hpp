@@ -19,8 +19,6 @@
 
 namespace draw {
 
-class AnimLoader;
-
 /**
  * Animation data containing the image information for frames/layers
  **/
