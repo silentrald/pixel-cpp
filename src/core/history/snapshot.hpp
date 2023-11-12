@@ -24,7 +24,8 @@ public:
   Snapshot& operator=(Snapshot&& rhs) noexcept = default;
   ~Snapshot() noexcept = default;
 
-  void snap(const Model& model) noexcept;
+  void snap_default(const Model& model) noexcept;
+  void snap_anim(const Model& model) noexcept;
   void restore(Model& model) const noexcept;
 
   void reset() noexcept;

@@ -28,6 +28,17 @@ void warn(const c8* msg, ...) noexcept;
 void info(const c8* msg, ...) noexcept;
 void debug(const c8* msg, ...) noexcept;
 
+// NOTE: No multi-threading is used for now but implement a locking logger
+
+/**
+ * @return if the log level passed is allowed
+ **/
+bool lock(Level lvl, const c8* msg, ...) noexcept;
+
+// Call lock before print
+void print(const c8* msg, ...) noexcept;
+void unlock() noexcept;
+
 } // namespace logger
 
 #endif

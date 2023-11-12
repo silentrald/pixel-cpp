@@ -31,7 +31,7 @@ void Pxl::save(const draw::Anim& anim, const c8* path) const noexcept {
   // NOLINTNEXTLINE
   fprintf(
       fp, "MDT\n%d %d %u %u %u\n", anim.get_width(), anim.get_height(),
-      images.get_size(), anim.get_layer_count(), anim.get_frame_count()
+      images.get_disk_size(), anim.get_layer_count(), anim.get_frame_count()
   );
 
   // Layers Section

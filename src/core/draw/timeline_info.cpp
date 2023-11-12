@@ -166,7 +166,6 @@ void TimelineInfo::copy_normal(const TimelineInfo& other) noexcept {
   this->frame_count = other.frame_count;
   this->layer_capacity = other.layer_capacity;
   this->frame_capacity = other.frame_capacity;
-  this->timeline_alloc_size = other.timeline_alloc_size;
 }
 
 void TimelineInfo::copy_overfit(const TimelineInfo& other) noexcept {
@@ -199,6 +198,7 @@ void TimelineInfo::copy_grow(const TimelineInfo& other) noexcept {
     std::abort();
   }
   this->timeline = new_ptr;
+  this->timeline_alloc_size = other.timeline_alloc_size;
 
   this->copy_normal(other);
 }
@@ -356,7 +356,7 @@ void TimelineInfo::allocate_timeline_capacities(
   // +1 is the frame id
   this->allocate_timeline(
       // NOLINTNEXTLINE
-      (this->layer_capacity + 1U) * this->frame_capacity * sizeof(usize)
+      (layer_capacity + 1U) * frame_capacity * sizeof(usize)
   );
 }
 
@@ -465,6 +465,23 @@ usize FrameIter::get_image_id(usize layer_index) const noexcept {
 FrameIter::operator bool() const noexcept {
   return this->id_ptr != nullptr;
 }
+
+#ifndef NDEBUG
+
+void TimelineInfo::print_metadata() const noexcept {
+  logger::debug(
+      "Timeline Info Metadata\n"
+      "  Layer Count/Cap: %u/%u\n"
+      "  Frame Count/Cap: %u/%u\n"
+      "  Timeline Alloc Size: %u\n"
+      "  Layer Info Alloc Size: %u",
+      this->layer_count, this->layer_capacity, this->frame_count,
+      this->frame_capacity, this->timeline_alloc_size,
+      this->layer_info_alloc_size
+  );
+}
+
+#endif
 
 } // namespace draw
 

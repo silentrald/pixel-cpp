@@ -78,6 +78,12 @@ public:
   void insert_layer(usize index, usize layer_id) noexcept;
   bool toggle_layer_visibility(usize index) noexcept;
 
+#ifndef NDEBUG
+
+  void print_metadata() const noexcept;
+
+#endif
+
 private:
   usize* timeline = nullptr;
   LayerInfo* layer_info = nullptr;

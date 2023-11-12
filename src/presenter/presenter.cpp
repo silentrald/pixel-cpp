@@ -101,6 +101,8 @@ void update_canvas_textures() noexcept {
     view_.get_curr_texture().set_pixels(
         (rgba8*)model_.img.get_ptr(), model_.anim.get_size()
     );
+  } else {
+    view_.get_curr_texture().clear(model_.anim.get_height());
   }
 }
 
@@ -164,21 +166,18 @@ void presenter::key_down_event(
     break;
 
   case cfg::ShortcutKey::ACTION_UNDO:
-    if (!caretaker_.can_undo())
+    if (!caretaker_.undo(model_))
       break;
+
     logger::info("Undo");
-    // BUG: breaks saving
-    caretaker_.undo().restore(model_);
     update_view();
     break;
 
   case cfg::ShortcutKey::ACTION_REDO:
-    if (!caretaker_.can_redo())
+    if (!caretaker_.redo(model_))
       break;
-    logger::info("Redo");
 
-    // BUG: breaks saving
-    caretaker_.redo().restore(model_);
+    logger::info("Redo");
     update_view();
     break;
 
@@ -196,9 +195,7 @@ void handle_flags(u32 flags) {
   using namespace event;
   using namespace presenter;
   if (flags & Flag::SNAPSHOT) {
-    history::Snapshot snapshot{};
-    snapshot.snap(model_);
-    caretaker_.push_snapshot(std::move(snapshot));
+    caretaker_.snap_model(model_);
   }
 }
 
@@ -368,9 +365,7 @@ void presenter::create_anim() noexcept {
 
   view_.insert_layer(0, model_.anim.get_layer_info(0));
 
-  history::Snapshot snapshot{};
-  snapshot.snap(model_);
-  caretaker_.push_snapshot(std::move(snapshot));
+  caretaker_.snap_model(model_);
 }
 
 void presenter::set_selected(u32 frame_id, i32 layer_index) noexcept {
@@ -384,6 +379,8 @@ void presenter::set_selected(u32 frame_id, i32 layer_index) noexcept {
   }
   model_.img = model_.anim.get_image(model_.img_id);
 
+  caretaker_.snap_model(model_);
+
   update_canvas_textures();
 
   view_.set_selected_on_timeline(frame_id, layer_index);
@@ -393,9 +390,7 @@ void presenter::toggle_visibility(i32 layer_index) noexcept {
   logger::info("Toggle visibility (Layer %d)", layer_index);
 
   bool show = model_.anim.toggle_layer_visibility(layer_index);
-  history::Snapshot snapshot{};
-  snapshot.snap(model_);
-  caretaker_.push_snapshot(std::move(snapshot));
+  caretaker_.snap_model(model_);
 
   view_.set_layer_visible(layer_index, show);
 
@@ -439,10 +434,6 @@ void presenter::insert_layer(i32 layer_index) noexcept {
   model_.anim.insert_layer(layer_index);
   presenter::set_selected(model_.frame_id, model_.layer_index);
 
-  history::Snapshot snapshot{};
-  snapshot.snap(model_);
-  caretaker_.push_snapshot(std::move(snapshot));
-
   view_.insert_layer(layer_index, model_.anim.get_layer_info(layer_index));
 }
 
@@ -455,10 +446,6 @@ void presenter::push_back_layer() noexcept {
   model_.layer_index = model_.anim.get_layer_count();
   model_.anim.insert_layer(model_.layer_index);
   presenter::set_selected(model_.frame_id, model_.layer_index);
-
-  history::Snapshot snapshot{};
-  snapshot.snap(model_);
-  caretaker_.push_snapshot(std::move(snapshot));
 
   view_.insert_layer(
       model_.layer_index, model_.anim.get_layer_info(model_.layer_index)
@@ -485,10 +472,11 @@ void presenter::open_file() noexcept {
 
   logger::info("Open");
   model_.anim = std::move(pxl_.load("save.pxl"));
+
   model_.frame_id = 1U;
   model_.layer_index = 0U;
   model_.img_id = 1U;
-  auto id = model_.anim.get_image_id(model_.frame_id, model_.layer_index);
+  auto id = model_.anim.get_image_id(1U, 0U);
   model_.img = model_.anim.get_image(id);
   model_.select_mask.resize(
       // NOLINTNEXTLINE
@@ -508,9 +496,7 @@ void presenter::open_file() noexcept {
   view_.set_canvas_rect(model_.rect);
   view_.set_draw_size(model_.anim.get_size());
 
-  history::Snapshot snapshot{};
-  snapshot.snap(model_);
-  caretaker_.push_snapshot(std::move(snapshot));
+  caretaker_.snap_model(model_);
 
   update_view();
 

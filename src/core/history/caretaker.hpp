@@ -10,6 +10,7 @@
 
 #include "./snapshot.hpp"
 #include "core/ds/vector.hpp"
+#include "model/model.hpp"
 
 namespace history {
 
@@ -29,16 +30,12 @@ public:
    **/
   void init(Snapshot&& snapshot) noexcept;
 
-  /**
-   * Pushes a new snapshot to the caretaker
-   * call init first before calling this function
-   **/
-  void push_snapshot(Snapshot&& snapshot) noexcept;
+  void snap_model(const Model& model) noexcept;
 
   [[nodiscard]] bool can_undo() const noexcept;
-  [[nodiscard]] const Snapshot& undo() noexcept;
+  [[nodiscard]] bool undo(Model& model) noexcept;
   [[nodiscard]] bool can_redo() const noexcept;
-  [[nodiscard]] const Snapshot& redo() noexcept;
+  [[nodiscard]] bool redo(Model& model) noexcept;
 
 private:
   // NOTE: Can be optimized with using a better datastructure with less overhead
@@ -49,6 +46,12 @@ private:
   i32 end_cursor = -1;
 
   void clear() noexcept;
+
+  /**
+   * Pushes a new snapshot to the caretaker
+   * call init first before calling this function
+   **/
+  void push_snapshot(Snapshot&& snapshot) noexcept;
 
   /**
    * When pushing a new snapshot in a middle timeline,
