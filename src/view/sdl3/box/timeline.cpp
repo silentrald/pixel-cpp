@@ -27,7 +27,7 @@ void TimelineBox::init(const Renderer& renderer) noexcept {
   this->add_btn.set_left_click_listener(presenter::push_back_layer);
 }
 
-void TimelineBox::insert_layer_info(
+error_code TimelineBox::insert_layer_info(
     i32 index, const draw::LayerInfo& layer_info, const Renderer& renderer
 ) noexcept {
   assert(index >= 0 && index <= this->layers.get_size());
@@ -48,11 +48,10 @@ void TimelineBox::insert_layer_info(
     textbox.tex_rect.pos = {text_rect.x + LAYERS_NAME_PADDING_X, text_rect.y};
     textbox.tex_rect.size = text_rect.size;
 
-    this->layers.insert(
+    return this->layers.insert(
         0, {.textbox = std::move(textbox),
             .visible = (bool)(layer_info.opacity & 0x80)}
     );
-    return;
   }
 
   text_rect.y = this->rect.y + (renderer.get_text_height() + LINE_WIDTH) *
@@ -62,10 +61,10 @@ void TimelineBox::insert_layer_info(
   textbox.tex_rect.pos = {text_rect.x + LAYERS_NAME_PADDING_X, text_rect.y};
   textbox.tex_rect.size = text_rect.size;
 
-  this->layers.insert(
+  TRY(this->layers.insert(
       index, {.textbox = std::move(textbox),
               .visible = (bool)(layer_info.opacity & 0x80)}
-  );
+  ));
 
   for (index = index - 1; index >= 0; --index) {
     text_rect.y += renderer.get_text_height() + LINE_WIDTH;
@@ -73,6 +72,8 @@ void TimelineBox::insert_layer_info(
     this->layers[index].textbox.tex_rect.pos = {
         text_rect.pos.x + LAYERS_NAME_PADDING_X, text_rect.pos.y};
   }
+
+  return error_code::OK;
 }
 
 void TimelineBox::set_layer_visible(i32 index, bool visible) noexcept {

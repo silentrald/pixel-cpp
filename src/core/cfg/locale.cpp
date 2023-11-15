@@ -39,7 +39,7 @@ locale::TextId parse_key(const c8* key) noexcept {
   return (locale::TextId)out;
 }
 
-void locale::load_locale(Locale locale) noexcept {
+error_code locale::load_locale(Locale locale) noexcept {
   _locale = locale;
 
   texts.clear();
@@ -60,8 +60,8 @@ void locale::load_locale(Locale locale) noexcept {
 
   std::ifstream ifs{locale_file};
   if (!ifs.is_open()) {
-    logger::fatal("Could not find locale config file %s", locale_file);
-    std::abort();
+    logger::warn("Could not find locale config file %s", locale_file);
+    return error_code::FILE_NOT_FOUND;
   }
 
   std::string line{};
@@ -83,6 +83,8 @@ void locale::load_locale(Locale locale) noexcept {
   }
 
   ifs.close();
+
+  return error_code::OK;
 }
 
 // NOTE: Try to read this in the config file

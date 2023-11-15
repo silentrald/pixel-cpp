@@ -32,10 +32,16 @@
 #include <cstring>
 
 void presenter::init() noexcept {
-  cfg::locale::load_locale(model_.locale);
-  shortcut_.load_config("keys.cfg");
-  pxl_.set_auto_save(50U);
+  TRY_ABORT(
+      cfg::locale::load_locale(model_.locale), "Could not load initial locale"
+  );
 
+  TRY_ABORT(
+      shortcut_.load_config("keys.cfg"),
+      "Could not load initial shortcut key mapping"
+  );
+
+  pxl_.set_auto_save(50U);
   view_.init();
 }
 
@@ -55,7 +61,10 @@ void presenter::set_locale() noexcept {
   model_.locale =
       model_.locale == Locale::ENGLISH ? Locale::JAPANESE : Locale::ENGLISH;
 
-  load_locale(model_.locale);
+  if (is_error(load_locale(model_.locale))) {
+    logger::fatal("Could not load locale");
+    std::abort();
+  }
   view_.locale_updated();
 }
 
@@ -75,28 +84,37 @@ void presenter::window_resized() noexcept {
 }
 
 void update_canvas_textures() noexcept {
-  ds::vector<rgba8> pixels{};
-  pixels.resize(model_.anim.get_height() * model_.anim.get_width());
+  if (model_.pixels.get_capacity() < model_.anim.get_image_bytes_size()) {
+    TRY_ABORT(
+        model_.pixels.resize(model_.anim.get_image_bytes_size()),
+        "Could not create cache"
+    );
+  }
+  memset(model_.pixels.get_data(), 0, model_.pixels.get_size());
 
   // Bot
   if (model_.layer_index > 0) {
-    model_.anim.get_flatten(model_.frame_id, 0, model_.layer_index - 1, pixels);
+    model_.anim.get_flatten(
+        model_.frame_id, 0, model_.layer_index - 1, model_.pixels
+    );
   }
-  view_.get_bot_texture().set_pixels(pixels.get_data(), model_.anim.get_size());
+  view_.get_bot_texture().set_pixels(
+      (rgba8*)model_.pixels.get_data(), model_.anim.get_size()
+  );
 
   // Clear
-  for (i32 i = 0; i < pixels.get_size(); ++i) {
-    pixels[i] = {};
-  }
+  memset(model_.pixels.get_data(), 0U, model_.anim.get_image_bytes_size());
 
   // Top
   if (model_.layer_index < model_.anim.get_layer_count() - 1) {
     model_.anim.get_flatten(
         model_.frame_id, model_.layer_index + 1,
-        model_.anim.get_layer_count() - 1, pixels
+        model_.anim.get_layer_count() - 1, model_.pixels
     );
   }
-  view_.get_top_texture().set_pixels(pixels.get_data(), model_.anim.get_size());
+  view_.get_top_texture().set_pixels(
+      (rgba8*)model_.pixels.get_data(), model_.anim.get_size()
+  );
 
   if (model_.anim.is_layer_visible(model_.layer_index)) {
     view_.get_curr_texture().set_pixels(
@@ -115,7 +133,10 @@ void update_view() noexcept {
   view_.clear_layers();
   for (i32 i = model_.anim.get_layer_count() - 1; i >= 0; --i) {
     auto layer_info = model_.anim.get_layer_info(i);
-    view_.insert_layer(0, model_.anim.get_layer_info(i));
+    TRY_ABORT(
+        view_.insert_layer(0, model_.anim.get_layer_info(i)),
+        "Could not update view"
+    );
   }
 
   view_.set_selected_on_timeline(model_.frame_id, model_.layer_index);
@@ -200,8 +221,11 @@ void handle_flags(u32 flags) {
 
     if (pxl_.will_auto_save()) {
       logger::info("Auto-save");
-      model_.anim.write_pixels_to_disk(model_.img_id);
-      pxl_.force_auto_save(model_.anim);
+      TRY_ABORT(
+          model_.anim.write_pixels_to_disk(model_.img_id),
+          "Could not write to disk"
+      );
+      TRY_ABORT(pxl_.force_auto_save(model_.anim), "Could not save");
     }
   }
 }
@@ -324,7 +348,10 @@ void presenter::close_modals() noexcept {
 }
 
 void presenter::new_file_clicked() noexcept {
-  view_.push_modal(view::modal::Id::NEW_FILE_MODAL);
+  TRY_ABORT(
+      view_.push_modal(view::modal::Id::NEW_FILE_MODAL),
+      "Could not add new file modal"
+  );
 }
 
 void presenter::create_anim() noexcept {
@@ -349,12 +376,13 @@ void presenter::create_anim() noexcept {
     return;
   }
 
-  model_.anim.init(size, draw::RGBA8);
+  TRY_ABORT(model_.anim.init(size, draw::RGBA8), "Could not create anim");
+
   model_.frame_id = 1U;
   model_.layer_index = 0U;
   model_.img_id = 1U;
   auto id = model_.anim.get_image_id(model_.frame_id, model_.layer_index);
-  model_.img = model_.anim.get_image(id);
+  model_.img = *TRY_ABORT_RET(model_.anim.get_image(id), "Could not read anim");
   model_.select_mask.resize(size.x * size.y); // NOLINT
   std::fill(model_.select_mask.begin(), model_.select_mask.end(), true);
 
@@ -370,9 +398,12 @@ void presenter::create_anim() noexcept {
   view_.set_canvas_rect(model_.rect);
   view_.set_draw_size(size);
 
-  view_.insert_layer(0, model_.anim.get_layer_info(0));
+  TRY_ABORT(
+      view_.insert_layer(0U, model_.anim.get_layer_info(0U)),
+      "Could not update view"
+  );
 
-  caretaker_.snap_model(model_);
+  TRY_ABORT(caretaker_.init(50, model_), "Could not initialize caretaker");
 }
 
 void presenter::set_selected(u32 frame_id, i32 layer_index) noexcept {
@@ -381,10 +412,15 @@ void presenter::set_selected(u32 frame_id, i32 layer_index) noexcept {
   model_.layer_index = layer_index;
   auto id = model_.anim.get_image_id(frame_id, layer_index);
   if (id != model_.img_id) {
-    model_.anim.write_pixels_to_disk(model_.img_id);
+    TRY_ABORT(
+        model_.anim.write_pixels_to_disk(model_.img_id),
+        "Could not write to disk"
+    );
     model_.img_id = id;
   }
-  model_.img = model_.anim.get_image(model_.img_id);
+  model_.img = *TRY_ABORT_RET(
+      model_.anim.get_image(model_.img_id), "Could not read anim"
+  );
 
   caretaker_.snap_model(model_);
 
@@ -403,7 +439,9 @@ void presenter::toggle_visibility(i32 layer_index) noexcept {
 
   if (layer_index == model_.layer_index) {
     if (show) {
-      auto layer = model_.anim.get_image(model_.img_id);
+      auto layer = *TRY_ABORT_RET(
+          model_.anim.get_image(model_.img_id), "Could not read anim"
+      );
       view_.get_curr_texture().set_pixels(
           (rgba8*)layer.get_ptr(), model_.anim.get_size()
       );
@@ -413,14 +451,21 @@ void presenter::toggle_visibility(i32 layer_index) noexcept {
     return;
   }
 
-  ds::vector<rgba8> pixels{};
-  pixels.resize(model_.anim.get_height() * model_.anim.get_width());
+  if (model_.anim.get_image_bytes_size()) {
+    TRY_ABORT(
+        model_.pixels.resize(model_.anim.get_image_bytes_size()),
+        "Could not create cache"
+    );
+  }
+  memset(model_.pixels.get_data(), 0, model_.pixels.get_size());
 
   // Bot
   if (layer_index < model_.layer_index) {
-    model_.anim.get_flatten(model_.frame_id, 0, model_.layer_index - 1, pixels);
+    model_.anim.get_flatten(
+        model_.frame_id, 0, model_.layer_index - 1, model_.pixels
+    );
     view_.get_bot_texture().set_pixels(
-        pixels.get_data(), model_.anim.get_size()
+        (rgba8*)model_.pixels.get_data(), model_.anim.get_size()
     );
     return;
   }
@@ -428,9 +473,11 @@ void presenter::toggle_visibility(i32 layer_index) noexcept {
   // Top
   model_.anim.get_flatten(
       model_.frame_id, model_.layer_index + 1,
-      model_.anim.get_layer_count() - 1, pixels
+      model_.anim.get_layer_count() - 1, model_.pixels
   );
-  view_.get_top_texture().set_pixels(pixels.get_data(), model_.anim.get_size());
+  view_.get_top_texture().set_pixels(
+      (rgba8*)model_.pixels.get_data(), model_.anim.get_size()
+  );
 }
 
 void presenter::insert_layer(i32 layer_index) noexcept {
@@ -438,12 +485,15 @@ void presenter::insert_layer(i32 layer_index) noexcept {
     return;
   }
 
-  model_.anim.insert_layer(layer_index);
-  pxl_.try_auto_save(model_.anim);
+  TRY_ABORT(model_.anim.insert_layer(layer_index), "Could not update anim");
+  TRY_IGNORE(pxl_.try_auto_save(model_.anim), "Could not auto save");
 
   presenter::set_selected(model_.frame_id, model_.layer_index);
 
-  view_.insert_layer(layer_index, model_.anim.get_layer_info(layer_index));
+  TRY_ABORT(
+      view_.insert_layer(layer_index, model_.anim.get_layer_info(layer_index)),
+      "Could not update view"
+  );
 }
 
 void presenter::push_back_layer() noexcept {
@@ -453,13 +503,18 @@ void presenter::push_back_layer() noexcept {
   logger::info("New layer");
 
   model_.layer_index = model_.anim.get_layer_count();
-  model_.anim.insert_layer(model_.layer_index);
-  pxl_.try_auto_save(model_.anim);
+  TRY_ABORT(
+      model_.anim.insert_layer(model_.layer_index), "Could not update anim"
+  );
+  TRY_IGNORE(pxl_.try_auto_save(model_.anim), "Could not auto save");
 
   presenter::set_selected(model_.frame_id, model_.layer_index);
 
-  view_.insert_layer(
-      model_.layer_index, model_.anim.get_layer_info(model_.layer_index)
+  TRY_ABORT(
+      view_.insert_layer(
+          model_.layer_index, model_.anim.get_layer_info(model_.layer_index)
+      ),
+      "Could not update view"
   );
 }
 
@@ -471,8 +526,10 @@ void presenter::save_file() noexcept {
   // TODO: If no file name set, ask the user for a file to save to
 
   logger::info("Saving");
-  model_.anim.write_pixels_to_disk(model_.img_id);
-  pxl_.save(model_.anim, "save.pxl");
+  TRY_ABORT(
+      model_.anim.write_pixels_to_disk(model_.img_id), "Could not write to disk"
+  );
+  TRY_ABORT(pxl_.save(model_.anim, "save.pxl"), "Could not save anim");
   logger::info("Save successful");
 }
 
@@ -482,13 +539,13 @@ void presenter::open_file() noexcept {
   }
 
   logger::info("Open");
-  model_.anim = std::move(pxl_.load("save.pxl"));
+  model_.anim = *TRY_ABORT_RET(pxl_.load("save.pxl"), "Could not load anim");
 
   model_.frame_id = 1U;
   model_.layer_index = 0U;
   model_.img_id = 1U;
   auto id = model_.anim.get_image_id(1U, 0U);
-  model_.img = model_.anim.get_image(id);
+  model_.img = *TRY_ABORT_RET(model_.anim.get_image(id), "Could not read anim");
   model_.select_mask.resize(
       // NOLINTNEXTLINE
       model_.anim.get_width() * model_.anim.get_height()
@@ -507,7 +564,7 @@ void presenter::open_file() noexcept {
   view_.set_canvas_rect(model_.rect);
   view_.set_draw_size(model_.anim.get_size());
 
-  caretaker_.snap_model(model_);
+  TRY_ABORT(caretaker_.init(50, model_), "Could not init caretaker");
 
   update_view();
 

@@ -44,7 +44,7 @@ enum TextId : u32 {
   NEW_FILE = hash_string("new_file"),
 };
 
-void load_locale(Locale locale) noexcept;
+[[nodiscard]] error_code load_locale(Locale locale) noexcept;
 
 const c8* get_font() noexcept;
 

@@ -113,16 +113,19 @@ Texture Renderer::create_text(const c8* str) const noexcept {
       this->font.get_font(), str, {0x00U, 0x00U, 0x00U, 0xffU}
   );
   if (surface == nullptr) {
-    logger::fatal("Could not create surface");
-    std::abort();
+    logger::error("Could not create text texture: surface error");
+    return Texture{};
   }
 
+  // tex can be nullptr
   SDL_Texture* tex = SDL_CreateTextureFromSurface(this->renderer, surface);
   SDL_DestroySurface(surface);
-  if (tex) {
-    SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
+  if (tex == nullptr) {
+    logger::error("Could not create text texture: texture error");
+    return Texture{};
   }
 
+  SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
   return Texture{tex};
 }
 
@@ -130,9 +133,8 @@ Texture Renderer::load_img(const c8* path) const noexcept {
   assert(path != nullptr);
 
   SDL_Texture* tex = IMG_LoadTexture(this->renderer, path);
-  if (!tex) {
+  if (tex == nullptr) {
     logger::error("Could not load image %s", path);
-    std::abort();
   }
 
   return Texture{tex};

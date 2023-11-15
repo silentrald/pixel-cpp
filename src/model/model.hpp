@@ -11,6 +11,7 @@
 #include "core/cfg/locale.hpp"
 #include "core/draw/anim.hpp"
 #include "core/draw/image.hpp"
+#include "core/ds/vector.hpp"
 #include "core/tool/enum.hpp"
 #include "types.hpp"
 #include <vector>
@@ -32,6 +33,9 @@ struct Model {
   ivec curr_pos{};
   ivec prev_pos{};
   rgba8 color{};
+
+  // Cache
+  ds::vector<draw::data_type> pixels{};
 
   //
   cfg::locale::Locale locale = cfg::locale::Locale::ENGLISH;

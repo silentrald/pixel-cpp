@@ -43,8 +43,8 @@ const c8* get_default_name(usize index) noexcept {
   return layer_prefix;
 }
 
-void TimelineInfo::init() noexcept {
-  this->allocate_by_capacities(LAYER_INIT, FRAME_INIT);
+error_code TimelineInfo::init() noexcept {
+  TRY(this->allocate_by_capacities(LAYER_INIT, FRAME_INIT));
 
   this->layer_capacity = LAYER_INIT;
   this->frame_capacity = FRAME_INIT;
@@ -59,18 +59,23 @@ void TimelineInfo::init() noexcept {
   std::strcpy(this->layer_info->name, "Layer 1");
   // visible bit and 100 opacity
   this->layer_info->opacity = VISIBLE_BIT | 100U;
+
+  return error_code::OK;
 }
 
-void TimelineInfo::load_init(usize layer_count, usize frame_count) noexcept {
-  this->allocate_by_capacities(
+error_code
+TimelineInfo::load_init(usize layer_count, usize frame_count) noexcept {
+  TRY(this->allocate_by_capacities(
       math::get_next_pow2(layer_count),
       frame_count == 1U ? 1U : math::get_next_pow2(frame_count)
-  );
+  ));
 
   this->layer_count = layer_count;
   this->layer_capacity = layer_count;
   this->frame_count = frame_count;
   this->frame_capacity = frame_count;
+
+  return error_code::OK;
 }
 
 void TimelineInfo::load_layer(usize index, LayerInfo layer_info) noexcept {
@@ -123,19 +128,19 @@ TimelineInfo& TimelineInfo::operator=(TimelineInfo&& rhs) noexcept {
 
 // === Copy === //
 
-void TimelineInfo::copy(const TimelineInfo& other) noexcept {
+error_code TimelineInfo::copy(const TimelineInfo& other) noexcept {
   if (this == &other) {
-    return;
+    return error_code::OK;
   }
 
   if (this->timeline == nullptr) {
-    this->copy_empty(other);
+    TRY(this->copy_empty(other));
   } else if (this->timeline_alloc_size == other.timeline_alloc_size) {
     this->copy_normal(other);
   } else if (this->timeline_alloc_size > other.timeline_alloc_size) {
     this->copy_overfit(other);
   } else {
-    this->copy_grow(other);
+    TRY(this->copy_grow(other));
   }
 
   // TODO: Minify copy here
@@ -146,17 +151,19 @@ void TimelineInfo::copy(const TimelineInfo& other) noexcept {
   // NOLINTNEXTLINE
   this->layer_info = (LayerInfo*)std::malloc(other.layer_info_alloc_size);
   if (this->layer_info == nullptr) {
-    logger::fatal("Could not allocate animation layer_info");
-    std::abort();
+    return error_code::BAD_ALLOC;
   }
 
   this->layer_info_alloc_size = other.layer_info_alloc_size;
   std::memcpy(this->layer_info, other.layer_info, this->layer_info_alloc_size);
+
+  return error_code::OK;
 }
 
-void TimelineInfo::copy_empty(const TimelineInfo& other) noexcept {
-  this->allocate_timeline(other.timeline_alloc_size);
+error_code TimelineInfo::copy_empty(const TimelineInfo& other) noexcept {
+  TRY(this->allocate_timeline(other.timeline_alloc_size));
   this->copy_normal(other);
+  return error_code::OK;
 }
 
 void TimelineInfo::copy_normal(const TimelineInfo& other) noexcept {
@@ -188,19 +195,19 @@ void TimelineInfo::copy_overfit(const TimelineInfo& other) noexcept {
   }
 }
 
-void TimelineInfo::copy_grow(const TimelineInfo& other) noexcept {
+error_code TimelineInfo::copy_grow(const TimelineInfo& other) noexcept {
   // NOLINTNEXTLINE
   auto* new_ptr =
       // NOLINTNEXTLINE
       (usize*)std::realloc(this->timeline, other.timeline_alloc_size);
   if (new_ptr == nullptr) {
-    logger::fatal("Could not allocate animation timeline");
-    std::abort();
+    return error_code::BAD_ALLOC;
   }
   this->timeline = new_ptr;
   this->timeline_alloc_size = other.timeline_alloc_size;
 
   this->copy_normal(other);
+  return error_code::OK;
 }
 
 TimelineInfo::~TimelineInfo() noexcept {
@@ -292,13 +299,13 @@ FrameIter TimelineInfo::get_frame_iter() const noexcept {
 
 // === Modifiers === //
 
-void TimelineInfo::insert_layer(usize index, usize layer_id) noexcept {
+error_code TimelineInfo::insert_layer(usize index, usize layer_id) noexcept {
   assert(index >= 0 && index <= this->layer_count);
 
   if (this->layer_count >= this->layer_capacity) {
     usize new_size = math::get_next_pow2(this->layer_count);
-    this->reallocate_timeline_on_layer(new_size);
-    this->reallocate_layer_info(new_size * sizeof(LayerInfo));
+    TRY(this->reallocate_timeline_on_layer(new_size));
+    TRY(this->reallocate_layer_info(new_size * sizeof(LayerInfo)));
   }
 
   auto* cursor = this->get_image_id_ptr() + index;
@@ -321,6 +328,8 @@ void TimelineInfo::insert_layer(usize index, usize layer_id) noexcept {
   this->layer_info[index].opacity = VISIBLE_BIT | 100U;
 
   ++this->layer_count;
+
+  return error_code::OK;
 }
 
 bool TimelineInfo::toggle_layer_visibility(usize index) noexcept {
@@ -333,42 +342,39 @@ bool TimelineInfo::toggle_layer_visibility(usize index) noexcept {
 
 // === Memory === //
 
-void TimelineInfo::allocate_by_capacities(
+error_code TimelineInfo::allocate_by_capacities(
     usize layer_capacity, usize frame_capacity
 ) noexcept {
-  this->allocate_timeline_capacities(layer_capacity, frame_capacity);
-  this->allocate_layer_info_capacity(layer_capacity);
+  TRY(this->allocate_timeline_capacities(layer_capacity, frame_capacity));
+  TRY(this->allocate_layer_info_capacity(layer_capacity));
+  return error_code::OK;
 }
 
-void TimelineInfo::allocate_timeline(usize new_size) noexcept {
+error_code TimelineInfo::allocate_timeline(usize new_size) noexcept {
   this->timeline_alloc_size = new_size;
   // NOLINTNEXTLINE
   this->timeline = (usize*)std::malloc(this->timeline_alloc_size);
-  if (this->timeline == nullptr) {
-    logger::fatal("Could not allocate animation timeline");
-    std::abort();
-  }
+  return this->timeline == nullptr ? error_code::BAD_ALLOC : error_code::OK;
 }
 
-void TimelineInfo::allocate_timeline_capacities(
+error_code TimelineInfo::allocate_timeline_capacities(
     usize layer_capacity, usize frame_capacity
 ) noexcept {
   // +1 is the frame id
-  this->allocate_timeline(
+  return this->allocate_timeline(
       // NOLINTNEXTLINE
       (layer_capacity + 1U) * frame_capacity * sizeof(usize)
   );
 }
 
-void TimelineInfo::reallocate_timeline_on_layer(usize new_layer_capacity
+error_code TimelineInfo::reallocate_timeline_on_layer(usize new_layer_capacity
 ) noexcept {
   auto new_capacity =
       // NOLINTNEXTLINE
       (new_layer_capacity + 1) * this->frame_capacity * sizeof(usize);
   auto* new_ptr = (usize*)std::realloc(this->timeline, new_capacity); // NOLINT
   if (new_ptr == nullptr) {
-    logger::fatal("Could not allocate animation timeline");
-    std::abort();
+    return error_code::BAD_ALLOC;
   }
 
   this->timeline = new_ptr;
@@ -385,32 +391,32 @@ void TimelineInfo::reallocate_timeline_on_layer(usize new_layer_capacity
 
   this->layer_capacity = new_layer_capacity;
   this->timeline_alloc_size = new_capacity;
+
+  return error_code::OK;
 }
 
-void TimelineInfo::allocate_layer_info(usize new_size) noexcept {
+error_code TimelineInfo::allocate_layer_info(usize new_size) noexcept {
   this->layer_info_alloc_size = new_size;
   // NOLINTNEXTLINE
   this->layer_info = (LayerInfo*)malloc(new_size);
-  if (this->layer_info == nullptr) {
-    logger::fatal("Could not allocate animation layer_info");
-    std::abort();
-  }
+  return this->layer_info == nullptr ? error_code::BAD_ALLOC : error_code::OK;
 }
 
-void TimelineInfo::allocate_layer_info_capacity(usize layer_capacity) noexcept {
-  this->allocate_layer_info(layer_capacity * sizeof(LayerInfo));
+error_code TimelineInfo::allocate_layer_info_capacity(usize layer_capacity
+) noexcept {
+  return this->allocate_layer_info(layer_capacity * sizeof(LayerInfo));
 }
 
-void TimelineInfo::reallocate_layer_info(usize new_size) noexcept {
+error_code TimelineInfo::reallocate_layer_info(usize new_size) noexcept {
   // NOLINTNEXTLINE
   auto* new_ptr =
       // NOLINTNEXTLINE
       (LayerInfo*)std::realloc(this->layer_info, new_size);
   if (new_ptr == nullptr) {
-    logger::fatal("Could not allocate animation layer_info");
-    std::abort();
+    return error_code::BAD_ALLOC;
   }
   this->layer_info = new_ptr;
+  return error_code::OK;
 }
 
 // === Private Accessors === //

@@ -31,18 +31,19 @@ public:
   Anim& operator=(Anim&& rhs) noexcept = default;
   ~Anim() noexcept = default;
 
-  void init(ivec size, ColorType type) noexcept;
+  [[nodiscard]] error_code init(ivec size, ColorType type) noexcept;
 
-  void load_init(
+  [[nodiscard]] error_code load_init(
       ivec size, usize image_count, usize layer_count, usize frame_count
   ) noexcept;
   void load_layer(usize index, LayerInfo layer_info) noexcept;
   void load_frame(usize index, usize id, usize* image_ids) noexcept;
-  void load_image(usize index, usize id, data_ptr pixels) noexcept;
-  void load_finish() noexcept;
+  [[nodiscard]] error_code
+  load_image(usize index, usize id, data_ptr pixels) noexcept;
+  [[nodiscard]] error_code load_finish() noexcept;
 
-  void copy(const Anim& other) noexcept;
-  void minicopy(const Anim& other) noexcept;
+  [[nodiscard]] error_code copy(const Anim& other) noexcept;
+  [[nodiscard]] error_code minicopy(const Anim& other) noexcept;
   void clear() noexcept;
 
   [[nodiscard]] const ImageDb& get_image_db() const noexcept;
@@ -57,20 +58,25 @@ public:
   [[nodiscard]] usize get_layer_count() const noexcept;
   [[nodiscard]] usize get_frame_count() const noexcept;
 
-  [[nodiscard]] Image get_image(usize id) noexcept;
-  [[nodiscard]] Image get_image(usize frame_id, usize layer_index) noexcept;
+  [[nodiscard]] expected<Image> get_image(usize id) noexcept;
+  [[nodiscard]] expected<Image>
+  get_image(usize frame_id, usize layer_index) noexcept;
   [[nodiscard]] Image get_image_fast(usize id) const noexcept;
   [[nodiscard]] Image
   get_image_fast(usize frame_id, usize layer_index) const noexcept;
+  [[nodiscard]] usize get_image_bytes_size() const noexcept;
 
-  [[nodiscard]] data_ptr get_pixels(usize id) noexcept;
-  [[nodiscard]] data_ptr get_pixels(usize frame_id, usize layer_index) noexcept;
+  [[nodiscard]] expected<data_ptr> get_pixels(usize id) noexcept;
+  [[nodiscard]] expected<data_ptr>
+  get_pixels(usize frame_id, usize layer_index) noexcept;
   [[nodiscard]] data_ptr get_pixels_fast(usize id) const noexcept;
   [[nodiscard]] data_ptr
   get_pixels_fast(usize frame_id, usize layer_index) const noexcept;
-  void get_pixels_slow(usize id, data_ptr pixels) const noexcept;
-  void get_pixels_slow(usize frame_id, usize layer_index, data_ptr pixels)
-      const noexcept;
+  [[nodiscard]] error_code
+  get_pixels_slow(usize id, data_ptr pixels) const noexcept;
+  [[nodiscard]] error_code get_pixels_slow(
+      usize frame_id, usize layer_index, data_ptr pixels
+  ) const noexcept;
 
   [[nodiscard]] usize
   get_image_id(usize frame_id, usize layer_index) const noexcept;
@@ -80,7 +86,7 @@ public:
   [[nodiscard]] bool is_layer_visible(usize index) const noexcept;
   void get_flatten(
       usize frame_id, usize start_layer, usize end_layer,
-      ds::vector<rgba8>& pixels
+      ds::vector<data_type>& pixels
   ) const noexcept;
 
   const std::string& get_name() noexcept;
@@ -89,10 +95,10 @@ public:
    * @param index - where to insert the new layer
    * @returns id of the newly created image on the layer
    **/
-  usize insert_layer(usize index) noexcept;
+  [[nodiscard]] expected<usize> insert_layer(usize index) noexcept;
   bool toggle_layer_visibility(usize index) noexcept;
 
-  void write_pixels_to_disk(usize id) const noexcept;
+  [[nodiscard]] error_code write_pixels_to_disk(usize id) const noexcept;
 
   [[nodiscard]] explicit operator bool() const noexcept;
 

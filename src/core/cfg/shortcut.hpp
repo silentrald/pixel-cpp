@@ -51,13 +51,13 @@ public:
    *   - Reading a non-existing file
    *   - Reading a non-config file
    **/
-  void load_config(const c8* path) noexcept;
+  [[nodiscard]] error_code load_config(const c8* path) noexcept;
 
   /**
    * Saves the current mapping to a file, from the path.
    * Recommeded to save as a .cfg file
    **/
-  void save_config(const c8* path) const noexcept;
+  [[nodiscard]] error_code save_config(const c8* path) const noexcept;
 
   [[nodiscard]] ShortcutKey get_shortcut_key(u32 key) const noexcept;
 

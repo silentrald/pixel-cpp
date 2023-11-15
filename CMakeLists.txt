@@ -121,7 +121,11 @@ set(PNG_EXECUTABLES OFF CACHE BOOL "" FORCE)
 set(PNG_TESTS OFF CACHE BOOL "" FORCE)
 set(SKIP_INSTALL_ALL OFF CACHE BOOL "" FORCE)
 set(PNG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/libpng)
+set(PNG_TOOLS OFF CACHE BOOL "" FORCE)
 add_subdirectory(${PNG_DIR})
+
+# Error Handling
+include_directories(external/expected/include)
 
 # Unit testing
 add_subdirectory(external/catch2)
@@ -134,7 +138,7 @@ add_executable(pixel_draw test/draw.cpp
 )
 target_link_libraries(pixel_draw PRIVATE Catch2::Catch2WithMain)
 
-add_executable(pixel_vector test/vector.cpp)
+add_executable(pixel_vector test/vector.cpp ${logger_srcs})
 target_link_libraries(pixel_vector PRIVATE Catch2::Catch2WithMain)
 
 if (UNIX)

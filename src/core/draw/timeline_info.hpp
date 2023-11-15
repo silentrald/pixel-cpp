@@ -47,14 +47,15 @@ public:
   TimelineInfo(const TimelineInfo&) noexcept = delete;
   TimelineInfo& operator=(const TimelineInfo&) noexcept = delete;
 
-  void init() noexcept;
-  void load_init(usize layer_count, usize frame_count) noexcept;
+  [[nodiscard]] error_code init() noexcept;
+  [[nodiscard]] error_code
+  load_init(usize layer_count, usize frame_count) noexcept;
   void load_layer(usize index, LayerInfo layer_info) noexcept;
   void load_frame(usize index, usize id, usize* image_ids) noexcept;
 
   TimelineInfo(TimelineInfo&& rhs) noexcept;
   TimelineInfo& operator=(TimelineInfo&& rhs) noexcept;
-  void copy(const TimelineInfo& other) noexcept;
+  [[nodiscard]] error_code copy(const TimelineInfo& other) noexcept;
   /* void minicopy(const TimelineInfo& other) noexcept; */
   ~TimelineInfo() noexcept;
 
@@ -75,7 +76,7 @@ public:
 
   [[nodiscard]] FrameIter get_frame_iter() const noexcept;
 
-  void insert_layer(usize index, usize layer_id) noexcept;
+  [[nodiscard]] error_code insert_layer(usize index, usize layer_id) noexcept;
   bool toggle_layer_visibility(usize index) noexcept;
 
 #ifndef NDEBUG
@@ -95,24 +96,26 @@ private:
   usize layer_info_alloc_size = 0;
 
   // === Copy Helpers === //
-  void copy_empty(const TimelineInfo& other) noexcept;
+  [[nodiscard]] error_code copy_empty(const TimelineInfo& other) noexcept;
   void copy_normal(const TimelineInfo& other) noexcept;
   void copy_overfit(const TimelineInfo& other) noexcept;
-  void copy_grow(const TimelineInfo& other) noexcept;
+  [[nodiscard]] error_code copy_grow(const TimelineInfo& other) noexcept;
 
   // === Memory === //
-  void
+  [[nodiscard]] error_code
   allocate_by_capacities(usize layer_capacity, usize frame_capacity) noexcept;
 
-  void allocate_timeline(usize new_size) noexcept;
-  void allocate_timeline_capacities(
+  [[nodiscard]] error_code allocate_timeline(usize new_size) noexcept;
+  [[nodiscard]] error_code allocate_timeline_capacities(
       usize layer_capacity, usize frame_capacity
   ) noexcept;
-  void reallocate_timeline_on_layer(usize new_layer_capacity) noexcept;
+  [[nodiscard]] error_code reallocate_timeline_on_layer(usize new_layer_capacity
+  ) noexcept;
 
-  void allocate_layer_info(usize new_size) noexcept;
-  void allocate_layer_info_capacity(usize layer_capacity) noexcept;
-  void reallocate_layer_info(usize new_size) noexcept;
+  [[nodiscard]] error_code allocate_layer_info(usize new_size) noexcept;
+  [[nodiscard]] error_code allocate_layer_info_capacity(usize layer_capacity
+  ) noexcept;
+  [[nodiscard]] error_code reallocate_layer_info(usize new_size) noexcept;
 
   // === Private Accessors === //
 

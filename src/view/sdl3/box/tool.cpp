@@ -12,7 +12,7 @@ namespace view::sdl3::widget {
 
 inline const f32 TOOL_BTN_SIZE = 32.0F;
 
-void ToolBox::push_btn(Button&& btn) noexcept {
+error_code ToolBox::push_btn(Button&& btn) noexcept {
   fvec off{this->rect.pos};
   if (!this->btns.is_empty()) {
     off = this->btns.back().rect.pos;
@@ -25,7 +25,7 @@ void ToolBox::push_btn(Button&& btn) noexcept {
   btn.rect = {.pos = off, .size = {TOOL_BTN_SIZE, TOOL_BTN_SIZE}};
   btn.tex_rect = {.pos = off, .size = {TOOL_BTN_SIZE, TOOL_BTN_SIZE}};
   btn.set_theme(input::BtnTheme::TOOL_BTN);
-  this->btns.push_back(std::move(btn));
+  return this->btns.push_back(std::move(btn));
 }
 
 void ToolBox::resize(const frect& rect) noexcept {

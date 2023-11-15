@@ -9,7 +9,7 @@
 
 namespace view::sdl3::widget {
 
-void MenuBox::push_menu_btn(MenuBtn&& btn) noexcept {
+error_code MenuBox::push_menu_btn(MenuBtn&& btn) noexcept {
   fvec off{this->rect.pos};
   if (!this->btns.is_empty()) {
     off = this->btns.back().rect.pos;
@@ -20,7 +20,7 @@ void MenuBox::push_menu_btn(MenuBtn&& btn) noexcept {
   off.x += (btn.rect.w - btn.tex_rect.w) * 0.5F;
   off.y += (btn.rect.h - btn.tex_rect.h) * 0.5F;
   btn.tex_rect.pos = off;
-  this->btns.push_back(std::move(btn));
+  return this->btns.push_back(std::move(btn));
 }
 
 void MenuBox::resize(const frect& rect) noexcept {

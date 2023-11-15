@@ -43,7 +43,7 @@ public:
   Manager(Manager&&) noexcept = delete;
   Manager& operator=(Manager&&) noexcept = delete;
 
-  void init() noexcept;
+  error_code init() noexcept;
   ~Manager() noexcept;
 
   [[nodiscard]] i32 get_window_width() const noexcept;
@@ -70,12 +70,13 @@ public:
 
   void locale_updated() noexcept;
 
-  void insert_layer(i32 index, const draw::LayerInfo& layer_info) noexcept;
+  [[nodiscard]] error_code
+  insert_layer(i32 index, const draw::LayerInfo& layer_info) noexcept;
   void set_layer_visible(i32 index, bool visible) noexcept;
   void clear_layers() noexcept;
   void set_selected_on_timeline(u32 frame_id, i32 layer_index) noexcept;
 
-  void push_modal(modal::Id id) noexcept;
+  [[nodiscard]] error_code push_modal(modal::Id id) noexcept;
   modal::Id pop_modal() noexcept;
   void clear_modals() noexcept;
 

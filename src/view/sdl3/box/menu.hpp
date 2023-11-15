@@ -23,7 +23,7 @@ public:
   ~MenuBox() noexcept override = default;
   MenuBox& operator=(MenuBox&&) noexcept = default;
 
-  void push_menu_btn(MenuBtn&& btn) noexcept;
+  [[nodiscard]] error_code push_menu_btn(MenuBtn&& btn) noexcept;
 
   void resize(const frect& rect) noexcept override;
   void reset() noexcept override;

@@ -11,9 +11,10 @@
 
 namespace view::sdl3::widget {
 
-void DrawBox::init_textures(const Renderer& renderer, ivec size) noexcept {
+error_code
+DrawBox::init_textures(const Renderer& renderer, ivec size) noexcept {
   ds::vector<rgba8> pixels{};
-  pixels.resize(size.x * size.y);
+  TRY(pixels.resize(size.x * size.y));
 
   for (i32 y = 0; y < size.y; ++y) {
     for (i32 x = 0; x < size.x; ++x) {
@@ -27,6 +28,8 @@ void DrawBox::init_textures(const Renderer& renderer, ivec size) noexcept {
     this->textures[i] = renderer.create_texture(size);
   }
   this->textures[0].set_pixels(pixels.get_data(), size);
+
+  return error_code::OK;
 }
 
 Texture& DrawBox::get_bg_texture() noexcept {

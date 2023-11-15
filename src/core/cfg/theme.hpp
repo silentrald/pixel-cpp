@@ -13,7 +13,7 @@
 
 namespace cfg::theme {
 
-void load_config(const c8* path) noexcept;
+[[nodiscard]] error_code load_config(const c8* path) noexcept;
 
 rgba8 get_menu_btn_color(input::BtnState state) noexcept;
 
