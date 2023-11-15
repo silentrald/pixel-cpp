@@ -28,17 +28,17 @@ namespace view::sdl3 {
 const u64 FPS = 60;
 const u64 SPF = 1000 / FPS;
 
-void Manager::init() noexcept {
+error_code Manager::init() noexcept {
   this->window.init();
   this->renderer.init(this->window.get_window());
 
   this->handle_resize(this->window.size);
 
-  this->boxes.push_back(&this->draw_box);
-  this->boxes.push_back(&this->timeline_box);
-  this->boxes.push_back(&this->tool_box);
-  this->boxes.push_back(&this->status_box);
-  this->boxes.push_back(&this->menu_box);
+  TRY(this->boxes.push_back(&this->draw_box));
+  TRY(this->boxes.push_back(&this->timeline_box));
+  TRY(this->boxes.push_back(&this->tool_box));
+  TRY(this->boxes.push_back(&this->status_box));
+  TRY(this->boxes.push_back(&this->menu_box));
 
   // Tool box
   widget::Button btn{};
@@ -46,27 +46,27 @@ void Manager::init() noexcept {
   btn.set_theme(input::BtnTheme::TOOL_BTN);
   btn.set_texture(this->renderer.load_img("assets/tools/pencil.png"));
   btn.set_left_click_listener(presenter::set_pencil_tool);
-  this->tool_box.push_btn(std::move(btn));
+  TRY(this->tool_box.push_btn(std::move(btn)));
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
   btn.set_texture(this->renderer.load_img("assets/tools/eraser.png"));
   btn.set_left_click_listener(presenter::set_eraser_tool);
-  this->tool_box.push_btn(std::move(btn));
+  TRY(this->tool_box.push_btn(std::move(btn)));
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
   btn.set_texture(this->renderer.load_img("assets/tools/line.png"));
   btn.set_left_click_listener(presenter::set_line_tool);
-  this->tool_box.push_btn(std::move(btn));
+  TRY(this->tool_box.push_btn(std::move(btn)));
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
   btn.set_texture(this->renderer.load_img("assets/tools/fill.png"));
   btn.set_left_click_listener(presenter::set_fill_tool);
-  this->tool_box.push_btn(std::move(btn));
+  TRY(this->tool_box.push_btn(std::move(btn)));
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
   btn.set_texture(this->renderer.load_img("assets/tools/fill.png"));
   btn.set_left_click_listener(presenter::set_select_tool);
-  this->tool_box.push_btn(std::move(btn));
+  TRY(this->tool_box.push_btn(std::move(btn)));
 
   // Menu box
   fvec size{};
@@ -74,15 +74,15 @@ void Manager::init() noexcept {
 
   menu_btn.set_text(cfg::locale::TextId::FILE_MENU_ITEM, this->renderer);
   menu_btn.set_left_click_listener(presenter::new_file_clicked);
-  this->menu_box.push_menu_btn(std::move(menu_btn));
+  TRY(this->menu_box.push_menu_btn(std::move(menu_btn)));
 
   menu_btn.set_text(cfg::locale::TextId::EDIT_MENU_ITEM, this->renderer);
   menu_btn.set_left_click_listener(presenter::export_to_png); // TODO:
-  this->menu_box.push_menu_btn(std::move(menu_btn));
+  TRY(this->menu_box.push_menu_btn(std::move(menu_btn)));
 
   menu_btn.set_text(cfg::locale::TextId::VIEW_MENU_ITEM, this->renderer);
   menu_btn.set_left_click_listener(presenter::debug_callback); // TODO:
-  this->menu_box.push_menu_btn(std::move(menu_btn));
+  TRY(this->menu_box.push_menu_btn(std::move(menu_btn)));
 
   this->timeline_box.init(this->renderer);
 
@@ -96,6 +96,8 @@ void Manager::init() noexcept {
   this->locale_btn.rect.size = size;
   this->locale_btn.tex_rect.size = size;
   this->locale_btn.set_left_click_listener(presenter::set_locale);
+
+  return error_code::OK;
 }
 
 Manager::~Manager() noexcept {
@@ -119,7 +121,12 @@ const frect& Manager::get_canvas_rect() const noexcept {
 }
 
 void Manager::set_draw_size(ivec size) noexcept {
-  this->draw_box.init_textures(this->renderer, size);
+  auto code = this->draw_box.init_textures(this->renderer, size);
+  if (is_error(code)) {
+    logger::fatal("Could not initialize draw box");
+    std::abort();
+  }
+
   this->status_box.size = size;
 }
 
@@ -159,10 +166,11 @@ Texture& Manager::get_select2_texture() noexcept {
   return this->draw_box.get_select2_texture();
 }
 
-void Manager::insert_layer(
-    i32 index, const draw::LayerInfo& layer_info
-) noexcept {
-  this->timeline_box.insert_layer_info(index, layer_info, this->renderer);
+error_code
+Manager::insert_layer(i32 index, const draw::LayerInfo& layer_info) noexcept {
+  return this->timeline_box.insert_layer_info(
+      index, layer_info, this->renderer
+  );
 }
 
 void Manager::set_layer_visible(i32 index, bool visible) noexcept {

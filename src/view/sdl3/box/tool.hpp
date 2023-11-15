@@ -23,7 +23,7 @@ public:
   ToolBox& operator=(ToolBox&&) noexcept = default;
   ~ToolBox() noexcept override = default;
 
-  void push_btn(Button&& btn) noexcept;
+  [[nodiscard]] error_code push_btn(Button&& btn) noexcept;
 
   void resize(const frect& rect) noexcept override;
   void reset() noexcept override;

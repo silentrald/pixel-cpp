@@ -21,6 +21,7 @@ enum ColorType : i32 {
 
 i32 get_color_type_size(ColorType type) noexcept;
 
+using data_type = u8;
 using data_ptr = u8*;
 using usize = u32;
 

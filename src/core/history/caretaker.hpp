@@ -20,7 +20,7 @@ public:
   Caretaker(const Caretaker&) noexcept = delete;
   Caretaker& operator=(const Caretaker&) noexcept = delete;
 
-  explicit Caretaker(i32 capacity = 50) noexcept;
+  Caretaker() noexcept = default;
   Caretaker(Caretaker&&) noexcept = default;
   Caretaker& operator=(Caretaker&&) noexcept = default;
   ~Caretaker() noexcept = default;
@@ -28,7 +28,7 @@ public:
   /**
    * First call to initialize or re-initialize the caretaker
    **/
-  void init(Snapshot&& snapshot) noexcept;
+  [[nodiscard]] error_code init(i32 capacity, const Model& model) noexcept;
 
   void snap_model(const Model& model) noexcept;
 

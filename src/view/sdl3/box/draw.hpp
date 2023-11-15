@@ -25,7 +25,8 @@ public:
 
   ~DrawBox() noexcept override = default;
 
-  void init_textures(const Renderer& renderer, ivec size) noexcept;
+  [[nodiscard]] error_code
+  init_textures(const Renderer& renderer, ivec size) noexcept;
   [[nodiscard]] Texture& get_bg_texture() noexcept;
   [[nodiscard]] Texture& get_bot_texture() noexcept;
   [[nodiscard]] Texture& get_curr_texture() noexcept;

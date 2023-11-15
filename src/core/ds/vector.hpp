@@ -10,7 +10,6 @@
 
 #include "types.hpp"
 #include <cassert>
-#include <cstdlib>
 #include <cstring>
 #include <new>
 #include <type_traits>
@@ -18,8 +17,8 @@
 
 namespace ds {
 
-inline const i32 VECTOR_INITIAL_SIZE = 4;
-inline const i32 VECTOR_K = 2;
+inline const u32 VECTOR_INITIAL_SIZE = 4;
+inline const u32 VECTOR_K = 2;
 
 /**
  * Self implemented vector class, std::vector crashes view data impls.
@@ -80,7 +79,7 @@ public:
   /**
    * Number of elements within the vector
    **/
-  [[nodiscard]] i32 get_size() const noexcept {
+  [[nodiscard]] u32 get_size() const noexcept {
     return this->top;
   }
 
@@ -95,30 +94,28 @@ public:
    * The maximum number of elements in the vector, this can change if a vector
    *  mutation happens
    **/
-  [[nodiscard]] i32 get_capacity() const noexcept {
+  [[nodiscard]] u32 get_capacity() const noexcept {
     return this->capacity;
   }
 
   // === Modifiers === //
 
-  // TODO: Replace to std::expected
-  void resize(i32 new_size) noexcept {
+  [[nodiscard]] error_code resize(u32 new_size) noexcept {
     assert(new_size >= 0);
 
-    if (this->data) {
-      this->reallocate(new_size);
-    } else {
-      this->allocate(new_size);
-    }
+    auto code =
+        this->data ? this->reallocate(new_size) : this->allocate(new_size);
     this->top = new_size;
+    return code;
   }
 
-  // TODO: Replace to std::expected
-  void push_back(rref elem) noexcept {
-    this->check_allocation();
+  [[nodiscard]] error_code push_back(rref elem) noexcept {
+    TRY(this->check_allocation());
 
     this->data[this->top] = std::move(elem);
     ++this->top;
+
+    return error_code::OK;
   }
 
   rref pop() noexcept {
@@ -128,22 +125,24 @@ public:
     return std::move(this->data[this->top + 1]);
   }
 
-  // TODO: Replace to std::expected
-  void insert(i32 index, rref elem) noexcept {
-    this->check_allocation();
+  [[nodiscard]] error_code insert(u32 index, rref elem) noexcept {
+    assert(index >= 0 && index <= this->top);
+    TRY(this->check_allocation());
 
     // Shift
-    for (i32 i = this->top; i > index; --i) {
+    for (u32 i = this->top; i > index; --i) {
       this->data[i] = std::move(data[i - 1]);
     }
     this->data[index] = std::move(elem);
     ++this->top;
+
+    return error_code::OK;
   }
 
-  void remove(i32 index) noexcept {
+  void remove(u32 index) noexcept {
     assert(this->top > 0);
 
-    for (i32 i = index + 1; i < this->top; ++i) {
+    for (u32 i = index + 1; i < this->top; ++i) {
       this->data[i - 1] = std::move(this->data[i]);
     }
     --this->top;
@@ -156,12 +155,12 @@ public:
 
   // === Accessing === //
 
-  [[nodiscard]] ref operator[](i32 index) noexcept {
+  [[nodiscard]] ref operator[](u32 index) noexcept {
     assert(index >= 0 && index < this->top);
     return this->data[index];
   }
 
-  [[nodiscard]] cref operator[](i32 index) const noexcept {
+  [[nodiscard]] cref operator[](u32 index) const noexcept {
     assert(index >= 0 && index < this->top);
     return this->data[index];
   }
@@ -188,24 +187,26 @@ public:
 
 private:
   ptr data = nullptr;
-  i32 top = 0;
-  i32 capacity = 0;
+  u32 top = 0;
+  u32 capacity = 0;
 
   /**
    * Check whether the current allocation is enough, else try to alloc/realloc
    *  memory
    **/
-  // TODO: Replace to std::expected
-  inline void check_allocation() noexcept {
+  [[nodiscard]] inline error_code check_allocation() noexcept {
     if (this->data == nullptr) {
-      this->allocate(VECTOR_INITIAL_SIZE);
-    } else if (this->top == this->capacity) {
-      this->reallocate(this->capacity * VECTOR_K);
+      return this->allocate(VECTOR_INITIAL_SIZE);
     }
+
+    if (this->top == this->capacity) {
+      return this->reallocate(this->capacity * VECTOR_K);
+    }
+
+    return error_code::OK;
   }
 
-  // TODO: Replace to std::expected
-  void allocate(i32 new_size) noexcept {
+  [[nodiscard]] error_code allocate(u32 new_size) noexcept {
     if constexpr (std::is_fundamental<T>::value) {
       // Primitive use calloc
       this->data = (ptr)std::calloc(new_size, sizeof(T)); // NOLINT
@@ -215,13 +216,14 @@ private:
     }
 
     if (this->data == nullptr) {
-      std::abort();
+      return error_code::BAD_ALLOC;
     }
+
     this->capacity = new_size;
+    return error_code::OK;
   }
 
-  // TODO: Replace to std::expected
-  void reallocate(i32 new_size) noexcept {
+  [[nodiscard]] error_code reallocate(u32 new_size) noexcept {
     ptr new_data = nullptr;
     if constexpr (std::is_fundamental<T>::value) {
       new_data = (ptr)std::realloc(this->data, new_size * sizeof(T)); // NOLINT
@@ -230,7 +232,7 @@ private:
     }
 
     if (new_data == nullptr) {
-      std::abort();
+      return error_code::BAD_ALLOC;
     }
 
     if constexpr (std::is_fundamental<T>::value) {
@@ -241,7 +243,7 @@ private:
       );
     } else {
       // For new store, need to transfer the data manually
-      for (i32 i = 0; i < this->top; ++i) {
+      for (u32 i = 0; i < this->top; ++i) {
         new_data[i] = std::move(this->data[i]);
       }
 
@@ -250,6 +252,8 @@ private:
 
     this->data = new_data;
     this->capacity = new_size;
+
+    return error_code::OK;
   }
 };
 

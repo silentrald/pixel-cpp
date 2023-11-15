@@ -74,11 +74,11 @@ i32 inline get_first_non_whitespace_index(
 }
 
 // Create test cases for this, might create a class for this
-void Shortcut::load_config(const c8* path) noexcept {
+error_code Shortcut::load_config(const c8* path) noexcept {
   std::ifstream ifs{path};
   if (!ifs.is_open()) {
     logger::error("Could not read file %s", path);
-    return;
+    return error_code::FILE_NOT_FOUND;
   }
 
   std::string line{};
@@ -125,10 +125,14 @@ void Shortcut::load_config(const c8* path) noexcept {
   }
 
   ifs.close();
+
+  return error_code::OK;
 }
 
-void Shortcut::save_config(const c8* path) const noexcept {
-  // TODO: UwU
+error_code Shortcut::save_config(const c8* path) const noexcept {
+  // TODO:
+  logger::fatal("Not yet implemented UwU");
+  std::abort();
 }
 
 ShortcutKey Shortcut::get_shortcut_key(u32 key) const noexcept {

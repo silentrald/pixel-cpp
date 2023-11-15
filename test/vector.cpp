@@ -7,6 +7,7 @@
 
 #include "core/ds/vector.hpp"
 #include "catch2/catch_test_macros.hpp"
+#include "core/logger/logger.hpp"
 #include "types.hpp"
 
 struct Test {
@@ -19,7 +20,7 @@ TEST_CASE("vector: init", "[ds]") {
   REQUIRE(v.get_size() == 0);
   REQUIRE(v.get_capacity() == 0);
 
-  v.push_back(Test{});
+  TRY_ABORT(v.push_back(Test{}), "Push back error");
 
   REQUIRE(v.get_size() == 1);
   REQUIRE(v.get_capacity() > 0);

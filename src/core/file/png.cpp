@@ -110,19 +110,16 @@ bool PngData::save_frame(const draw::Anim& anim, u32 frame_id) noexcept {
     return false;
   }
 
-  ds::vector<rgba8> pixels{};
-  pixels.resize(anim.get_width() * anim.get_height());
+  ds::vector<draw::data_type> pixels{};
+  TRY_ABORT(
+      pixels.resize(anim.get_image_db().get_bytes_size()),
+      "Could not resize temp storage"
+  );
   anim.get_flatten(frame_id, 0, anim.get_layer_count() - 1, pixels);
-  i32 i = 0;
   for (i32 y = 0; y < anim.get_height(); ++y) {
     row_pointer = row_pointers[y];
-    for (i32 x = 0; x < row_size; x += 4) {
-      row_pointer[x] = pixels[i].r;
-      row_pointer[x + 1] = pixels[i].g;
-      row_pointer[x + 2] = pixels[i].b;
-      row_pointer[x + 3] = pixels[i].a;
-      ++i;
-    }
+    // NOLINTNEXTLINE
+    std::memcpy(row_pointer, pixels.get_data() + y * row_size, row_size);
   }
   png_write_image(this->png_ptr, row_pointers);
   png_write_end(this->png_ptr, nullptr);

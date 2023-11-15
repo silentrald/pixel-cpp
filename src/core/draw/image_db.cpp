@@ -66,21 +66,32 @@ ImageDb& ImageDb::operator=(ImageDb&& rhs) noexcept {
   return *this;
 }
 
-void ImageDb::init(usize bytes, usize capacity) noexcept {
+error_code ImageDb::init(usize bytes, usize capacity) noexcept {
   this->bytes = bytes;
   this->capacity = capacity;
-  this->allocate(capacity * (bytes + LAYER_HEADER_SIZE));
+  TRY(this->allocate(capacity * (bytes + LAYER_HEADER_SIZE)));
+  TRY(this->disk.open_file(".image_db", "w+"));
 
-  this->disk.open_file(".image_db", "w+");
-  this->create_image();
+  TRY(this->create_image(), {}, to_error_code);
+
+  return error_code::OK;
 }
 
-void ImageDb::load_init(usize image_count, usize bytes) noexcept {
+error_code ImageDb::load_init(usize image_count, usize bytes) noexcept {
   // NOTE: INIT start with 64U
   this->capacity = 64U;
+  auto code = this->allocate(this->capacity * (bytes * LAYER_HEADER_SIZE));
+  if (is_error(code)) {
+    return code;
+  }
+
+  code = this->disk.open_file(".image_db", "w+");
+  if (is_error(code)) {
+    return code;
+  }
+
   this->size = std::min(this->capacity, image_count);
   this->bytes = bytes;
-  this->allocate(this->capacity * (bytes * LAYER_HEADER_SIZE));
 
   this->head_index = 0U;
   this->tail_index = this->size - 1U;
@@ -90,10 +101,16 @@ void ImageDb::load_init(usize image_count, usize bytes) noexcept {
   this->disk_size = image_count;
   this->disk_capacity = image_count;
 
-  this->disk.open_file(".image_db", "w+");
+  return error_code::OK;
 }
 
-void ImageDb::load_image(usize index, usize id, data_ptr pixels) noexcept {
+error_code
+ImageDb::load_image(usize index, usize id, data_ptr pixels) noexcept {
+  // Disk Write
+  TRY(this->seek_disk_id(id));
+  TRY(this->disk.write_u32(INDEX_SENTINEL));
+  TRY(this->disk.write(pixels, this->bytes));
+
   if (index <= this->capacity) {
     // Memory Write
     this->get_id_ptr()[index] = id;
@@ -112,46 +129,45 @@ void ImageDb::load_image(usize index, usize id, data_ptr pixels) noexcept {
     );
   }
 
-  // Disk Write
-  this->seek_disk_id(id);
-  this->disk.write_u32(INDEX_SENTINEL);
-  this->disk.write(pixels, this->bytes);
+  return error_code::OK;
 }
 
-void ImageDb::load_finish() noexcept {
-  this->disk.flush();
+error_code ImageDb::load_finish() noexcept {
+  return this->disk.flush();
 }
 
 // === Copy Functions === //
 
-void ImageDb::copy(const ImageDb& other) noexcept {
+error_code ImageDb::copy(const ImageDb& other) noexcept {
   if (this == &other) {
-    return;
+    return error_code::OK;
   }
 
   if (this->ptr == nullptr) {
-    this->copy_empty(other);
+    TRY(this->copy_empty(other));
   } else if (this->alloc_size == other.alloc_size) {
     this->copy_normal(other);
   } else if (this->alloc_size > other.alloc_size) {
     this->copy_overfit(other);
   } else {
-    this->copy_grow(other);
+    TRY(this->copy_grow(other));
   }
 
   this->disk_size = other.disk_size;
   this->disk_capacity = other.disk_capacity;
+
+  return error_code::OK;
 }
 
-void ImageDb::copy_empty(const ImageDb& other) noexcept {
+error_code ImageDb::copy_empty(const ImageDb& other) noexcept {
   // NOLINTNEXTLINE
   this->ptr = (data_ptr)std::malloc(other.alloc_size);
   if (this->ptr == nullptr) {
-    logger::fatal("Could not allocate animation layers");
-    std::abort();
+    return error_code::BAD_ALLOC;
   }
 
   this->copy_normal(other);
+  return error_code::OK;
 }
 
 void ImageDb::copy_normal(const ImageDb& other) noexcept {
@@ -206,21 +222,21 @@ void ImageDb::copy_overfit(const ImageDb& other) noexcept {
   }
 }
 
-void ImageDb::copy_grow(const ImageDb& other) noexcept {
+error_code ImageDb::copy_grow(const ImageDb& other) noexcept {
   // NOLINTNEXTLINE
   auto* new_ptr = (data_ptr)std::realloc(this->ptr, other.alloc_size);
   if (new_ptr == nullptr) {
-    logger::fatal("Could not allocate animation layers");
-    std::abort();
+    return error_code::BAD_ALLOC;
   }
   this->ptr = new_ptr;
 
   this->copy_normal(other);
+  return error_code::OK;
 }
 
-void ImageDb::minicopy(const ImageDb& other) noexcept {
+error_code ImageDb::minicopy(const ImageDb& other) noexcept {
   if (this == &other) {
-    return;
+    return error_code::OK;
   }
 
   // TODO: Reuse memory if already allocated
@@ -243,8 +259,7 @@ void ImageDb::minicopy(const ImageDb& other) noexcept {
   // NOLINTNEXTLINE
   this->ptr = (data_ptr)std::malloc(this->alloc_size);
   if (this->ptr == nullptr) {
-    logger::fatal("Could not allocate animation layers");
-    std::abort();
+    return error_code::BAD_ALLOC;
   }
 
   // Manual Copy
@@ -266,6 +281,8 @@ void ImageDb::minicopy(const ImageDb& other) noexcept {
     dst_cursor += this->bytes;
     ++count;
   }
+
+  return error_code::OK;
 }
 
 ImageDb::~ImageDb() noexcept {
@@ -281,7 +298,7 @@ data_ptr ImageDb::get_ptr() const noexcept {
   return this->ptr;
 }
 
-data_ptr ImageDb::get_pixels(usize id) noexcept {
+expected<data_ptr> ImageDb::get_pixels(usize id) noexcept {
   assert(this->ptr != nullptr);
   assert(id <= this->disk_capacity);
 
@@ -316,8 +333,8 @@ data_ptr ImageDb::get_pixels(usize id) noexcept {
   // Write memory from disk and return the data
   // NOLINTNEXTLINE
   auto* pixels_ptr = this->get_pixels_ptr() + index * this->bytes;
-  this->seek_disk_pixels(id);
-  this->disk.read(pixels_ptr, this->bytes);
+  TRY_RET(this->seek_disk_pixels(id), {}, to_unexpected);
+  TRY_RET(this->disk.read(pixels_ptr, this->bytes), {}, to_unexpected);
 
   return pixels_ptr;
 }
@@ -343,10 +360,13 @@ data_ptr ImageDb::get_pixels_fast(usize id) const noexcept {
   std::abort();
 }
 
-void ImageDb::get_pixels_slow(usize id, data_ptr pixels) const noexcept {
+error_code ImageDb::get_pixels_slow(usize id, data_ptr pixels) const noexcept {
   assert(id != 0U && id <= this->disk_capacity);
-  this->seek_disk_pixels(id);
-  this->disk.read(pixels, this->bytes);
+
+  TRY(this->seek_disk_pixels(id));
+  TRY(this->disk.read(pixels, this->bytes));
+
+  return error_code::OK;
 }
 
 usize ImageDb::get_size() const noexcept {
@@ -375,7 +395,7 @@ ImageDbIter ImageDb::get_iter() const noexcept {
 
 // === Modifiers === //
 
-usize ImageDb::create_image() noexcept {
+expected<usize> ImageDb::create_image() noexcept {
   assert(this->ptr != nullptr);
   assert(this->size <= this->capacity);
 
@@ -389,13 +409,13 @@ usize ImageDb::create_image() noexcept {
   assert(this->disk_size <= this->disk_capacity);
 
   usize id = this->next_id;
-  this->seek_disk_id(id);
+  TRY(this->seek_disk_id(id), {}, to_unexpected);
   if (this->disk_size == this->disk_capacity) {
     ++this->next_id;
     ++this->disk_capacity;
   } else {
-    this->next_id = this->disk.read_u32();
-    this->disk.move(-4);
+    this->next_id = *TRY_RET(this->disk.read_u32());
+    TRY(this->disk.move(-4), {}, to_unexpected);
   }
 
   // Memory write
@@ -406,14 +426,14 @@ usize ImageDb::create_image() noexcept {
   this->insert_index = new_index;
 
   // Disk Write, already moved the disk pointer
-  this->disk.write_u32(INDEX_SENTINEL);
+  TRY(this->disk.write_u32(INDEX_SENTINEL), {}, to_unexpected);
 
   // Set the data before writing it into disk
   // NOLINTNEXTLINE
   auto* pixels = this->get_pixels_ptr() + (id - 1U) * this->bytes;
   std::memset(pixels, 0U, this->bytes);
-  this->disk.write(pixels, this->bytes);
-  this->disk.flush();
+  TRY(this->disk.write(pixels, this->bytes), {}, to_unexpected);
+  TRY(this->disk.flush(), {}, to_unexpected);
 
   // Update both sizes
   ++this->size;
@@ -427,27 +447,28 @@ usize ImageDb::create_image() noexcept {
   return id;
 }
 
-void ImageDb::write_pixels_to_disk(usize id) const noexcept {
+error_code ImageDb::write_pixels_to_disk(usize id) const noexcept {
   if (id > this->disk_size) {
     // Means that the data is removed
-    return;
+    return error_code::OK;
   }
 
   auto* pixels = this->get_pixels_fast(id);
-  this->seek_disk_id(id);
-  this->disk.write_u32(ID_SENTINEL);
-  this->disk.write(pixels, this->bytes);
-  this->disk.flush();
+  TRY(this->seek_disk_id(id));
+  TRY(this->disk.write_u32(ID_SENTINEL));
+  TRY(this->disk.write(pixels, this->bytes));
+  TRY(this->disk.flush());
+
+  return error_code::OK;
 }
 
 // === Memory === //
 
-void ImageDb::allocate(usize alloc_size) noexcept {
+error_code ImageDb::allocate(usize alloc_size) noexcept {
   // NOLINTNEXTLINE
   this->ptr = (data_ptr)std::malloc(alloc_size);
   if (this->ptr == nullptr) {
-    logger::fatal("Could not allocate animation layers");
-    std::abort();
+    return error_code::BAD_ALLOC;
   }
   this->alloc_size = alloc_size;
 
@@ -462,6 +483,8 @@ void ImageDb::allocate(usize alloc_size) noexcept {
   this->insert_index = 0U;
   this->head_index = INDEX_SENTINEL;
   this->tail_index = INDEX_SENTINEL;
+
+  return error_code::OK;
 }
 
 // === Private Accessors === //
@@ -482,12 +505,14 @@ data_ptr ImageDb::get_pixels_ptr() const noexcept {
 
 // === Disk Helper === //
 
-void ImageDb::seek_disk_id(usize id) const noexcept {
-  this->disk.seek((id - 1U) * (sizeof(usize) + this->bytes));
+error_code ImageDb::seek_disk_id(usize id) const noexcept {
+  return this->disk.seek((id - 1U) * (sizeof(usize) + this->bytes));
 }
 
-void ImageDb::seek_disk_pixels(usize id) const noexcept {
-  this->disk.seek((id - 1U) * (sizeof(usize) + this->bytes) + sizeof(usize));
+error_code ImageDb::seek_disk_pixels(usize id) const noexcept {
+  return this->disk.seek(
+      (id - 1U) * (sizeof(usize) + this->bytes) + sizeof(usize)
+  );
 }
 
 // === Iterators === //

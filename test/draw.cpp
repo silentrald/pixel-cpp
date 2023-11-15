@@ -51,7 +51,7 @@ void test_init_anim(const Anim& anim) noexcept {
 TEST_CASE("Anim: layers modification", "[draw]") {
   Anim anim{};
 
-  anim.init(SIZE, ColorType::RGBA8);
+  TRY_ABORT(anim.init(SIZE, ColorType::RGBA8), "Could not init anim");
   test_init_anim(anim);
 
   u32 id = 0U;
@@ -60,11 +60,11 @@ TEST_CASE("Anim: layers modification", "[draw]") {
   const i32 INSERT_COUNT = 6;
 
   for (i32 i = 1; i < INSERT_COUNT; ++i) {
-    id = anim.insert_layer(0);
+    id = *TRY_ABORT_RET(anim.insert_layer(0), "Could not update anim");
     REQUIRE(id != 1U);
     REQUIRE(anim.get_layer_count() == i + 1);
 
-    image = std::move(anim.get_image(id));
+    image = *TRY_ABORT_RET(anim.get_image(id), "Could not read anim");
     test_empty_layer(image, id);
   }
 
@@ -80,14 +80,14 @@ TEST_CASE("Anim: layers modification", "[draw]") {
       {0x33, 0x33, 0x33, 0x33}, {0x44, 0x44, 0x44, 0x44},
       {0x55, 0x55, 0x55, 0x55}, {0x66, 0x66, 0x66, 0x66}};
   for (id = 1U; id <= 6U; ++id) {
-    image = std::move(anim.get_image(id));
+    image = *TRY_ABORT_RET(anim.get_image(id), "Could not read anim");
     for (i32 i = 0; i < ISIZE; ++i) {
       image.paint(i, expected_colors[id - 1]);
     }
   }
 
   for (id = 1U; id <= INSERT_COUNT; ++id) {
-    image = std::move(anim.get_image(id));
+    image = *TRY_ABORT_RET(anim.get_image(id), "Could not read anim");
     for (i32 i = 0; i < ISIZE; ++i) {
       test_color(*(rgba8*)image.get_pixel(i), expected_colors[id - 1]);
     }

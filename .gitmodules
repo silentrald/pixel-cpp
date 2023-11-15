@@ -13,3 +13,6 @@
 [submodule "external/libpng"]
 	path = external/libpng
 	url = https://github.com/glennrp/libpng.git
+[submodule "external/expected"]
+	path = external/expected
+	url = https://github.com/TartanLlama/expected.git

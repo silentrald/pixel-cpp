@@ -22,7 +22,7 @@ void* Manager::get_modal_data(modal::Id id) const noexcept {
   std::abort();
 }
 
-void Manager::push_modal(modal::Id id) noexcept {
+error_code Manager::push_modal(modal::Id id) noexcept {
   assert(id != modal::Id::NONE);
 
   if (this->mouse_box_id > -1) {
@@ -43,10 +43,11 @@ void Manager::push_modal(modal::Id id) noexcept {
     break;
 
   case modal::Id::NONE:
-    return;
+    return error_code::OK;
   }
 
-  this->modals.push_back(std::move(modal)); // NOLINT
+  // NOLINTNEXTLINE
+  return this->modals.push_back(std::move(modal));
 }
 
 modal::Id Manager::pop_modal() noexcept {

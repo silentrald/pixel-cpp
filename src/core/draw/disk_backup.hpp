@@ -22,17 +22,17 @@ public:
   DiskBackup& operator=(DiskBackup&& rhs) noexcept;
   ~DiskBackup() noexcept;
 
-  void open_file(const c8* path, const c8* mode) noexcept;
+  [[nodiscard]] error_code open_file(const c8* path, const c8* mode) noexcept;
 
-  void seek(u32 off) const noexcept;
-  void move(i32 off) const noexcept;
+  [[nodiscard]] error_code seek(u32 off) const noexcept;
+  [[nodiscard]] error_code move(i32 off) const noexcept;
 
-  void read(void* data, u32 size) const noexcept;
-  [[nodiscard]] u32 read_u32() const noexcept;
+  [[nodiscard]] error_code read(void* data, u32 size) const noexcept;
+  [[nodiscard]] expected<u32> read_u32() const noexcept;
 
-  void write(void* data, u32 size) const noexcept;
-  void write_u32(u32 val) const noexcept;
-  void flush() const noexcept;
+  [[nodiscard]] error_code write(void* data, u32 size) const noexcept;
+  [[nodiscard]] error_code write_u32(u32 val) const noexcept;
+  [[nodiscard]] error_code flush() const noexcept;
 
 private:
   FILE* fp = nullptr;

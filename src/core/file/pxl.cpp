@@ -27,91 +27,106 @@ bool Pxl::will_auto_save() noexcept {
   return this->actions == this->auto_save;
 }
 
-void Pxl::force_auto_save(const draw::Anim& anim) noexcept {
+error_code Pxl::force_auto_save(const draw::Anim& anim) noexcept {
   this->actions = 0;
-  this->save(anim, "save.pxl");
+  return this->save(anim, "save.pxl");
 }
 
-void Pxl::try_auto_save(const draw::Anim& anim) noexcept {
+error_code Pxl::try_auto_save(const draw::Anim& anim) noexcept {
   if (this->auto_save == 0U) {
-    return;
+    return error_code::OK;
   }
 
   ++this->actions;
   if (this->actions < this->auto_save) {
-    return;
+    return error_code::OK;
   }
 
   this->actions = 0;
-  this->save(anim, "save.pxl");
+  return this->save(anim, "save.pxl");
 }
 
-// BUG: May crash if the file is getting deleted, handle the fprintf error when
-// expected is impl
-// NOTE: Caching is not supported here yet, assuming the whole
-// data is in memory
-void Pxl::save(const draw::Anim& anim, const c8* path) const noexcept {
+// NOLINTNEXTLINE
+#define FILE_PRINT(...)                                                        \
+  if (fprintf(__VA_ARGS__) < 0) {                                              \
+    return error_code::FILE_WRITE;                                             \
+  }
+
+// NOLINTNEXTLINE
+error_code Pxl::save(const draw::Anim& anim, const c8* path) noexcept {
   FILE* fp = fopen(path, "w"); // NOLINT
   if (fp == nullptr) {
     logger::error("Could not write to %s", path);
-    return;
+    return error_code::FILE_NOT_FOUND;
   }
 
   const draw::ImageDb& images = anim.get_image_db();
 
-  // Metadata
-  // NOLINTNEXTLINE
-  fprintf(
+  // === Metadata === //
+  FILE_PRINT(
       fp, "MDT\n%d %d %u %u %u\n", anim.get_width(), anim.get_height(),
       images.get_disk_size(), anim.get_layer_count(), anim.get_frame_count()
   );
 
-  // Layers Section
-  fprintf(fp, "LYR\n"); // NOLINT
+  // === Layers Section === //
+  FILE_PRINT(fp, "LYR\n");
+
   for (draw::usize i = 0U; i < anim.get_layer_count(); ++i) {
     const auto& layer_info = anim.get_layer_info(i);
-    // NOLINTNEXTLINE
-    fprintf(fp, "%02x %s\n", layer_info.opacity, layer_info.name);
+    FILE_PRINT(fp, "%02x %s\n", layer_info.opacity, layer_info.name);
   }
 
-  // Frames Section
+  // === Frames Section === //
+  FILE_PRINT(fp, "FRM\n");
   {
-    fprintf(fp, "FRM\n"); // NOLINT
     const draw::TimelineInfo& timeline_info = anim.get_timeline_info();
     for (auto it = timeline_info.get_frame_iter(); it; ++it) {
-      fprintf(fp, "%u", it.get_id()); // NOLINT
+      FILE_PRINT(fp, "%u", it.get_id());
       for (i32 i = 0; i < timeline_info.get_layer_count(); ++i) {
-        fprintf(fp, " %u", it.get_image_id(i)); // NOLINT
+        FILE_PRINT(fp, " %u", it.get_image_id(i));
       }
-      fprintf(fp, "\n"); // NOLINT
+      FILE_PRINT(fp, "\n");
     }
   }
 
-  // Images Section
-  auto* pixels = (draw::data_ptr)malloc(images.get_bytes_size()); // NOLINT
-  if (pixels == nullptr) {
-    logger::fatal("Could not create temporary pixels");
-    std::abort();
+  // === Images Section === //
+  if (this->pixels.get_capacity() < images.get_bytes_size()) {
+    TRY(this->pixels.resize(images.get_bytes_size()));
   }
 
-  fprintf(fp, "IMG\n"); // NOLINT
+  FILE_PRINT(fp, "IMG\n");
   for (draw::usize id = 1U; id <= images.get_disk_capacity(); ++id) {
-    images.get_pixels_slow(id, pixels);
+    TRY(images.get_pixels_slow(id, this->pixels.get_data()));
 
-    fprintf(fp, "%u ", id);                         // NOLINT
-    fwrite(pixels, 1, images.get_bytes_size(), fp); // NOLINT
-    fprintf(fp, "\n");                              // NOLINT
+    FILE_PRINT(fp, "%u ", id);
+    if (fwrite(this->pixels.get_data(), 1, images.get_bytes_size(), fp) !=
+        images.get_bytes_size()) {
+      return error_code::FILE_WRITE;
+    }
+    FILE_PRINT(fp, "\n");
   }
-  free(pixels); // NOLINT
 
-  fclose(fp); // NOLINT
+  if (fclose(fp) != 0) { // NOLINT
+    return error_code::FILE_WRITE;
+  }
+  return error_code::OK;
 }
 
-draw::Anim Pxl::load(const c8* path) const noexcept {
+#undef FILE_PRINT
+
+// NOLINTNEXTLINE
+#define FILE_SCAN(...)                                                         \
+  /* NOLINTNEXTLINE */                                                         \
+  if (fscanf(__VA_ARGS__) < 0) {                                               \
+    return unexpected{error_code::FILE_READ};                                  \
+  }
+
+// NOLINTNEXTLINE
+expected<draw::Anim> Pxl::load(const c8* path) noexcept {
   FILE* fp = fopen(path, "r"); // NOLINT
   if (fp == nullptr) {
     logger::error("Could not read %s", path);
-    return {};
+    return unexpected{error_code::FILE_NOT_FOUND};
   }
 
   draw::Anim anim{};
@@ -122,68 +137,72 @@ draw::Anim Pxl::load(const c8* path) const noexcept {
     ivec size{};
     draw::usize layer_count = 0U;
     draw::usize frame_count = 0U;
-    // NOLINTNEXTLINE
-    fscanf(
+
+    FILE_SCAN(
         fp, "%*s %d %d %u %u %u", &size.x, &size.y, &image_count, &layer_count,
         &frame_count
     );
 
-    anim.load_init(size, image_count, layer_count, frame_count);
+    TRY(anim.load_init(size, image_count, layer_count, frame_count), {},
+        to_unexpected);
   }
 
   // Layer Section
   {
-    fscanf(fp, "%*s"); // NOLINT
+    FILE_SCAN(fp, "%*s");
     draw::LayerInfo layer_info{};
-
     for (draw::usize i = 0U; i < anim.get_layer_count(); ++i) {
-      // NOLINTNEXTLINE
-      fscanf(fp, "%02x %51[^\n]", &layer_info.opacity, layer_info.name);
+      FILE_SCAN(fp, "%02x %51[^\n]", &layer_info.opacity, layer_info.name);
       anim.load_layer(i, layer_info);
     }
   }
 
   // Frame Section
   {
-    fscanf(fp, "%*s"); // NOLINT
+    FILE_SCAN(fp, "%*s");
 
     draw::usize id = 0U;
     ds::vector<draw::usize> image_ids{};
-    image_ids.resize(anim.get_width() * anim.get_height());
+    TRY(image_ids.resize(anim.get_width() * anim.get_height()), {},
+        to_unexpected);
 
     for (draw::usize i = 0U; i < anim.get_frame_count(); ++i) {
-      fscanf(fp, "%u ", &id); // NOLINT
-
+      FILE_SCAN(fp, "%u ", &id);
       for (draw::usize j = 0U; j < anim.get_layer_count(); ++j) {
-        // NOLINTNEXTLINE
-        fscanf(fp, "%u ", image_ids.get_data() + j);
+        FILE_SCAN(fp, "%u ", image_ids.get_data() + j);
       }
-
       anim.load_frame(i, id, image_ids.get_data());
     }
   }
 
   // Image Section
   {
-    fscanf(fp, "%*s"); // NOLINT
+    FILE_SCAN(fp, "%*s");
 
-    ds::vector<u8> pixels{};
-    // NOLINTNEXTLINE
-    pixels.resize(anim.get_width() * anim.get_height() * sizeof(rgba8));
+    if (this->pixels.get_capacity() < anim.get_image_db().get_bytes_size()) {
+      TRY(this->pixels.resize(anim.get_image_db().get_bytes_size()), {},
+          to_unexpected);
+    }
     u32 id = 0U;
 
     for (i32 i = 0; i < image_count; ++i) {
-      fscanf(fp, "%u ", &id);                              // NOLINT
-      fread(pixels.get_data(), 1U, pixels.get_size(), fp); // NOLINT
-
-      anim.load_image(i, id, pixels.get_data());
+      FILE_SCAN(fp, "%u ", &id);
+      if (fread(pixels.get_data(), 1U, pixels.get_size(), fp) !=
+          pixels.get_size()) {
+        return unexpected{error_code::FILE_READ};
+      }
+      TRY(anim.load_image(i, id, pixels.get_data()), {}, to_unexpected);
     }
   }
 
-  fclose(fp); // NOLINT
+  if (fclose(fp) != 0) { // NOLINT
+    return unexpected{error_code::FILE_READ};
+  }
 
   return anim;
 }
+
+#undef FILE_SCAN
 
 } // namespace file
 

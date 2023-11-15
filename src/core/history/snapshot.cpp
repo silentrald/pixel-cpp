@@ -15,6 +15,7 @@ void Snapshot::snap_default(const Model& model) noexcept {
   this->layer_index = model.layer_index;
 }
 
+// NOTE: Shouldn't throw an error if optimization is implemented
 void Snapshot::snap_anim(const Model& model) noexcept {
   this->anim.minicopy(model.anim);
 }
@@ -28,7 +29,7 @@ void Snapshot::restore(Model& model) const noexcept {
   model.img_id = model.anim.get_image_id(this->frame_id, this->layer_index);
 
   // Update the image object, since this can be invalidated in anim copy
-  model.img = model.anim.get_image(model.img_id);
+  model.img = *model.anim.get_image(model.img_id); // TODO:
 
   model.frame_id = this->frame_id;
   model.layer_index = this->layer_index;

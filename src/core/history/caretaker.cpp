@@ -12,14 +12,18 @@
 
 namespace history {
 
-Caretaker::Caretaker(i32 capacity) noexcept {
-  this->snapshots.resize(capacity);
-}
+error_code Caretaker::init(i32 capacity, const Model& model) noexcept {
+  TRY(this->snapshots.resize(capacity));
 
-void Caretaker::init(Snapshot&& snapshot) noexcept {
+  history::Snapshot snapshot{};
+  snapshot.snap_default(model);
+  snapshot.snap_anim(model);
+
   this->clear();
   this->snapshots[0] = std::move(snapshot);
   this->cursor = this->start_cursor = this->end_cursor = 0;
+
+  return error_code::OK;
 }
 
 void Caretaker::snap_model(const Model& model) noexcept {
@@ -58,17 +62,12 @@ void Caretaker::remove_future_snapshots() noexcept {
 
   if (this->cursor < this->end_cursor) {
     // +2 because +1 will contain the new snapshot
-    logger::debug("Clearing %d -> %d", this->cursor + 2, this->end_cursor);
     for (i32 i = this->cursor + 2; i <= this->end_cursor; ++i) {
       this->snapshots[i].reset();
     }
     return;
   }
 
-  logger::debug(
-      "Clearing 0 -> %d & %d -> %d", this->end_cursor, this->cursor + 2,
-      this->snapshots.get_size()
-  );
   for (i32 i = this->cursor + 2; i < this->snapshots.get_size(); ++i) {
     this->snapshots[i].reset();
   }
@@ -102,7 +101,6 @@ bool Caretaker::undo(Model& model) noexcept {
     --this->cursor;
   }
 
-  logger::debug("Cursor at %d", this->cursor);
   this->snapshots[this->cursor].restore(model);
 
   return true;
@@ -122,9 +120,7 @@ bool Caretaker::redo(Model& model) noexcept {
     this->cursor = 0;
   }
 
-  logger::debug("Cursor at %d", this->cursor);
   this->snapshots[this->cursor].restore(model);
-
   return true;
 }
 

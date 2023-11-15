@@ -37,15 +37,16 @@ public:
     return *this;
   }
 
-  // TODO: std::expected
+  // Just fail if font is not loaded
   void init(const c8* path, i32 size) noexcept {
     this->font = TTF_OpenFont(path, size);
     if (this->font == nullptr) {
-      logger::fatal("Could not load font");
+      logger::fatal("Could not load font `%s`", path);
       std::abort();
     }
   }
 
+  // Just fail if font is not loaded
   void set(const c8* path, i32 size) noexcept {
     if (this->font) {
       TTF_CloseFont(this->font);
@@ -53,7 +54,7 @@ public:
 
     this->font = TTF_OpenFont(path, size);
     if (this->font == nullptr) {
-      logger::fatal("Could not load font");
+      logger::fatal("Could not load font `%s`", path);
       std::abort();
     }
   }

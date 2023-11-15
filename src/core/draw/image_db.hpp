@@ -24,16 +24,25 @@ public:
   ImageDb(const ImageDb&) noexcept = delete;
   ImageDb& operator=(const ImageDb&) noexcept = delete;
 
-  void init(usize bytes, usize capacity) noexcept;
+  /**
+   * Error Codes:
+   *   BAD_ALLOC
+   **/
+  [[nodiscard]] error_code init(usize bytes, usize capacity) noexcept;
 
-  void load_init(usize image_count, usize bytes) noexcept;
-  void load_image(usize index, usize id, data_ptr pixels) noexcept;
-  void load_finish() noexcept;
+  /**
+   * Error Codes:
+   *   BAD_ALLOC
+   **/
+  [[nodiscard]] error_code load_init(usize image_count, usize bytes) noexcept;
+  [[nodiscard]] error_code
+  load_image(usize index, usize id, data_ptr pixels) noexcept;
+  [[nodiscard]] error_code load_finish() noexcept;
 
   ImageDb(ImageDb&& rhs) noexcept;
   ImageDb& operator=(ImageDb&& rhs) noexcept;
-  void copy(const ImageDb& other) noexcept;
-  void minicopy(const ImageDb& other) noexcept;
+  [[nodiscard]] error_code copy(const ImageDb& other) noexcept;
+  [[nodiscard]] error_code minicopy(const ImageDb& other) noexcept;
   ~ImageDb() noexcept;
 
   [[nodiscard]] data_ptr get_ptr() const noexcept;
@@ -42,7 +51,7 @@ public:
    * Average retrieval of image data either cache hit on memory or cache miss on
    * disk.
    **/
-  [[nodiscard]] data_ptr get_pixels(usize id) noexcept;
+  [[nodiscard]] expected<data_ptr> get_pixels(usize id) noexcept;
 
   /**
    * Fast retrieval of image data in memory.
@@ -60,7 +69,8 @@ public:
    * @param id
    * @param pixels - output of the disk read
    **/
-  void get_pixels_slow(usize id, data_ptr pixels) const noexcept;
+  [[nodiscard]] error_code
+  get_pixels_slow(usize id, data_ptr pixels) const noexcept;
 
   [[nodiscard]] usize get_size() const noexcept;
   [[nodiscard]] usize get_capacity() const noexcept;
@@ -70,8 +80,8 @@ public:
 
   [[nodiscard]] ImageDbIter get_iter() const noexcept;
 
-  usize create_image() noexcept;
-  void write_pixels_to_disk(usize id) const noexcept;
+  [[nodiscard]] expected<usize> create_image() noexcept;
+  [[nodiscard]] error_code write_pixels_to_disk(usize id) const noexcept;
 
 private:
   data_ptr ptr = nullptr;
@@ -91,13 +101,14 @@ private:
   usize disk_capacity = 0U;
 
   // === Copy Helpers === //
-  void copy_empty(const ImageDb& other) noexcept;
+  [[nodiscard]] error_code copy_empty(const ImageDb& other) noexcept;
   void copy_normal(const ImageDb& other) noexcept;
   void copy_overfit(const ImageDb& other) noexcept;
-  void copy_grow(const ImageDb& other) noexcept;
+  [[nodiscard]] error_code copy_grow(const ImageDb& other) noexcept;
 
   // === Memory === //
-  void allocate(usize alloc_size) noexcept;
+
+  [[nodiscard]] error_code allocate(usize alloc_size) noexcept;
 
   // === Private Accessors === //
 
@@ -112,8 +123,8 @@ private:
 
   // === Disk Helper === //
 
-  inline void seek_disk_id(usize id) const noexcept;
-  inline void seek_disk_pixels(usize id) const noexcept;
+  [[nodiscard]] inline error_code seek_disk_id(usize id) const noexcept;
+  [[nodiscard]] inline error_code seek_disk_pixels(usize id) const noexcept;
 };
 
 // Forward iterator for ImageDb

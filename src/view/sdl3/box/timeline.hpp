@@ -28,7 +28,7 @@ public:
 
   void init(const Renderer& renderer) noexcept;
 
-  void insert_layer_info(
+  [[nodiscard]] error_code insert_layer_info(
       i32 index, const draw::LayerInfo& layer_info, const Renderer& renderer
   ) noexcept;
   void set_layer_visible(i32 index, bool visible) noexcept;

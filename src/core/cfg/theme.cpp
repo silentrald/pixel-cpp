@@ -6,6 +6,7 @@
  *==========================*/
 
 #include "./theme.hpp"
+#include "core/logger/logger.hpp"
 
 namespace cfg {
 
@@ -25,8 +26,10 @@ rgba8 tool_btn_colors[] = {
     {0xcc, 0xcc, 0xcc, 0xff},
     {0x44, 0x44, 0x44, 0xff}};
 
-void theme::load_config(const c8* path) noexcept {
+error_code theme::load_config(const c8* path) noexcept {
   // TODO: Loader plus hex string to rgba8 function helper
+  logger::fatal("Not yet implemented UwU");
+  std::abort();
 }
 
 rgba8 theme::get_menu_btn_color(input::BtnState state) noexcept {
