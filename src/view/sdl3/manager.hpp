@@ -71,10 +71,10 @@ public:
   void locale_updated() noexcept;
 
   [[nodiscard]] error_code
-  insert_layer(i32 index, const draw::LayerInfo& layer_info) noexcept;
-  void set_layer_visible(i32 index, bool visible) noexcept;
+  insert_layer(usize index, const draw::LayerInfo& layer_info) noexcept;
+  void set_layer_visible(usize index, bool visible) noexcept;
   void clear_layers() noexcept;
-  void set_selected_on_timeline(u32 frame_id, i32 layer_index) noexcept;
+  void set_selected_on_timeline(usize frame_id, usize layer_index) noexcept;
 
   [[nodiscard]] error_code push_modal(modal::Id id) noexcept;
   modal::Id pop_modal() noexcept;

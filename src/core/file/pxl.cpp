@@ -64,14 +64,15 @@ error_code Pxl::save(const draw::Anim& anim, const c8* path) noexcept {
 
   // === Metadata === //
   FILE_PRINT(
-      fp, "MDT\n%d %d %u %u %u\n", anim.get_width(), anim.get_height(),
-      images.get_disk_size(), anim.get_layer_count(), anim.get_frame_count()
+      fp, "MDT\n%d %d " USIZE_FMT " " USIZE_FMT " " USIZE_FMT "\n",
+      anim.get_width(), anim.get_height(), images.get_disk_size(),
+      anim.get_layer_count(), anim.get_frame_count()
   );
 
   // === Layers Section === //
   FILE_PRINT(fp, "LYR\n");
 
-  for (draw::usize i = 0U; i < anim.get_layer_count(); ++i) {
+  for (usize i = 0U; i < anim.get_layer_count(); ++i) {
     const auto& layer_info = anim.get_layer_info(i);
     FILE_PRINT(fp, "%02x %s\n", layer_info.opacity, layer_info.name);
   }
@@ -81,9 +82,9 @@ error_code Pxl::save(const draw::Anim& anim, const c8* path) noexcept {
   {
     const draw::TimelineInfo& timeline_info = anim.get_timeline_info();
     for (auto it = timeline_info.get_frame_iter(); it; ++it) {
-      FILE_PRINT(fp, "%u", it.get_id());
+      FILE_PRINT(fp, USIZE_FMT, it.get_id());
       for (i32 i = 0; i < timeline_info.get_layer_count(); ++i) {
-        FILE_PRINT(fp, " %u", it.get_image_id(i));
+        FILE_PRINT(fp, " " USIZE_FMT, it.get_image_id(i));
       }
       FILE_PRINT(fp, "\n");
     }
@@ -95,10 +96,10 @@ error_code Pxl::save(const draw::Anim& anim, const c8* path) noexcept {
   }
 
   FILE_PRINT(fp, "IMG\n");
-  for (draw::usize id = 1U; id <= images.get_disk_capacity(); ++id) {
+  for (usize id = 1U; id <= images.get_disk_capacity(); ++id) {
     TRY(images.get_pixels_slow(id, this->pixels.get_data()));
 
-    FILE_PRINT(fp, "%u ", id);
+    FILE_PRINT(fp, USIZE_FMT " ", id);
     if (fwrite(this->pixels.get_data(), 1, images.get_bytes_size(), fp) !=
         images.get_bytes_size()) {
       return error_code::FILE_WRITE;
@@ -132,15 +133,15 @@ expected<draw::Anim> Pxl::load(const c8* path) noexcept {
   draw::Anim anim{};
 
   // Metadata
-  draw::usize image_count = 0U;
+  usize image_count = 0U;
   {
     ivec size{};
-    draw::usize layer_count = 0U;
-    draw::usize frame_count = 0U;
+    usize layer_count = 0U;
+    usize frame_count = 0U;
 
     FILE_SCAN(
-        fp, "%*s %d %d %u %u %u", &size.x, &size.y, &image_count, &layer_count,
-        &frame_count
+        fp, "%*s %d %d" USIZE_FMT USIZE_FMT USIZE_FMT, &size.x, &size.y,
+        &image_count, &layer_count, &frame_count
     );
 
     TRY(anim.load_init(size, image_count, layer_count, frame_count), {},
@@ -151,7 +152,7 @@ expected<draw::Anim> Pxl::load(const c8* path) noexcept {
   {
     FILE_SCAN(fp, "%*s");
     draw::LayerInfo layer_info{};
-    for (draw::usize i = 0U; i < anim.get_layer_count(); ++i) {
+    for (usize i = 0U; i < anim.get_layer_count(); ++i) {
       FILE_SCAN(fp, "%02x %51[^\n]", &layer_info.opacity, layer_info.name);
       anim.load_layer(i, layer_info);
     }
@@ -161,15 +162,15 @@ expected<draw::Anim> Pxl::load(const c8* path) noexcept {
   {
     FILE_SCAN(fp, "%*s");
 
-    draw::usize id = 0U;
-    ds::vector<draw::usize> image_ids{};
+    usize id = 0U;
+    ds::vector<usize> image_ids{};
     TRY(image_ids.resize(anim.get_width() * anim.get_height()), {},
         to_unexpected);
 
-    for (draw::usize i = 0U; i < anim.get_frame_count(); ++i) {
-      FILE_SCAN(fp, "%u ", &id);
-      for (draw::usize j = 0U; j < anim.get_layer_count(); ++j) {
-        FILE_SCAN(fp, "%u ", image_ids.get_data() + j);
+    for (usize i = 0U; i < anim.get_frame_count(); ++i) {
+      FILE_SCAN(fp, USIZE_FMT " ", &id);
+      for (usize j = 0U; j < anim.get_layer_count(); ++j) {
+        FILE_SCAN(fp, USIZE_FMT " ", image_ids.get_data() + j);
       }
       anim.load_frame(i, id, image_ids.get_data());
     }
@@ -186,7 +187,7 @@ expected<draw::Anim> Pxl::load(const c8* path) noexcept {
     u32 id = 0U;
 
     for (i32 i = 0; i < image_count; ++i) {
-      FILE_SCAN(fp, "%u ", &id);
+      FILE_SCAN(fp, USIZE_FMT " ", &id);
       if (fread(pixels.get_data(), 1U, pixels.get_size(), fp) !=
           pixels.get_size()) {
         return unexpected{error_code::FILE_READ};

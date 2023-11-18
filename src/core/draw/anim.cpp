@@ -272,9 +272,9 @@ void Anim::print_metadata() const noexcept {
   logger::debug(
       "Animation Metadata\n"
       "  Size: (%d, %d)\n"
-      "  Image Count: %u\n"
-      "  Layer Count: %u\n"
-      "  Frame Count: %u\n",
+      "  Image Count: " USIZE_FMT "\n"
+      "  Layer Count: " USIZE_FMT "\n"
+      "  Frame Count: " USIZE_FMT "\n",
       size.x, size.y, this->images.get_disk_size(),
       this->timeline.get_layer_count(), this->timeline.get_frame_count()
   );
@@ -292,7 +292,9 @@ void Anim::print_images_memory() const noexcept {
   usize mod = this->size.x * get_color_type_size(this->type);
   usize psize = mod * this->size.y;
   for (auto it = this->images.get_iter(); it; ++it) {
-    logger::print("  Image Id: %u ; Ptr: %p", it.get_id(), it.get_data());
+    logger::print(
+        "  Image Id: " USIZE_FMT " ; Ptr: %p", it.get_id(), it.get_data()
+    );
     for (usize i = 0U; i < psize; ++i) {
       if (i % mod == 0U) {
         logger::print("\n");
@@ -323,7 +325,7 @@ void Anim::print_images_disk() const noexcept {
         { logger::unlock(); }, to_void
     );
 
-    logger::print("  Image Id: %u", id);
+    logger::print("  Image Id: " USIZE_FMT, id);
     for (usize i = 0U; i < pixels.get_size(); ++i) {
       if (i % mod == 0U) {
         logger::print("\n");
@@ -351,7 +353,7 @@ void Anim::print_timeline_info() const noexcept {
 
   logger::print("=== Frames ===\n");
   for (auto it = this->timeline.get_frame_iter(); it; ++it) {
-    logger::print("  Id: %u ; Images:\n ", it.get_id());
+    logger::print("  Id: " USIZE_FMT " ; Images:\n ", it.get_id());
     for (usize i = 0U; i < this->timeline.get_layer_count(); ++i) {
       logger::print(" %3u", it.get_image_id(i));
     }

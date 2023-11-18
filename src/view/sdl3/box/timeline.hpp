@@ -29,9 +29,9 @@ public:
   void init(const Renderer& renderer) noexcept;
 
   [[nodiscard]] error_code insert_layer_info(
-      i32 index, const draw::LayerInfo& layer_info, const Renderer& renderer
+      usize index, const draw::LayerInfo& layer_info, const Renderer& renderer
   ) noexcept;
-  void set_layer_visible(i32 index, bool visible) noexcept;
+  void set_layer_visible(usize index, bool visible) noexcept;
   void clear_layers() noexcept;
 
   void resize(const frect& rect) noexcept override;
@@ -41,10 +41,10 @@ public:
   void update() noexcept override;
   void render(const Renderer& renderer) const noexcept override;
 
-  u32 start_frame = 1U;
-  u32 end_frame = 1U;
-  i32 selected_layer = 0;
-  u32 selected_frame = 1U;
+  usize start_frame = 1U;
+  usize end_frame = 1U;
+  usize selected_layer = 0;
+  usize selected_frame = 1U;
 
 private:
   struct Layer {

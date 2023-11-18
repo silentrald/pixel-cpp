@@ -80,8 +80,8 @@ void Image::print() const noexcept {
   }
 
   logger::print(
-      "  Image Id: %u ; Size (%d, %d) ; Ptr: %p", this->id, this->size.x,
-      this->size.y, this->ptr
+      "  Image Id: " USIZE_FMT " ; Size (%d, %d) ; Ptr: %p", this->id,
+      this->size.x, this->size.y, this->ptr
   );
 
   usize mod = this->size.x * get_color_type_size(this->type);

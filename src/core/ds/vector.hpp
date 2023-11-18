@@ -17,8 +17,8 @@
 
 namespace ds {
 
-inline const u32 VECTOR_INITIAL_SIZE = 4;
-inline const u32 VECTOR_K = 2;
+inline const usize VECTOR_INITIAL_SIZE = 4;
+inline const usize VECTOR_K = 2;
 
 /**
  * Self implemented vector class, std::vector crashes view data impls.
@@ -79,7 +79,7 @@ public:
   /**
    * Number of elements within the vector
    **/
-  [[nodiscard]] u32 get_size() const noexcept {
+  [[nodiscard]] usize get_size() const noexcept {
     return this->top;
   }
 
@@ -94,13 +94,13 @@ public:
    * The maximum number of elements in the vector, this can change if a vector
    *  mutation happens
    **/
-  [[nodiscard]] u32 get_capacity() const noexcept {
+  [[nodiscard]] usize get_capacity() const noexcept {
     return this->capacity;
   }
 
   // === Modifiers === //
 
-  [[nodiscard]] error_code resize(u32 new_size) noexcept {
+  [[nodiscard]] error_code resize(usize new_size) noexcept {
     assert(new_size >= 0);
 
     auto code =
@@ -125,12 +125,12 @@ public:
     return std::move(this->data[this->top + 1]);
   }
 
-  [[nodiscard]] error_code insert(u32 index, rref elem) noexcept {
+  [[nodiscard]] error_code insert(usize index, rref elem) noexcept {
     assert(index >= 0 && index <= this->top);
     TRY(this->check_allocation());
 
     // Shift
-    for (u32 i = this->top; i > index; --i) {
+    for (usize i = this->top; i > index; --i) {
       this->data[i] = std::move(data[i - 1]);
     }
     this->data[index] = std::move(elem);
@@ -139,10 +139,10 @@ public:
     return error_code::OK;
   }
 
-  void remove(u32 index) noexcept {
+  void remove(usize index) noexcept {
     assert(this->top > 0);
 
-    for (u32 i = index + 1; i < this->top; ++i) {
+    for (usize i = index + 1; i < this->top; ++i) {
       this->data[i - 1] = std::move(this->data[i]);
     }
     --this->top;
@@ -155,12 +155,12 @@ public:
 
   // === Accessing === //
 
-  [[nodiscard]] ref operator[](u32 index) noexcept {
+  [[nodiscard]] ref operator[](usize index) noexcept {
     assert(index >= 0 && index < this->top);
     return this->data[index];
   }
 
-  [[nodiscard]] cref operator[](u32 index) const noexcept {
+  [[nodiscard]] cref operator[](usize index) const noexcept {
     assert(index >= 0 && index < this->top);
     return this->data[index];
   }
@@ -187,8 +187,8 @@ public:
 
 private:
   ptr data = nullptr;
-  u32 top = 0;
-  u32 capacity = 0;
+  usize top = 0;
+  usize capacity = 0;
 
   /**
    * Check whether the current allocation is enough, else try to alloc/realloc
@@ -206,7 +206,7 @@ private:
     return error_code::OK;
   }
 
-  [[nodiscard]] error_code allocate(u32 new_size) noexcept {
+  [[nodiscard]] error_code allocate(usize new_size) noexcept {
     if constexpr (std::is_fundamental<T>::value) {
       // Primitive use calloc
       this->data = (ptr)std::calloc(new_size, sizeof(T)); // NOLINT
@@ -223,7 +223,7 @@ private:
     return error_code::OK;
   }
 
-  [[nodiscard]] error_code reallocate(u32 new_size) noexcept {
+  [[nodiscard]] error_code reallocate(usize new_size) noexcept {
     ptr new_data = nullptr;
     if constexpr (std::is_fundamental<T>::value) {
       new_data = (ptr)std::realloc(this->data, new_size * sizeof(T)); // NOLINT
@@ -243,7 +243,7 @@ private:
       );
     } else {
       // For new store, need to transfer the data manually
-      for (u32 i = 0; i < this->top; ++i) {
+      for (usize i = 0; i < this->top; ++i) {
         new_data[i] = std::move(this->data[i]);
       }
 

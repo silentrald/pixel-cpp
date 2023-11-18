@@ -167,13 +167,13 @@ Texture& Manager::get_select2_texture() noexcept {
 }
 
 error_code
-Manager::insert_layer(i32 index, const draw::LayerInfo& layer_info) noexcept {
+Manager::insert_layer(usize index, const draw::LayerInfo& layer_info) noexcept {
   return this->timeline_box.insert_layer_info(
       index, layer_info, this->renderer
   );
 }
 
-void Manager::set_layer_visible(i32 index, bool visible) noexcept {
+void Manager::set_layer_visible(usize index, bool visible) noexcept {
   this->timeline_box.set_layer_visible(index, visible);
 }
 
@@ -181,7 +181,9 @@ void Manager::clear_layers() noexcept {
   this->timeline_box.clear_layers();
 }
 
-void Manager::set_selected_on_timeline(u32 frame_id, i32 layer_index) noexcept {
+void Manager::set_selected_on_timeline(
+    usize frame_id, usize layer_index
+) noexcept {
   this->timeline_box.selected_frame = frame_id;
   this->timeline_box.selected_layer = layer_index;
 }

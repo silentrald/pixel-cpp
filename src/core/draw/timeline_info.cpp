@@ -305,7 +305,7 @@ error_code TimelineInfo::insert_layer(usize index, usize layer_id) noexcept {
   if (this->layer_count >= this->layer_capacity) {
     usize new_size = math::get_next_pow2(this->layer_count);
     TRY(this->reallocate_timeline_on_layer(new_size));
-    TRY(this->reallocate_layer_info(new_size * sizeof(LayerInfo)));
+    TRY(this->reallocate_layer_info(new_size));
   }
 
   auto* cursor = this->get_image_id_ptr() + index;
@@ -346,15 +346,19 @@ error_code TimelineInfo::allocate_by_capacities(
     usize layer_capacity, usize frame_capacity
 ) noexcept {
   TRY(this->allocate_timeline_capacities(layer_capacity, frame_capacity));
-  TRY(this->allocate_layer_info_capacity(layer_capacity));
+  TRY(this->allocate_layer_info(layer_capacity));
   return error_code::OK;
 }
 
 error_code TimelineInfo::allocate_timeline(usize new_size) noexcept {
-  this->timeline_alloc_size = new_size;
   // NOLINTNEXTLINE
-  this->timeline = (usize*)std::malloc(this->timeline_alloc_size);
-  return this->timeline == nullptr ? error_code::BAD_ALLOC : error_code::OK;
+  this->timeline = (usize*)std::malloc(new_size);
+  if (this->timeline == nullptr) {
+    return error_code::BAD_ALLOC;
+  }
+
+  this->timeline_alloc_size = new_size;
+  return error_code::OK;
 }
 
 error_code TimelineInfo::allocate_timeline_capacities(
@@ -395,27 +399,34 @@ error_code TimelineInfo::reallocate_timeline_on_layer(usize new_layer_capacity
   return error_code::OK;
 }
 
-error_code TimelineInfo::allocate_layer_info(usize new_size) noexcept {
-  this->layer_info_alloc_size = new_size;
+error_code TimelineInfo::allocate_layer_info(usize layer_capacity) noexcept {
+  auto alloc_size = layer_capacity * sizeof(LayerInfo);
   // NOLINTNEXTLINE
-  this->layer_info = (LayerInfo*)malloc(new_size);
-  return this->layer_info == nullptr ? error_code::BAD_ALLOC : error_code::OK;
+  this->layer_info =
+      // NOLINTNEXTLINE
+      (LayerInfo*)std::malloc(alloc_size);
+  if (this->layer_info == nullptr) {
+    return error_code::BAD_ALLOC;
+  }
+
+  this->layer_info_alloc_size = alloc_size;
+  return error_code::OK;
 }
 
-error_code TimelineInfo::allocate_layer_info_capacity(usize layer_capacity
+error_code TimelineInfo::reallocate_layer_info(usize new_layer_capacity
 ) noexcept {
-  return this->allocate_layer_info(layer_capacity * sizeof(LayerInfo));
-}
-
-error_code TimelineInfo::reallocate_layer_info(usize new_size) noexcept {
+  auto alloc_size = new_layer_capacity * sizeof(LayerInfo);
   // NOLINTNEXTLINE
   auto* new_ptr =
       // NOLINTNEXTLINE
-      (LayerInfo*)std::realloc(this->layer_info, new_size);
+      (LayerInfo*)std::realloc(this->layer_info, alloc_size);
   if (new_ptr == nullptr) {
     return error_code::BAD_ALLOC;
   }
+
   this->layer_info = new_ptr;
+  this->layer_info_alloc_size = alloc_size;
+
   return error_code::OK;
 }
 
@@ -477,10 +488,10 @@ FrameIter::operator bool() const noexcept {
 void TimelineInfo::print_metadata() const noexcept {
   logger::debug(
       "Timeline Info Metadata\n"
-      "  Layer Count/Cap: %u/%u\n"
-      "  Frame Count/Cap: %u/%u\n"
-      "  Timeline Alloc Size: %u\n"
-      "  Layer Info Alloc Size: %u",
+      "  Layer Count/Cap: " USIZE_FMT "/" USIZE_FMT "\n"
+      "  Frame Count/Cap: " USIZE_FMT "/" USIZE_FMT "\n"
+      "  Timeline Alloc Size: " USIZE_FMT "\n"
+      "  Layer Info Alloc Size: " USIZE_FMT,
       this->layer_count, this->layer_capacity, this->frame_count,
       this->frame_capacity, this->timeline_alloc_size,
       this->layer_info_alloc_size
