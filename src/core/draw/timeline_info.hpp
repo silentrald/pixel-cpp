@@ -14,11 +14,6 @@
 
 namespace draw {
 
-struct LayerInfo {
-  c8 name[51] = ""; // NOLINT
-  u8 opacity = 0U;
-};
-
 class FrameIter {
 public:
   FrameIter() noexcept = default;
@@ -56,7 +51,6 @@ public:
   TimelineInfo(TimelineInfo&& rhs) noexcept;
   TimelineInfo& operator=(TimelineInfo&& rhs) noexcept;
   [[nodiscard]] error_code copy(const TimelineInfo& other) noexcept;
-  /* void minicopy(const TimelineInfo& other) noexcept; */
   ~TimelineInfo() noexcept;
 
   [[nodiscard]] usize
@@ -88,12 +82,12 @@ public:
 private:
   usize* timeline = nullptr;
   LayerInfo* layer_info = nullptr;
-  usize layer_count = 0;
-  usize frame_count = 0;
-  usize layer_capacity = 0;
-  usize frame_capacity = 0;
-  usize timeline_alloc_size = 0;
-  usize layer_info_alloc_size = 0;
+  usize layer_count = 0U;
+  usize frame_count = 0U;
+  usize layer_capacity = 0U;
+  usize frame_capacity = 0U;
+  usize timeline_alloc_size = 0U;
+  usize layer_info_alloc_size = 0U;
 
   // === Copy Helpers === //
   [[nodiscard]] error_code copy_empty(const TimelineInfo& other) noexcept;
@@ -112,10 +106,9 @@ private:
   [[nodiscard]] error_code reallocate_timeline_on_layer(usize new_layer_capacity
   ) noexcept;
 
-  [[nodiscard]] error_code allocate_layer_info(usize new_size) noexcept;
-  [[nodiscard]] error_code allocate_layer_info_capacity(usize layer_capacity
+  [[nodiscard]] error_code allocate_layer_info(usize layer_capacity) noexcept;
+  [[nodiscard]] error_code reallocate_layer_info(usize new_layer_capacity
   ) noexcept;
-  [[nodiscard]] error_code reallocate_layer_info(usize new_size) noexcept;
 
   // === Private Accessors === //
 

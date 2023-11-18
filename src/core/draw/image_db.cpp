@@ -356,7 +356,7 @@ data_ptr ImageDb::get_pixels_fast(usize id) const noexcept {
     return this->get_pixels_ptr() + i * this->bytes;
   }
 
-  logger::fatal("Image data of id `%u` is not in memory", id);
+  logger::fatal("Image data of id `" USIZE_FMT "` is not in memory", id);
   std::abort();
 }
 

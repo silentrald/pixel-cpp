@@ -12,6 +12,11 @@
 
 namespace draw {
 
+struct LayerInfo {
+  c8 name[51] = ""; // NOLINT
+  u8 opacity = 0U;
+};
+
 // last 4 bytes is the size compares to char*
 enum ColorType : i32 {
   NONE = 0,
@@ -23,7 +28,6 @@ i32 get_color_type_size(ColorType type) noexcept;
 
 using data_type = u8;
 using data_ptr = u8*;
-using usize = u32;
 
 } // namespace draw
 

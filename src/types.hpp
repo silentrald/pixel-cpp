@@ -12,6 +12,8 @@
 #include <cstdint>
 #include <string>
 
+#define USIZE_FMT "%u"
+
 // === Main Types === //
 
 using i8 = int8_t;
@@ -28,6 +30,8 @@ using f32 = float;
 using f64 = double;
 
 using c8 = char;
+
+using usize = u32;
 
 // === Color Types === //
 

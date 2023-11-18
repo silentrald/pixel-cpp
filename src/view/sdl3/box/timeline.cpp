@@ -28,7 +28,7 @@ void TimelineBox::init(const Renderer& renderer) noexcept {
 }
 
 error_code TimelineBox::insert_layer_info(
-    i32 index, const draw::LayerInfo& layer_info, const Renderer& renderer
+    usize index, const draw::LayerInfo& layer_info, const Renderer& renderer
 ) noexcept {
   assert(index >= 0 && index <= this->layers.get_size());
 
@@ -76,7 +76,7 @@ error_code TimelineBox::insert_layer_info(
   return error_code::OK;
 }
 
-void TimelineBox::set_layer_visible(i32 index, bool visible) noexcept {
+void TimelineBox::set_layer_visible(usize index, bool visible) noexcept {
   this->layers[index].visible = visible;
 }
 
@@ -151,11 +151,11 @@ void TimelineBox::input(const event::Input& evt, Data& data) noexcept {
     return;
   }
 
-  u32 new_sel_layer = this->selected_layer;
-  u32 new_sel_frame = this->selected_frame;
+  usize new_sel_layer = this->selected_layer;
+  usize new_sel_frame = this->selected_frame;
   bounds.size = {this->rect.w - LAYERS_WIDTH, height};
 
-  for (u32 i = 0; i < this->layers.get_size(); ++i) {
+  for (usize i = 0; i < this->layers.get_size(); ++i) {
     bounds.pos = this->layers[i].textbox.rect.pos;
     bounds.x -= LAYERS_WIDTH;
     if (bounds.has_point(evt.mouse.pos)) {
@@ -166,7 +166,7 @@ void TimelineBox::input(const event::Input& evt, Data& data) noexcept {
 
   bounds.pos = {this->rect.x + LAYERS_WIDTH + LINE_WIDTH, this->rect.y};
   bounds.size = {height, this->rect.h};
-  for (u32 i = this->start_frame; i <= this->end_frame; ++i) {
+  for (usize i = this->start_frame; i <= this->end_frame; ++i) {
     if (bounds.has_point(evt.mouse.pos)) {
       new_sel_frame = i;
       break;
