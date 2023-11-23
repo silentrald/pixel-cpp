@@ -91,6 +91,10 @@ set(file_srcs
 
 set(srcs src/entry.cpp
   src/presenter/presenter_var.cpp
+  src/presenter/presenter_anim.cpp
+  src/presenter/presenter_file.cpp
+  src/presenter/presenter_tool.cpp
+  src/presenter/presenter_view.cpp
   src/presenter/presenter.cpp
   src/colors.cpp
   src/math.cpp
