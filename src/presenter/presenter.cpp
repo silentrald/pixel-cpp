@@ -12,8 +12,8 @@
 #include "core/ds/vector.hpp"
 #include "core/file/png.hpp"
 #include "core/file/pxl.hpp"
+#include "core/history/action.hpp"
 #include "core/history/caretaker.hpp"
-#include "core/history/snapshot.hpp"
 #include "core/logger/logger.hpp"
 #include "core/tool/enum.hpp"
 #include "core/tool/eraser.hpp"
@@ -40,6 +40,8 @@ void presenter::init() noexcept {
       shortcut_.load_config("keys.cfg"),
       "Could not load initial shortcut key mapping"
   );
+
+  TRY_ABORT(caretaker_.init(50), "Could not init caretaker");
 
   pxl_.set_auto_save(50U);
   view_.init();
@@ -84,13 +86,7 @@ void presenter::window_resized() noexcept {
 }
 
 void update_canvas_textures() noexcept {
-  if (model_.pixels.get_capacity() < model_.anim.get_image_bytes_size()) {
-    TRY_ABORT(
-        model_.pixels.resize(model_.anim.get_image_bytes_size()),
-        "Could not create cache"
-    );
-  }
-  memset(model_.pixels.get_data(), 0, model_.pixels.get_size());
+  std::memset(model_.pixels.get_data(), 0, model_.pixels.get_size());
 
   // Bot
   if (model_.layer_index > 0) {
@@ -103,7 +99,7 @@ void update_canvas_textures() noexcept {
   );
 
   // Clear
-  memset(model_.pixels.get_data(), 0U, model_.anim.get_image_bytes_size());
+  std::memset(model_.pixels.get_data(), 0, model_.anim.get_image_bytes_size());
 
   // Top
   if (model_.layer_index < model_.anim.get_layer_count() - 1) {
@@ -118,7 +114,7 @@ void update_canvas_textures() noexcept {
 
   if (model_.anim.is_layer_visible(model_.layer_index)) {
     view_.get_curr_texture().set_pixels(
-        (rgba8*)model_.img.get_ptr(), model_.anim.get_size()
+        (rgba8*)model_.img.get_pixels(), model_.anim.get_size()
     );
   } else {
     view_.get_curr_texture().clear(model_.anim.get_height());
@@ -153,6 +149,10 @@ inline void handle_unselect() noexcept {
 void presenter::key_down_event(
     input::Keycode keycode, input::KeyMod key_mod
 ) noexcept {
+  if (model_.is_editing_image) {
+    return;
+  }
+
   using namespace input;
   switch (shortcut_.get_shortcut_key(
       keycode | (key_mod.ctrl * input::Keycode::CTRL) |
@@ -213,11 +213,39 @@ void presenter::key_down_event(
   }
 }
 
-void handle_flags(u32 flags) {
+inline void handle_canvas_mouse_middle(const event::Input& evt) noexcept {
+  using namespace presenter;
+  // NOTE: Check if there any available things other than panning
+  (void)pan_.execute(model_, evt);
+  view_.set_canvas_rect(model_.rect);
+}
+
+inline void canvas_mouse_scroll_event(const event::Input& evt) noexcept {
+  using namespace presenter;
+  (void)zoom_.execute(model_, evt);
+  view_.set_canvas_rect(model_.rect);
+}
+
+inline void handle_flags(u32 flags) {
   using namespace event;
   using namespace presenter;
   if (flags & Flag::SNAPSHOT) {
-    caretaker_.snap_model(model_);
+    model_.is_editing_image = false;
+
+    caretaker_.prepare_push_action();
+
+    history::Action action =
+        caretaker_.create_edit_image_action(model_.anim.get_image_bytes_size());
+    std::memcpy(
+        action.edit_image.prev_pixels, model_.orig_pixels.get_data(),
+        model_.anim.get_image_bytes_size()
+    );
+    std::memcpy(
+        action.edit_image.pixels, model_.img.get_pixels(),
+        model_.anim.get_image_bytes_size()
+    );
+
+    caretaker_.push_action(std::move(action));
 
     if (pxl_.will_auto_save()) {
       logger::info("Auto-save");
@@ -230,23 +258,6 @@ void handle_flags(u32 flags) {
   }
 }
 
-inline void handle_canvas_mouse_middle(const event::Input& evt) noexcept {
-  using namespace presenter;
-  // NOTE: Check if there any available things other than panning
-  u32 flags = 0U;
-  flags = pan_.execute(model_, evt);
-  view_.set_canvas_rect(model_.rect);
-  handle_flags(flags);
-}
-
-inline void canvas_mouse_scroll_event(const event::Input& evt) noexcept {
-  using namespace presenter;
-  u32 flags = 0U;
-  flags = zoom_.execute(model_, evt);
-  view_.set_canvas_rect(model_.rect);
-  handle_flags(flags);
-}
-
 void presenter::canvas_mouse_event(const event::Input& evt) noexcept {
   if (!model_.anim) {
     return;
@@ -257,9 +268,7 @@ void presenter::canvas_mouse_event(const event::Input& evt) noexcept {
     // Continue with other mouse events
   }
 
-  if ((evt.mouse.left.state != input::MouseState::NONE ||
-       evt.mouse.right.state != input::MouseState::NONE ||
-       evt.mouse.middle.state != input::MouseState::NONE) &&
+  if (!evt.is_mouse_state(input::MouseState::NONE) &&
       !model_.anim.is_layer_visible(model_.layer_index)) {
     logger::info("Layer is hidden");
     return;
@@ -275,6 +284,15 @@ void presenter::canvas_mouse_event(const event::Input& evt) noexcept {
       .y = (i32)std::floor((evt.mouse.pos.y - model_.rect.y) / model_.scale),
   };
   view_.set_cursor_canvas_pos(model_.curr_pos);
+
+  if (evt.mouse.left.state == input::MouseState::DOWN ||
+      evt.mouse.right.state == input::MouseState::DOWN) {
+    model_.is_editing_image = true;
+    std::memcpy(
+        model_.orig_pixels.get_data(), model_.img.get_pixels(),
+        model_.anim.get_image_bytes_size()
+    );
+  }
 
   u32 flags = 0U;
   switch (model_.tool) {
@@ -376,6 +394,7 @@ void presenter::create_anim() noexcept {
     return;
   }
 
+  // Model Update
   TRY_ABORT(model_.anim.init(size, draw::RGBA8), "Could not create anim");
 
   model_.frame_id = 1U;
@@ -395,6 +414,17 @@ void presenter::create_anim() noexcept {
       .y = model_.bounds.y + 10.0F,
       .w = size.x * model_.scale,
       .h = size.y * model_.scale};
+
+  TRY_ABORT(
+      model_.pixels.resize(model_.anim.get_image_bytes_size()),
+      "Could not create cache"
+  );
+  TRY_ABORT(
+      model_.orig_pixels.resize(model_.anim.get_image_bytes_size()),
+      "Could not create cache"
+  );
+
+  // View Update
   view_.set_canvas_rect(model_.rect);
   view_.set_draw_size(size);
 
@@ -402,12 +432,19 @@ void presenter::create_anim() noexcept {
       view_.insert_layer(0U, model_.anim.get_layer_info(0U)),
       "Could not update view"
   );
-
-  TRY_ABORT(caretaker_.init(50, model_), "Could not initialize caretaker");
 }
 
 void presenter::set_selected(u32 frame_id, i32 layer_index) noexcept {
   logger::info("Selected (Frame %u, Layer %d)", frame_id, layer_index);
+
+  history::Action action{history::ActionType::CHANGE_SELECTION};
+  action.change_selection.prev_frame_id = model_.frame_id;
+  action.change_selection.prev_layer_index = model_.layer_index;
+  action.change_selection.frame_id = frame_id;
+  action.change_selection.layer_index = layer_index;
+  caretaker_.prepare_push_action();
+  caretaker_.push_action(std::move(action));
+
   model_.frame_id = frame_id;
   model_.layer_index = layer_index;
   auto id = model_.anim.get_image_id(frame_id, layer_index);
@@ -422,8 +459,6 @@ void presenter::set_selected(u32 frame_id, i32 layer_index) noexcept {
       model_.anim.get_image(model_.img_id), "Could not read anim"
   );
 
-  caretaker_.snap_model(model_);
-
   update_canvas_textures();
 
   view_.set_selected_on_timeline(frame_id, layer_index);
@@ -433,7 +468,12 @@ void presenter::toggle_visibility(i32 layer_index) noexcept {
   logger::info("Toggle visibility (Layer %d)", layer_index);
 
   bool show = model_.anim.toggle_layer_visibility(layer_index);
-  caretaker_.snap_model(model_);
+
+  history::Action action{history::ActionType::SET_VISIBILITY};
+  action.set_visibility.layer_index = layer_index;
+  action.set_visibility.visibility = show;
+  caretaker_.prepare_push_action();
+  caretaker_.push_action(std::move(action));
 
   view_.set_layer_visible(layer_index, show);
 
@@ -443,7 +483,7 @@ void presenter::toggle_visibility(i32 layer_index) noexcept {
           model_.anim.get_image(model_.img_id), "Could not read anim"
       );
       view_.get_curr_texture().set_pixels(
-          (rgba8*)layer.get_ptr(), model_.anim.get_size()
+          (rgba8*)layer.get_pixels(), model_.anim.get_size()
       );
     } else {
       view_.get_curr_texture().clear(model_.anim.get_height());
@@ -451,12 +491,6 @@ void presenter::toggle_visibility(i32 layer_index) noexcept {
     return;
   }
 
-  if (model_.anim.get_image_bytes_size()) {
-    TRY_ABORT(
-        model_.pixels.resize(model_.anim.get_image_bytes_size()),
-        "Could not create cache"
-    );
-  }
   memset(model_.pixels.get_data(), 0, model_.pixels.get_size());
 
   // Bot
@@ -485,15 +519,26 @@ void presenter::insert_layer(i32 layer_index) noexcept {
     return;
   }
 
-  TRY_ABORT(model_.anim.insert_layer(layer_index), "Could not update anim");
-  TRY_IGNORE(pxl_.try_auto_save(model_.anim), "Could not auto save");
+  history::Action action{history::ActionType::INSERT_LAYER};
+  action.insert_layer.prev_layer_index = model_.layer_index;
+  action.insert_layer.layer_index = layer_index;
+  caretaker_.prepare_push_action();
+  caretaker_.push_action(std::move(action));
 
-  presenter::set_selected(model_.frame_id, model_.layer_index);
+  usize id = *TRY_ABORT_RET(
+      model_.anim.insert_layer(layer_index), "Could not update anim"
+  );
+  model_.img_id = id;
+  model_.img = *model_.anim.get_image(id); // Should throw an error
+
+  TRY_IGNORE(pxl_.try_auto_save(model_.anim), "Could not auto save");
 
   TRY_ABORT(
       view_.insert_layer(layer_index, model_.anim.get_layer_info(layer_index)),
       "Could not update view"
   );
+  update_canvas_textures();
+  view_.set_selected_on_timeline(model_.frame_id, layer_index);
 }
 
 void presenter::push_back_layer() noexcept {
@@ -502,13 +547,20 @@ void presenter::push_back_layer() noexcept {
   }
   logger::info("New layer");
 
+  history::Action action{history::ActionType::INSERT_LAYER};
+  action.insert_layer.prev_layer_index = model_.layer_index;
+  action.insert_layer.layer_index = model_.anim.get_layer_count();
+  caretaker_.prepare_push_action();
+  caretaker_.push_action(std::move(action));
+
   model_.layer_index = model_.anim.get_layer_count();
-  TRY_ABORT(
+  usize id = *TRY_ABORT_RET(
       model_.anim.insert_layer(model_.layer_index), "Could not update anim"
   );
-  TRY_IGNORE(pxl_.try_auto_save(model_.anim), "Could not auto save");
+  model_.img_id = id;
+  model_.img = *model_.anim.get_image(id); // Shouldn't throw an error
 
-  presenter::set_selected(model_.frame_id, model_.layer_index);
+  TRY_IGNORE(pxl_.try_auto_save(model_.anim), "Could not auto save");
 
   TRY_ABORT(
       view_.insert_layer(
@@ -516,6 +568,8 @@ void presenter::push_back_layer() noexcept {
       ),
       "Could not update view"
   );
+  update_canvas_textures();
+  view_.set_selected_on_timeline(model_.frame_id, model_.layer_index);
 }
 
 void presenter::save_file() noexcept {
@@ -563,8 +617,6 @@ void presenter::open_file() noexcept {
       .h = model_.anim.get_height() * model_.scale};
   view_.set_canvas_rect(model_.rect);
   view_.set_draw_size(model_.anim.get_size());
-
-  TRY_ABORT(caretaker_.init(50, model_), "Could not init caretaker");
 
   update_view();
 

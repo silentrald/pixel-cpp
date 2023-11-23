@@ -8,14 +8,15 @@
 #include "./image.hpp"
 #include "core/logger/logger.hpp"
 #include <cassert>
+#include <cstring>
 
 namespace draw {
 
-Image::Image(data_ptr ptr, ivec size, ColorType type, u32 id) noexcept
-    : ptr(ptr), size(size), type(type), id(id) {}
+Image::Image(data_ptr pixels, ivec size, ColorType type, usize id) noexcept
+    : pixels(pixels), size(size), type(type), id(id) {}
 
-data_ptr Image::get_ptr() const noexcept {
-  return this->ptr;
+data_ptr Image::get_pixels() const noexcept {
+  return this->pixels;
 }
 
 ivec Image::get_size() const noexcept {
@@ -34,42 +35,47 @@ ColorType Image::get_type() const noexcept {
   return this->type;
 }
 
-u32 Image::get_id() const noexcept {
+usize Image::get_id() const noexcept {
   return this->id;
 }
 
 data_ptr Image::get_pixel(ivec pos) const noexcept {
-  assert(this->ptr != nullptr);
+  assert(this->pixels != nullptr);
   assert(
       pos.x >= 0 && pos.y >= 0 && pos.x < this->size.x && pos.y < this->size.y
   );
   // NOLINTNEXTLINE
-  return this->ptr + pos.x * pos.y * get_color_type_size(this->type);
+  return this->pixels + pos.x * pos.y * get_color_type_size(this->type);
 }
 
 data_ptr Image::get_pixel(i32 index) const noexcept {
-  assert(this->ptr != nullptr);
+  assert(this->pixels != nullptr);
   assert(index >= 0 && index < this->size.x * this->size.y);
   // NOLINTNEXTLINE
-  return this->ptr + index * get_color_type_size(this->type);
+  return this->pixels + index * get_color_type_size(this->type);
+}
+
+void Image::set_pixels(data_ptr pixels, usize size) noexcept {
+  assert(size == this->size.x * this->size.y * get_color_type_size(this->type));
+  std::memcpy(this->pixels, pixels, size);
 }
 
 void Image::paint(ivec pos, rgba8 color) noexcept {
-  assert(this->ptr != nullptr);
+  assert(this->pixels != nullptr);
   assert(
       pos.x >= 0 && pos.y >= 0 && pos.x < this->size.x && pos.y < this->size.y
   );
   // NOLINTNEXTLINE
-  ((rgba8*)this->ptr)[pos.x * pos.y] = color;
+  ((rgba8*)this->pixels)[pos.x * pos.y] = color;
 }
 
-void Image::paint(i32 index, rgba8 color) noexcept {
-  assert(index >= 0 && index < this->size.x * this->size.y);
-  ((rgba8*)this->ptr)[index] = color;
+void Image::paint(usize index, rgba8 color) noexcept {
+  assert(index < this->size.x * this->size.y);
+  ((rgba8*)this->pixels)[index] = color;
 }
 
 Image::operator bool() const noexcept {
-  return this->ptr != nullptr;
+  return this->pixels != nullptr;
 }
 
 #ifndef NDEBUG
@@ -81,7 +87,7 @@ void Image::print() const noexcept {
 
   logger::print(
       "  Image Id: " USIZE_FMT " ; Size (%d, %d) ; Ptr: %p", this->id,
-      this->size.x, this->size.y, this->ptr
+      this->size.x, this->size.y, this->pixels
   );
 
   usize mod = this->size.x * get_color_type_size(this->type);
@@ -90,7 +96,7 @@ void Image::print() const noexcept {
     if (i % mod == 0U) {
       logger::print("\n");
     }
-    logger::print("%02x", this->ptr[i]);
+    logger::print("%02x", this->pixels[i]);
   }
   logger::print("\n");
 

@@ -423,15 +423,17 @@ expected<usize> ImageDb::create_image() noexcept {
   auto new_index = this->get_index_ptr()[this->insert_index].next;
   this->get_index_ptr()[this->insert_index] = {
       .next = INDEX_SENTINEL, .prev = this->tail_index};
+
+  // Set the data to 0's
+  // NOLINTNEXTLINE
+  auto* pixels = this->get_pixels_ptr() + this->insert_index * this->bytes;
+  std::memset(pixels, 0U, this->bytes);
+
   this->insert_index = new_index;
 
   // Disk Write, already moved the disk pointer
   TRY(this->disk.write_u32(INDEX_SENTINEL), {}, to_unexpected);
 
-  // Set the data before writing it into disk
-  // NOLINTNEXTLINE
-  auto* pixels = this->get_pixels_ptr() + (id - 1U) * this->bytes;
-  std::memset(pixels, 0U, this->bytes);
   TRY(this->disk.write(pixels, this->bytes), {}, to_unexpected);
   TRY(this->disk.flush(), {}, to_unexpected);
 
@@ -447,6 +449,47 @@ expected<usize> ImageDb::create_image() noexcept {
   return id;
 }
 
+error_code ImageDb::remove_image(usize id) noexcept {
+  assert(id > 0U && id <= this->disk_capacity);
+
+  if (id == ID_SENTINEL) {
+    return error_code::OK;
+  }
+
+  // Disk Delete
+  if (this->disk_capacity == id) {
+    --this->disk_capacity;
+  } else {
+    TRY(this->seek_disk_id(id));
+    TRY(this->disk.write_u32(this->next_id));
+  }
+  this->next_id = id;
+  --this->disk_size;
+
+  // Memory Delete
+  if (this->size == 0U) {
+    return error_code::OK;
+  }
+
+  for (usize i = 0U; i < this->capacity; ++i) {
+    if (this->get_id_ptr()[i] == id) {
+      this->get_id_ptr()[i] = ID_SENTINEL;
+
+      const auto& index_ref = this->get_index_ptr()[i];
+      if (index_ref.next != INDEX_SENTINEL) {
+        this->get_index_ptr()[index_ref.next].prev = index_ref.prev;
+      }
+      if (index_ref.prev != INDEX_SENTINEL) {
+        this->get_index_ptr()[index_ref.prev].next = index_ref.next;
+      }
+      --this->size;
+      break;
+    }
+  }
+
+  return error_code::OK;
+}
+
 error_code ImageDb::write_pixels_to_disk(usize id) const noexcept {
   if (id > this->disk_size) {
     // Means that the data is removed
@@ -459,6 +502,14 @@ error_code ImageDb::write_pixels_to_disk(usize id) const noexcept {
   TRY(this->disk.write(pixels, this->bytes));
   TRY(this->disk.flush());
 
+  return error_code::OK;
+}
+
+error_code ImageDb::write_image_to_disk(const Image& image) const noexcept {
+  TRY(this->seek_disk_id(image.get_id()));
+  TRY(this->disk.write_u32(ID_SENTINEL));
+  TRY(this->disk.write(image.get_pixels(), this->bytes));
+  TRY(this->disk.flush());
   return error_code::OK;
 }
 

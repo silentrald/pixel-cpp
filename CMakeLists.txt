@@ -73,8 +73,9 @@ set(tool_srcs
 )
 
 set(history_srcs
+  src/core/history/action.cpp
   src/core/history/caretaker.cpp
-  src/core/history/snapshot.cpp
+  src/core/history/arena.cpp
 )
 
 set(config_srcs

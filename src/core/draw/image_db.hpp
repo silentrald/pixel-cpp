@@ -9,6 +9,7 @@
 #define PXL_DRAW_IMAGE_DB_HPP
 
 #include "./disk_backup.hpp"
+#include "./image.hpp"
 #include "./types.hpp"
 #include "core/ds/vector.hpp"
 #include "types.hpp"
@@ -81,7 +82,10 @@ public:
   [[nodiscard]] ImageDbIter get_iter() const noexcept;
 
   [[nodiscard]] expected<usize> create_image() noexcept;
+  [[nodiscard]] error_code remove_image(usize id) noexcept;
   [[nodiscard]] error_code write_pixels_to_disk(usize id) const noexcept;
+  [[nodiscard]] error_code write_image_to_disk(const Image& image
+  ) const noexcept;
 
 private:
   data_ptr ptr = nullptr;

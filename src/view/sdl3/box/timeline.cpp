@@ -8,6 +8,7 @@
 #include "./timeline.hpp"
 #include "presenter/presenter.hpp"
 #include "view/input.hpp"
+#include <cstdint>
 
 namespace view::sdl3::widget {
 
@@ -66,7 +67,8 @@ error_code TimelineBox::insert_layer_info(
               .visible = (bool)(layer_info.opacity & 0x80)}
   ));
 
-  for (index = index - 1; index >= 0; --index) {
+  // NOTE: Underflows
+  for (index = index - 1U; index < UINT32_MAX; --index) {
     text_rect.y += renderer.get_text_height() + LINE_WIDTH;
     this->layers[index].textbox.rect.pos = text_rect.pos;
     this->layers[index].textbox.tex_rect.pos = {

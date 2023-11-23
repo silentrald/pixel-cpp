@@ -16,20 +16,21 @@ namespace draw {
 class Image {
 public:
   Image() noexcept = default;
-  explicit Image(data_ptr ptr, ivec size, ColorType type, u32 id) noexcept;
+  explicit Image(data_ptr pixels, ivec size, ColorType type, usize id) noexcept;
 
-  [[nodiscard]] data_ptr get_ptr() const noexcept;
+  [[nodiscard]] data_ptr get_pixels() const noexcept;
   [[nodiscard]] ivec get_size() const noexcept;
   [[nodiscard]] i32 get_width() const noexcept;
   [[nodiscard]] i32 get_height() const noexcept;
   [[nodiscard]] ColorType get_type() const noexcept;
-  [[nodiscard]] u32 get_id() const noexcept;
+  [[nodiscard]] usize get_id() const noexcept;
 
   [[nodiscard]] data_ptr get_pixel(ivec pos) const noexcept;
   [[nodiscard]] data_ptr get_pixel(i32 index) const noexcept;
 
+  void set_pixels(data_ptr pixels, usize size) noexcept;
   void paint(ivec pos, rgba8 color) noexcept;
-  void paint(i32 index, rgba8 color) noexcept;
+  void paint(usize index, rgba8 color) noexcept;
 
   [[nodiscard]] explicit operator bool() const noexcept;
 
@@ -40,10 +41,10 @@ public:
 #endif
 
 private:
-  data_ptr ptr = nullptr;
+  data_ptr pixels = nullptr;
   ivec size{};
   ColorType type = ColorType::NONE;
-  u32 id = 0U;
+  usize id = 0U;
 };
 
 } // namespace draw
