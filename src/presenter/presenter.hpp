@@ -21,12 +21,17 @@ class Model;
 
 namespace presenter {
 
+// === General Functions === //
+
 void init() noexcept;
 void run() noexcept;
 
-// Events
+// NOTE: For debugging purposes
+void debug_callback() noexcept;
 
+// === Unknown === //
 // TODO: Add the param of the new value
+
 void set_locale() noexcept;
 
 void window_resized() noexcept;
@@ -35,6 +40,19 @@ void window_resized() noexcept;
  * @param keycode
  **/
 void key_down_event(input::Keycode keycode, input::KeyMod key_mod) noexcept;
+
+void set_selected(u32 frame_id, i32 layer_index) noexcept;
+
+void new_file_clicked() noexcept;
+
+// === Anim Mutations === //
+
+void create_anim() noexcept;
+void toggle_visibility(i32 layer_index) noexcept;
+void insert_layer(i32 layer_index) noexcept;
+void push_back_layer() noexcept;
+
+// === Tools === //
 
 /**
  * When a canvas box is interacted with a mouse event
@@ -51,23 +69,17 @@ void set_line_tool() noexcept;
 void set_fill_tool() noexcept;
 void set_select_tool() noexcept;
 
+// === Update View === //
+
+void update_canvas_textures() noexcept;
+void update_view() noexcept;
 void close_modals() noexcept;
-void new_file_clicked() noexcept;
-void create_anim() noexcept;
 
-void set_selected(u32 frame_id, i32 layer_index) noexcept;
-void toggle_visibility(i32 layer_index) noexcept;
-void insert_layer(i32 layer_index) noexcept;
-void push_back_layer() noexcept;
-
-// === Exports / Writers === //
+// === File Stuff === //
 
 void save_file() noexcept;
 void open_file() noexcept;
 void export_to_png() noexcept;
-
-// NOTE: For debugging purposes
-void debug_callback() noexcept;
 
 } // namespace presenter
 
