@@ -30,7 +30,7 @@ void test_empty_layer(const Image& image, u32 id) noexcept {
   REQUIRE(image.get_width() == SIZE.x);
   REQUIRE(image.get_size().y == SIZE.y);
   REQUIRE(image.get_height() == SIZE.y);
-  REQUIRE(image.get_ptr() != nullptr);
+  REQUIRE(image.get_pixels() != nullptr);
 
   for (i32 i = 0; i < ISIZE; ++i) {
     test_color(*(rgba8*)image.get_pixel(i), {});

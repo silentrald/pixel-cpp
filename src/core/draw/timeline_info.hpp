@@ -71,7 +71,9 @@ public:
   [[nodiscard]] FrameIter get_frame_iter() const noexcept;
 
   [[nodiscard]] error_code insert_layer(usize index, usize layer_id) noexcept;
+  void remove_layer(usize index) noexcept;
   bool toggle_layer_visibility(usize index) noexcept;
+  void set_layer_visibility(usize index, bool visibility) noexcept;
 
 #ifndef NDEBUG
 

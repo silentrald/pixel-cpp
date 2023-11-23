@@ -96,9 +96,13 @@ public:
    * @returns id of the newly created image on the layer
    **/
   [[nodiscard]] expected<usize> insert_layer(usize index) noexcept;
+  [[nodiscard]] error_code remove_layer(usize index) noexcept;
   bool toggle_layer_visibility(usize index) noexcept;
+  void set_layer_visibility(usize index, bool visibility) noexcept;
 
   [[nodiscard]] error_code write_pixels_to_disk(usize id) const noexcept;
+  [[nodiscard]] error_code write_image_to_disk(const Image& image
+  ) const noexcept;
 
   [[nodiscard]] explicit operator bool() const noexcept;
 

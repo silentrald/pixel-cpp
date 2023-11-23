@@ -308,16 +308,17 @@ error_code TimelineInfo::insert_layer(usize index, usize layer_id) noexcept {
     TRY(this->reallocate_layer_info(new_size));
   }
 
+  // Update timeline
   auto* cursor = this->get_image_id_ptr() + index;
   for (usize i = 0U; i < this->frame_count; ++i) {
     std::memmove(
         cursor + 1, cursor, (this->layer_count - index) * sizeof(usize)
     );
-    *cursor = 0U;
+    *cursor = layer_id;
     cursor += this->layer_capacity;
   }
-  this->get_image_id_ptr()[index] = layer_id;
 
+  // Update layer_info
   std::memmove(
       this->layer_info + index + 1U, this->layer_info + index,
       sizeof(LayerInfo) * (this->layer_count - index) // NOLINT
@@ -332,12 +333,41 @@ error_code TimelineInfo::insert_layer(usize index, usize layer_id) noexcept {
   return error_code::OK;
 }
 
+void TimelineInfo::remove_layer(usize index) noexcept {
+  assert(index >= 0U && index < this->layer_count);
+
+  --this->layer_count;
+
+  // Update timeline_info
+  auto* cursor = this->get_image_id_ptr() + index;
+  for (usize i = 0U; i < this->frame_count; ++i) {
+    std::memmove(
+        cursor, cursor + 1U, (this->layer_count - index) * sizeof(usize)
+    );
+    cursor += this->layer_capacity;
+  }
+
+  // Update layer_info
+  std::memmove(
+      this->layer_info + index, this->layer_info + index + 1U,
+      sizeof(LayerInfo) * (this->layer_count - index) // NOLINT
+  );
+}
+
 bool TimelineInfo::toggle_layer_visibility(usize index) noexcept {
   assert(index >= 0 && index < this->layer_count);
 
   auto& info = this->layer_info[index].opacity;
   info ^= VISIBLE_BIT;
   return info & VISIBLE_BIT;
+}
+
+void TimelineInfo::set_layer_visibility(usize index, bool visibility) noexcept {
+  assert(index >= 0 && index < this->layer_count);
+
+  this->layer_info[index].opacity =
+      (this->layer_info[index].opacity & ~VISIBLE_BIT) |
+      (VISIBLE_BIT * visibility);
 }
 
 // === Memory === //

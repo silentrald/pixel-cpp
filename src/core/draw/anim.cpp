@@ -256,12 +256,34 @@ expected<usize> Anim::insert_layer(usize index) noexcept {
   return id;
 }
 
-bool Anim::toggle_layer_visibility(usize layer_index) noexcept {
-  return this->timeline.toggle_layer_visibility(layer_index);
+error_code Anim::remove_layer(usize index) noexcept {
+  assert(index >= 0 && index < this->timeline.get_layer_count());
+
+  // Delete layers from each frame
+  usize id = 0U;
+  for (auto iter = this->timeline.get_frame_iter(); iter; ++iter) {
+    id = iter.get_image_id(index);
+    TRY(this->images.remove_image(id));
+  }
+  this->timeline.remove_layer(index);
+
+  return error_code::OK;
+}
+
+bool Anim::toggle_layer_visibility(usize index) noexcept {
+  return this->timeline.toggle_layer_visibility(index);
+}
+
+void Anim::set_layer_visibility(usize index, bool visibility) noexcept {
+  this->timeline.set_layer_visibility(index, visibility);
 }
 
 error_code Anim::write_pixels_to_disk(usize id) const noexcept {
   return this->images.write_pixels_to_disk(id);
+}
+
+error_code Anim::write_image_to_disk(const Image& image) const noexcept {
+  return this->images.write_image_to_disk(image);
 }
 
 // === Debugging === //
@@ -319,7 +341,7 @@ void Anim::print_images_disk() const noexcept {
   }
 
   usize mod = this->size.x * get_color_type_size(this->type);
-  for (usize id = 1U; id < this->images.get_disk_capacity(); ++id) {
+  for (usize id = 1U; id <= this->images.get_disk_capacity(); ++id) {
     TRY(
         this->images.get_pixels_slow(id, pixels.get_data()),
         { logger::unlock(); }, to_void
