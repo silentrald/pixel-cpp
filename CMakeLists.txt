@@ -14,7 +14,7 @@ endif (WIN32)
 file(COPY assets DESTINATION .)
 file(COPY themes DESTINATION .)
 file(COPY locale DESTINATION .)
-file(COPY keys.cfg DESTINATION .)
+file(COPY keys.ini DESTINATION .)
 
 # Disable assert in release
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -59,6 +59,7 @@ set(view_srcs src/view/sdl3/manager.cpp
   src/view/sdl3/widget/menu_btn.cpp
   src/view/sdl3/widget/text.cpp
   src/view/sdl3/widget/textbox.cpp
+  src/view/sdl3/widget/context_menu.cpp
 )
 
 set(tool_srcs

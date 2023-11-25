@@ -12,34 +12,35 @@
 #include "view/input.hpp"
 #include <unordered_map>
 
+#define TEXT_ID(prefix, key) prefix##_##key = hash_shortcut(#key)
+
 namespace cfg {
 
-constexpr u32 hash_shortcut_string(const c8* str) noexcept {
+constexpr u32 hash_shortcut(const c8* str) noexcept {
   u32 out = 0U;
   for (i32 i = 0; i < 4; ++i) {
     if (str[i] == '\0') {
       break;
     }
-
-    out |= str[i] << (i * 4);
+    out = (out << 4) | str[i];
   }
   return out;
 }
 
-enum class ShortcutKey {
+enum class ShortcutKey : u32 {
   NONE = 0U,
 
-  TOOL_PENCIL = hash_shortcut_string("pencil"),
-  TOOL_ERASER = hash_shortcut_string("eraser"),
-  TOOL_FILL = hash_shortcut_string("fill"),
-  TOOL_LINE = hash_shortcut_string("line"),
-  TOOL_SELECT = hash_shortcut_string("select"),
+  TEXT_ID(TOOL, PENCIL),
+  TEXT_ID(TOOL, ERASER),
+  TEXT_ID(TOOL, FILL),
+  TEXT_ID(TOOL, LINE),
+  TEXT_ID(TOOL, SELECT),
 
-  ACTION_SAVE = hash_shortcut_string("save"),
-  ACTION_OPEN = hash_shortcut_string("open"),
-  ACTION_UNDO = hash_shortcut_string("undo"),
-  ACTION_REDO = hash_shortcut_string("redo"),
-  ACTION_UNSELECT = hash_shortcut_string("unselect"),
+  TEXT_ID(ACTION, SAVE),
+  TEXT_ID(ACTION, OPEN),
+  TEXT_ID(ACTION, UNDO),
+  TEXT_ID(ACTION, REDO),
+  TEXT_ID(ACTION, UNSELECT),
 };
 
 class Shortcut {
@@ -66,6 +67,8 @@ private:
 };
 
 } // namespace cfg
+
+#undef TEXT_ID
 
 #endif
 

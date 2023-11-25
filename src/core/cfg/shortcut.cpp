@@ -20,19 +20,6 @@ inline bool compare_string(const c8* str1, const c8* str2) noexcept {
   return std::strncmp(str1, str2, std::strlen(str2)) == 0;
 }
 
-// Hash
-ShortcutKey parse_key_map(const c8* key) noexcept {
-  u32 out = 0U;
-  for (i32 i = 0; i < 4; ++i) {
-    if (key[i] == '\0') {
-      break;
-    }
-
-    out |= key[i] << (i * 4);
-  }
-  return (ShortcutKey)out;
-}
-
 u32 convert_str_to_key(const c8* str) noexcept {
   u32 key = 0U;
   if (std::strncmp("ctrl+", str, 5) == 0) {
@@ -106,7 +93,7 @@ error_code Shortcut::load_config(const c8* path) noexcept {
     while (right_cursor > 0 && is_white_space(right_cursor))
       --right_cursor;
     line[right_cursor] = '\0';
-    key_map = parse_key_map(line.c_str() + left_cursor);
+    key_map = (ShortcutKey)hash_shortcut(line.c_str() + left_cursor);
     if (key_map == ShortcutKey::NONE) {
       continue;
     }

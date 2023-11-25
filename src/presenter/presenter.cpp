@@ -27,7 +27,7 @@ void presenter::init() noexcept {
   );
 
   TRY_ABORT(
-      shortcut_.load_config("keys.cfg"),
+      shortcut_.load_config("keys.ini"),
       "Could not load initial shortcut key mapping"
   );
 
