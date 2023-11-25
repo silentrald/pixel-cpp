@@ -7,7 +7,7 @@
 
 #include "./locale.hpp"
 #include "core/logger/logger.hpp"
-#include <cstdlib>
+#include <array>
 #include <cstring>
 #include <fstream>
 #include <string>
@@ -17,77 +17,93 @@ namespace cfg {
 
 namespace locale {
 
-std::unordered_map<TextId, std::string> texts{};
 Locale _locale{};
+std::ifstream ifs{}; // NOLINT
+std::string line{};
+std::array<u64, Section::SIZE> lookups{};
 
 } // namespace locale
 
-inline bool compare_string(const c8* str1, const c8* str2) noexcept {
-  return std::strncmp(str1, str2, std::strlen(str2)) == 0;
+void locale::destroy_locale() noexcept {
+  if (ifs.is_open()) {
+    ifs.close();
+  }
 }
 
-// Hash
-locale::TextId parse_key(const c8* key) noexcept {
-  u32 out = 0U;
-  for (i32 i = 0; i < 4; ++i) {
-    if (key[i] == '\0') {
-      break;
-    }
-
-    out |= key[i] << (i * 4);
+struct SectionHash {
+  [[nodiscard]] u32 operator()(const c8* str) const noexcept {
+    assert(str[0] != '\0');
+    assert(str[1] != '\0');
+    assert(str[2] != '\0');
+    return *str;
   }
-  return (locale::TextId)out;
+};
+
+struct SectionCmp {
+  [[nodiscard]] bool operator()(const c8* str1, const c8* str2) const noexcept {
+    return std::strncmp(str1, str2, 4) == 0;
+  }
+};
+
+// NOLINTNEXTLINE
+#define SECTION_ENTRY(key)                                                     \
+  { #key, locale::Section::key }
+const std::unordered_map<const c8*, locale::Section, SectionHash, SectionCmp>
+    // NOLINTNEXTLINE
+    section_map{
+        SECTION_ENTRY(GENERAL),       SECTION_ENTRY(MENU_ITEM),
+        SECTION_ENTRY(FILE_CTX_MENU), SECTION_ENTRY(EXPORT_CTX_MENU),
+        SECTION_ENTRY(MODAL_TITLE),
+    };
+#undef SECTION_ENTRY
+
+locale::Section parse_section(const char* str) noexcept {
+  auto it = section_map.find(str);
+  return it != section_map.end() ? it->second : locale::Section::SIZE;
 }
 
 error_code locale::load_locale(Locale locale) noexcept {
   _locale = locale;
 
-  texts.clear();
-
   const c8* locale_file = nullptr;
   switch (locale) {
   case Locale::ENGLISH:
-    locale_file = "locale/en.cfg";
+    locale_file = "locale/en.ini";
     break;
 
   case Locale::JAPANESE:
-    locale_file = "locale/jp.cfg";
+    locale_file = "locale/jp.ini";
     break;
 
   default:
     std::abort();
   }
 
-  std::ifstream ifs{locale_file};
+  if (ifs.is_open()) {
+    ifs.close();
+  }
+
+  locale::ifs.open(locale_file);
   if (!ifs.is_open()) {
     logger::warn("Could not find locale config file %s", locale_file);
     return error_code::FILE_NOT_FOUND;
   }
 
-  std::string line{};
-  i32 equal_index = 0;
-  i32 comment_index = 0;
+  u64 offset = 0U;
   while (std::getline(ifs, line, '\n')) {
-    equal_index = line.find('=');
-    if (equal_index == -1) {
+    offset += line.size() + 1; // text + \n
+    if (line[0] != '[') {
       continue;
     }
 
-    comment_index = line.find('#');
-    if (comment_index != -1 && comment_index < equal_index) {
-      continue;
-    }
-
-    line[equal_index - 1] = '\0';
-    texts.insert({parse_key(line.c_str()), line.substr(equal_index + 2)});
+    line[line.size() - 1] = '\0';
+    lookups[parse_section(line.c_str() + 1)] = offset;
   }
-
-  ifs.close();
+  ifs.clear();
 
   return error_code::OK;
 }
 
-// NOTE: Try to read this in the config file
 const c8* locale::get_font() noexcept {
   switch (_locale) {
   case Locale::ENGLISH:
@@ -115,8 +131,39 @@ i32 locale::get_size() noexcept {
 }
 
 const c8* locale::get_text(TextId id) noexcept {
-  auto it = texts.find(id);
-  return it == texts.end() ? nullptr : it->second.c_str();
+  i32 equal_index = 0;
+  i32 comment_index = 0;
+
+  auto section = (0xffff'0000U & id) >> 16;
+  id = (TextId)(0x0000'ffffU & id);
+  ifs.seekg(lookups[section], std::ios::beg);
+
+  while (std::getline(ifs, line, '\n')) {
+    if (line[0] == '[') {
+      // Would not find in the next section, just abort
+      break;
+    }
+
+    equal_index = line.find('=');
+    if (equal_index == -1) {
+      continue;
+    }
+
+    comment_index = line.find('#');
+    if (comment_index != -1 && comment_index < equal_index) {
+      continue;
+    }
+
+    line[equal_index - 1] = '\0';
+    if (id != (locale::TextId)locale::hash_locale(line.c_str())) {
+      continue;
+    }
+
+    return line.c_str() + equal_index + 2;
+  }
+
+  logger::error("Could not find text id %04x'%04x", section, id);
+  std::abort();
 }
 
 } // namespace cfg

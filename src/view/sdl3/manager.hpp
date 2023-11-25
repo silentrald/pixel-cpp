@@ -32,6 +32,7 @@
 #include "view/event.hpp"
 #include "view/input.hpp"
 #include "view/modal.hpp"
+#include "view/sdl3/widget/context_menu.hpp"
 
 namespace view::sdl3 {
 
@@ -96,6 +97,8 @@ private:
   ds::vector<widget::Box*> boxes{};
   // NOTE: Better to use a stack here
   ds::vector<widget::Modal*> modals{};
+
+  widget::ContextMenu ctx_menu{};
 
   // TODO: Change to dropdown, and store it in a box
   widget::Button locale_btn{};

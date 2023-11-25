@@ -72,15 +72,15 @@ error_code Manager::init() noexcept {
   fvec size{};
   widget::MenuBtn menu_btn{};
 
-  menu_btn.set_text(cfg::locale::TextId::FILE_MENU_ITEM, this->renderer);
+  menu_btn.set_text(cfg::locale::TextId::FILE_, this->renderer);
   menu_btn.set_left_click_listener(presenter::new_file_clicked);
   TRY(this->menu_box.push_menu_btn(std::move(menu_btn)));
 
-  menu_btn.set_text(cfg::locale::TextId::EDIT_MENU_ITEM, this->renderer);
+  menu_btn.set_text(cfg::locale::TextId::EDIT, this->renderer);
   menu_btn.set_left_click_listener(presenter::export_to_png); // TODO:
   TRY(this->menu_box.push_menu_btn(std::move(menu_btn)));
 
-  menu_btn.set_text(cfg::locale::TextId::VIEW_MENU_ITEM, this->renderer);
+  menu_btn.set_text(cfg::locale::TextId::VIEW, this->renderer);
   menu_btn.set_left_click_listener(presenter::debug_callback); // TODO:
   TRY(this->menu_box.push_menu_btn(std::move(menu_btn)));
 
@@ -96,6 +96,9 @@ error_code Manager::init() noexcept {
   this->locale_btn.rect.size = size;
   this->locale_btn.tex_rect.size = size;
   this->locale_btn.set_left_click_listener(presenter::set_locale);
+
+  this->ctx_menu.rect.pos = {50.0F, 50.0F};
+  this->ctx_menu.rect.w = 200.0F;
 
   return error_code::OK;
 }
