@@ -34,7 +34,7 @@ void presenter::init() noexcept {
   TRY_ABORT(caretaker_.init(50), "Could not init caretaker");
 
   pxl_.set_auto_save(50U);
-  view_.init();
+  TRY_ABORT(view_.init(), "Could not init view");
 }
 
 void presenter::run() noexcept {
@@ -125,19 +125,11 @@ void presenter::key_down_event(
     break;
 
   case cfg::ShortcutKey::ACTION_UNDO:
-    if (!caretaker_.undo(model_))
-      break;
-
-    logger::info("Undo");
-    update_view();
+    presenter::undo_action();
     break;
 
   case cfg::ShortcutKey::ACTION_REDO:
-    if (!caretaker_.redo(model_))
-      break;
-
-    logger::info("Redo");
-    update_view();
+    presenter::redo_action();
     break;
 
   case cfg::ShortcutKey::ACTION_UNSELECT:

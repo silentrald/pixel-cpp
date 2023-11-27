@@ -30,7 +30,7 @@ public:
       std::abort();
     }
 
-    // Maximize and get the size of the window
+// Maximize and get the size of the window
 #ifdef NDEBUG
     SDL_MaximizeWindow(this->window);
 #endif

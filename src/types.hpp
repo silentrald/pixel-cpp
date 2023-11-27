@@ -112,7 +112,7 @@ template <typename Type> struct rect {
    **/
   [[nodiscard]] inline bool has_point(const vec<Type>& point) const noexcept {
     return point.x >= this->x && point.y >= this->y && //
-           point.x <= this->x + this->w && point.y <= this->y + this->h;
+           point.x < this->x + this->w && point.y < this->y + this->h;
   }
 };
 

@@ -73,15 +73,11 @@ error_code Manager::init() noexcept {
   widget::MenuBtn menu_btn{};
 
   menu_btn.set_text(cfg::locale::TextId::FILE_, this->renderer);
-  menu_btn.set_left_click_listener(presenter::new_file_clicked);
+  menu_btn.set_left_click_listener(presenter::toggle_file_ctx_menu);
   TRY(this->menu_box.push_menu_btn(std::move(menu_btn)));
 
   menu_btn.set_text(cfg::locale::TextId::EDIT, this->renderer);
-  menu_btn.set_left_click_listener(presenter::export_to_png); // TODO:
-  TRY(this->menu_box.push_menu_btn(std::move(menu_btn)));
-
-  menu_btn.set_text(cfg::locale::TextId::VIEW, this->renderer);
-  menu_btn.set_left_click_listener(presenter::debug_callback); // TODO:
+  menu_btn.set_left_click_listener(presenter::toggle_edit_ctx_menu);
   TRY(this->menu_box.push_menu_btn(std::move(menu_btn)));
 
   this->timeline_box.init(this->renderer);
@@ -97,8 +93,7 @@ error_code Manager::init() noexcept {
   this->locale_btn.tex_rect.size = size;
   this->locale_btn.set_left_click_listener(presenter::set_locale);
 
-  this->ctx_menu.rect.pos = {50.0F, 50.0F};
-  this->ctx_menu.rect.w = 200.0F;
+  TRY(this->init_ctx_menus());
 
   return error_code::OK;
 }
@@ -230,12 +225,21 @@ void Manager::render() noexcept {
   this->renderer.set_color({0x33, 0x33, 0x33, 0xff});
   this->renderer.clear();
 
-  for (i32 i = 0; i < this->boxes.get_size(); ++i) {
+  for (usize i = 0; i < this->boxes.get_size(); ++i) {
     this->boxes[i]->render(this->renderer);
   }
 
-  for (i32 i = 0; i < this->modals.get_size(); ++i) {
+  for (usize i = 0; i < this->modals.get_size(); ++i) {
     this->modals[i]->render(this->renderer);
+  }
+
+  if (this->ctx_menu_idx > -1 &&
+      this->ctx_menu_idx < this->ctx_menus.get_size()) {
+    this->ctx_menus[this->ctx_menu_idx].render(this->renderer);
+  }
+
+  for (usize i = 0; i < this->ctx_menu_stack.get_size(); ++i) {
+    this->ctx_menu_stack[i].render(this->renderer);
   }
 
   this->locale_btn.render(renderer);

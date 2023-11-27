@@ -18,7 +18,7 @@ enum class Locale : u32 { ENGLISH, JAPANESE };
 
 constexpr u32 hash_locale(const c8* str) noexcept {
   assert(str[0] != '\0');
-  return str[0] | (str[1] << 4);
+  return str[0] | (str[1] << 8);
 }
 
 // Occupies the first 16 bits of the text id
@@ -27,6 +27,7 @@ enum Section : u16 {
   MENU_ITEM,
   FILE_CTX_MENU,
   EXPORT_CTX_MENU,
+  EDIT_CTX_MENU,
   MODAL_TITLE,
   SIZE // Last Elem
 };
@@ -54,6 +55,10 @@ enum TextId : u32 {
   // Export Context Menu
   TEXT_ID(EXPORT_CTX_MENU, PNG_EXPORT),
   TEXT_ID(EXPORT_CTX_MENU, JPG_EXPORT),
+
+  // Edit Context Menu
+  TEXT_ID(EDIT_CTX_MENU, UNDO),
+  TEXT_ID(EDIT_CTX_MENU, REDO),
 
   // Modal Titles
   TEXT_ID(MODAL_TITLE, NEW_FILE),

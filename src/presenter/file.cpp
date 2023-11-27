@@ -60,6 +60,15 @@ void presenter::open_file() noexcept {
   view_.set_canvas_rect(model_.rect);
   view_.set_draw_size(model_.anim.get_size());
 
+  TRY_ABORT(
+      model_.pixels.resize(model_.anim.get_image_bytes_size()),
+      "Could not create cache"
+  );
+  TRY_ABORT(
+      model_.orig_pixels.resize(model_.anim.get_image_bytes_size()),
+      "Could not create cache"
+  );
+
   update_view();
 
   logger::info("Open successful");

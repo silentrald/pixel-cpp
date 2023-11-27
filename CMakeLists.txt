@@ -38,6 +38,7 @@ set(draw_srcs
 
 # NOTE: Can be changed depending on the gui lib
 set(view_srcs src/view/sdl3/manager.cpp
+  src/view/sdl3/manager_ctx_menu.cpp
   src/view/sdl3/manager_event.cpp
   src/view/sdl3/manager_modal.cpp
   src/view/sdl3/renderer.cpp
@@ -91,11 +92,12 @@ set(file_srcs
 )
 
 set(srcs src/entry.cpp
-  src/presenter/presenter_var.cpp
-  src/presenter/presenter_anim.cpp
-  src/presenter/presenter_file.cpp
-  src/presenter/presenter_tool.cpp
-  src/presenter/presenter_view.cpp
+  src/presenter/var.cpp
+  src/presenter/anim.cpp
+  src/presenter/ctx_menu.cpp
+  src/presenter/file.cpp
+  src/presenter/tool.cpp
+  src/presenter/view.cpp
   src/presenter/presenter.cpp
   src/colors.cpp
   src/math.cpp
