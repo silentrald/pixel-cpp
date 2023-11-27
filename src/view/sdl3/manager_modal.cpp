@@ -39,7 +39,10 @@ error_code Manager::push_modal(modal::Id id) noexcept {
       std::abort();
     }
 
-    ((widget::FileModal*)modal)->init(this->renderer);
+    ((widget::FileModal*)modal)
+        ->init(
+            {(f32)this->window.size.x, (f32)this->window.size.y}, this->renderer
+        );
     break;
 
   case modal::Id::NONE:

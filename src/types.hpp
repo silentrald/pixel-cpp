@@ -88,6 +88,18 @@ template <typename Type> struct vec {
     return {.x = this->x - rhs.x, .y = this->y - rhs.y};
   }
 
+  vec<Type>& operator+=(const vec<Type>& rhs) {
+    this->x += rhs.x;
+    this->y += rhs.y;
+    return *this;
+  }
+
+  vec<Type>& operator-=(const vec<Type>& rhs) {
+    this->x -= rhs.x;
+    this->y -= rhs.y;
+    return *this;
+  }
+
   [[nodiscard]] friend vec<Type>
   operator*(const vec<Type>& lhs, Type rhs) noexcept {
     return {.x = lhs.x * rhs, .y = lhs.y * rhs};

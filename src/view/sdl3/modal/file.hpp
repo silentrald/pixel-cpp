@@ -29,13 +29,13 @@ public:
   FileModal& operator=(FileModal&&) noexcept = default;
   ~FileModal() noexcept override = default;
 
-  void init(const Renderer& renderer) noexcept;
+  void init(fvec window_size, const Renderer& renderer) noexcept;
 
   [[nodiscard]] void* get_data() const noexcept override;
 
   void resize(const frect& rect) noexcept override;
+  void reposition(fvec pos) noexcept override;
   void locale_updated(const Renderer& renderer) noexcept override;
-  void drag(fvec pos) noexcept override;
   void reset() noexcept override;
   void input(const event::Input& evt, Data& data) noexcept override;
   void update() noexcept override;
@@ -43,7 +43,6 @@ public:
 
 private:
   // === Texts === //
-  Text new_file_text{};
   Text width_text{};
   Text height_text{};
 

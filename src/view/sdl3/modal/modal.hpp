@@ -8,6 +8,7 @@
 #ifndef PXL_VIEW_SDL3_MODAL_HPP
 #define PXL_VIEW_SDL3_MODAL_HPP
 
+#include "../widget/text.hpp"
 #include "../widget/widget.hpp"
 #include "view/modal.hpp"
 
@@ -34,13 +35,11 @@ public:
    * Call for responsive elements within the modal
    **/
   virtual void resize(const frect& rect) noexcept = 0;
-
-  /**
-   * Call when the the modal window is dragged
-   **/
-  virtual void drag(fvec pos) noexcept = 0;
+  virtual void reposition(fvec pos) noexcept = 0;
 
 protected:
+  frect title_rect{};
+  Text title_text{};
   modal::Id id = modal::Id::NONE;
 
 public:
