@@ -96,9 +96,9 @@ void Manager::input() noexcept {
 
   this->handle_input_event();
 
-  update_mouse_state(this->input_evt.mouse.left.state, this->is_input_evt);
-  update_mouse_state(this->input_evt.mouse.right.state, this->is_input_evt);
-  update_mouse_state(this->input_evt.mouse.middle.state, this->is_input_evt);
+  update_mouse_state(this->input_evt.mouse.left, this->is_input_evt);
+  update_mouse_state(this->input_evt.mouse.right, this->is_input_evt);
+  update_mouse_state(this->input_evt.mouse.middle, this->is_input_evt);
   this->input_evt.mouse.wheel = {};
 
   if (this->is_text_input_changed && this->data.sel_textbox) {
@@ -134,7 +134,7 @@ void Manager::handle_input_event() noexcept {
       this->data.sel_textbox = this->data.new_sel_textbox;
       this->data.new_sel_textbox = nullptr;
       SDL_StartTextInput();
-    } else if (this->input_evt.mouse.left.state == input::MouseState::UP && this->data.sel_textbox) {
+    } else if (this->input_evt.mouse.left == input::MouseState::UP && this->data.sel_textbox) {
       this->data.sel_textbox->focused = false;
       this->data.sel_textbox->update_texture(this->renderer);
       this->data.sel_textbox = nullptr;
@@ -188,15 +188,15 @@ void Manager::handle_mouse_input(
 
   switch (mouse.button) {
   case SDL_BUTTON_LEFT:
-    this->input_evt.mouse.left.state = state;
+    this->input_evt.mouse.left = state;
     break;
 
   case SDL_BUTTON_RIGHT:
-    this->input_evt.mouse.right.state = state;
+    this->input_evt.mouse.right = state;
     break;
 
   case SDL_BUTTON_MIDDLE:
-    this->input_evt.mouse.middle.state = state;
+    this->input_evt.mouse.middle = state;
     break;
 
   default:

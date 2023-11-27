@@ -25,20 +25,14 @@ struct Input {
     // Position on where the mouse is
     fvec pos{};
 
-    // Left mouse button info
-    struct {
-      input::MouseState state{};
-    } left;
+    // Left mouse button state
+    input::MouseState left{};
 
-    // Right mouse button info
-    struct {
-      input::MouseState state{};
-    } right;
+    // Right mouse button state
+    input::MouseState right{};
 
-    // Middle mouse button info
-    struct {
-      input::MouseState state{};
-    } middle;
+    // Middle mouse button state
+    input::MouseState middle{};
 
     // Scroll Info
     fvec wheel{};
@@ -51,9 +45,8 @@ struct Input {
 
   [[nodiscard]] inline bool is_mouse_state(input::MouseState state
   ) const noexcept {
-    return this->mouse.left.state == state ||
-           this->mouse.right.state == state ||
-           this->mouse.middle.state == state;
+    return this->mouse.left == state || this->mouse.right == state ||
+           this->mouse.middle == state;
   }
 };
 

@@ -11,7 +11,7 @@
 namespace tool {
 
 u32 Select::execute(Model& model, const event::Input& evt) noexcept {
-  switch (evt.mouse.left.state) {
+  switch (evt.mouse.left) {
   case input::MouseState::HOLD:
     this->handle_mouse_motion(model, evt.mouse.pos);
     return event::Flag::NONE;

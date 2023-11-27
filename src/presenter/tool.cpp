@@ -120,7 +120,7 @@ void presenter::canvas_mouse_event(const event::Input& evt) noexcept {
     return;
   }
 
-  if (evt.mouse.middle.state != input::MouseState::NONE) {
+  if (evt.mouse.middle != input::MouseState::NONE) {
     handle_canvas_mouse_middle(evt);
     return;
   }
@@ -131,8 +131,8 @@ void presenter::canvas_mouse_event(const event::Input& evt) noexcept {
   };
   view_.set_cursor_canvas_pos(model_.curr_pos);
 
-  if (evt.mouse.left.state == input::MouseState::DOWN ||
-      evt.mouse.right.state == input::MouseState::DOWN) {
+  if (evt.mouse.left == input::MouseState::DOWN ||
+      evt.mouse.right == input::MouseState::DOWN) {
     model_.is_editing_image = true;
     std::memcpy(
         model_.orig_pixels.get_data(), model_.img.get_pixels(),

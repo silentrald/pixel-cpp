@@ -95,7 +95,7 @@ void ContextMenu::input(const event::Input& evt, Data& data) noexcept {
       continue;
     }
 
-    switch (evt.mouse.left.state) {
+    switch (evt.mouse.left) {
     case input::MouseState::NONE:
       this->items[i].state = input::BtnState::HOVER;
       break;

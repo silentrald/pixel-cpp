@@ -121,8 +121,7 @@ void TimelineBox::input(const event::Input& evt, Data& data) noexcept {
   this->add_btn.input(evt, data);
 
   // NOTE: Only handles changing of frame/layer for now
-  if (this->layers.is_empty() ||
-      (evt.mouse.left.state != input::MouseState::UP)) {
+  if (this->layers.is_empty() || (evt.mouse.left != input::MouseState::UP)) {
     return;
   }
 

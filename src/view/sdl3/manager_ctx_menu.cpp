@@ -71,7 +71,7 @@ error_code Manager::init_ctx_menus() noexcept {
 void Manager::handle_ctx_menu_event() noexcept {
   // Check if the mouse up event is outside any ctx menu rect
   // If it is outside, close all ctx menus
-  if (this->input_evt.mouse.left.state == input::MouseState::UP) {
+  if (this->input_evt.mouse.left == input::MouseState::UP) {
     bool outside = true;
 
     if (this->ctx_menus[this->ctx_menu_idx].rect.has_point(
