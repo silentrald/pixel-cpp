@@ -8,6 +8,8 @@
 #ifndef PXL_VIEW_SDL3_DATA_HPP
 #define PXL_VIEW_SDL3_DATA_HPP
 
+#include "types.hpp"
+
 namespace view::sdl3 {
 
 namespace widget {
@@ -21,8 +23,13 @@ class Textbox;
  * Mostly references of selected widgets.
  **/
 struct Data {
+  // TODO: Convert to widget::Input
   widget::Textbox* sel_textbox = nullptr;
   widget::Textbox* new_sel_textbox = nullptr;
+
+  fvec orig_pos{};
+  fvec orig_mouse{};
+  bool dragging = false;
 };
 
 } // namespace view::sdl3
