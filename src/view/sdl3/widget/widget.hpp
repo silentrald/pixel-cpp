@@ -18,7 +18,7 @@ namespace view::sdl3 {
 
 class Widget {
 public:
-  Widget() noexcept {};
+  Widget() noexcept {}; // NOLINT
   Widget(const Widget&) noexcept = default;
   Widget& operator=(const Widget&) noexcept = default;
   Widget(Widget&&) noexcept = default;
@@ -37,13 +37,17 @@ public:
 
   // Position where to draw the widget
   union {
-    frect rect;
     struct {
       f32 x = 0.0F;
       f32 y = 0.0F;
       f32 w = 0.0F;
       f32 h = 0.0F;
     };
+    struct {
+      fvec pos;
+      fvec size;
+    };
+    frect rect;
   };
 };
 

@@ -6,7 +6,6 @@
  *==========================*/
 
 #include "./manager.hpp"
-#include "./widget/menu_btn.hpp"
 #include "SDL3_image/SDL_image.h"
 #include "SDL3_ttf/SDL_ttf.h"
 #include "SDL_blendmode.h"
@@ -70,15 +69,15 @@ error_code Manager::init() noexcept {
 
   // Menu box
   fvec size{};
-  widget::MenuBtn menu_btn{};
 
-  menu_btn.set_text(cfg::locale::TextId::FILE_, this->renderer);
-  menu_btn.set_left_click_listener(presenter::toggle_file_ctx_menu);
-  TRY(this->menu_box.push_menu_btn(std::move(menu_btn)));
+  TRY(this->menu_box.push_menu_btn(
+      cfg::locale::TextId::FILE_, this->renderer,
+      presenter::toggle_file_ctx_menu
+  ));
 
-  menu_btn.set_text(cfg::locale::TextId::EDIT, this->renderer);
-  menu_btn.set_left_click_listener(presenter::toggle_edit_ctx_menu);
-  TRY(this->menu_box.push_menu_btn(std::move(menu_btn)));
+  TRY(this->menu_box.push_menu_btn(
+      cfg::locale::TextId::EDIT, this->renderer, presenter::toggle_edit_ctx_menu
+  ));
 
   this->timeline_box.init(this->renderer);
 
@@ -87,9 +86,9 @@ error_code Manager::init() noexcept {
   this->locale_btn.set_theme(input::BtnTheme::TOOL_BTN); // TODO:
   this->locale_btn.set_texture(this->renderer.create_text(text));
   size = this->renderer.get_text_size(text);
-  this->locale_btn.rect.pos = {this->window.size.x - size.x, 0.0F};
+  this->locale_btn.pos = {this->window.size.x - size.x, 0.0F};
   this->locale_btn.tex_rect.pos = {this->window.size.x - size.x, 0.0F};
-  this->locale_btn.rect.size = size;
+  this->locale_btn.size = size;
   this->locale_btn.tex_rect.size = size;
   this->locale_btn.set_left_click_listener(presenter::set_locale);
 

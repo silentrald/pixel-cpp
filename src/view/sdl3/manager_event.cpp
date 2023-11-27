@@ -345,13 +345,12 @@ void Manager::handle_resize(ivec new_size) noexcept {
   );
 
   this->timeline_box.resize(
-      {32.0F, status_box.rect.y - 200.0F, (f32)new_size.x - 32.0F, 200.0F}
+      {32.0F, status_box.y - 200.0F, (f32)new_size.x - 32.0F, 200.0F}
   );
 
   this->draw_box.resize(
       {32.0F, menu_box_height, (f32)new_size.x - 32.0F,
-       (f32)new_size.y - menu_box_height - text_height -
-           this->timeline_box.rect.h}
+       (f32)new_size.y - menu_box_height - text_height - this->timeline_box.h}
   );
 
   presenter::window_resized();
@@ -374,14 +373,14 @@ void Manager::locale_updated() noexcept {
   this->handle_resize(this->window.size);
 
   for (usize i = 0; i < this->ctx_menus.get_size(); ++i) {
-    this->ctx_menus[i].rect.pos = {
-        .x = this->menu_box.btns[i].rect.x,
-        .y = this->menu_box.rect.y + this->menu_box.rect.h};
+    this->ctx_menus[i].pos = {
+        .x = this->menu_box.get_btn_rect(i).x,
+        .y = this->menu_box.y + this->menu_box.h};
     this->ctx_menus[i].locale_updated(this->renderer);
   }
 
   for (usize i = 0; i < this->ctx_menu_stack.get_size(); ++i) {
-    this->ctx_menu_stack[i].rect.pos =
+    this->ctx_menu_stack[i].pos =
         i == 0 ? this->ctx_menus[this->ctx_menu_idx].get_sel_item_pos()
                : this->ctx_menu_stack[i - 1].get_sel_item_pos();
     this->ctx_menu_stack[i].locale_updated(this->renderer);
