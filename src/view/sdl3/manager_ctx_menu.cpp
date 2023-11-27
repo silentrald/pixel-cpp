@@ -22,8 +22,8 @@ error_code Manager::init_ctx_menus() noexcept {
   // File Context Menu
   {
     auto& file_ctx_menu = this->ctx_menus[FILE_CTX_ID];
-    file_ctx_menu.rect.pos = {
-        this->menu_box.btns[FILE_CTX_ID].rect.x, this->menu_box.rect.h};
+    file_ctx_menu.pos = {
+        this->menu_box.get_btn_rect(FILE_CTX_ID).x, this->menu_box.h};
 
     TRY(file_ctx_menu.push_item(cfg::locale::TextId::NEW, this->renderer, []() {
       presenter::close_ctx_menus();
@@ -51,8 +51,8 @@ error_code Manager::init_ctx_menus() noexcept {
   // Edit Context Menu
   {
     auto& edit_ctx_menu = this->ctx_menus[EDIT_CTX_ID];
-    edit_ctx_menu.rect.pos = {
-        this->menu_box.btns[1].rect.x, this->menu_box.rect.h};
+    edit_ctx_menu.pos = {
+        this->menu_box.get_btn_rect(EDIT_CTX_ID).x, this->menu_box.h};
     TRY(edit_ctx_menu
             .push_item(cfg::locale::TextId::UNDO, this->renderer, []() {
               presenter::close_ctx_menus();
@@ -93,14 +93,15 @@ void Manager::handle_ctx_menu_event() noexcept {
     }
   }
 
-  for (usize i = 0; i < this->menu_box.btns.get_size(); ++i) {
-    if (this->menu_box.btns[i].rect.has_point(this->input_evt.mouse.pos)) {
+  for (usize i = 0; i < this->menu_box.get_btns_size(); ++i) {
+    if (this->menu_box.get_btn_rect(i).has_point(this->input_evt.mouse.pos)) {
       if (this->ctx_menu_idx == i) {
         break;
       }
 
       this->ctx_menus[this->ctx_menu_idx].reset();
       this->ctx_menu_idx = i;
+      this->menu_box.selected = i;
       this->ctx_menu_stack.clear();
       break;
     }
@@ -124,7 +125,7 @@ error_code Manager::open_export_ctx_menu() noexcept {
   assert(this->ctx_menu_idx == FILE_CTX_ID);
 
   widget::ContextMenu ctx_menu{};
-  ctx_menu.rect.pos = this->ctx_menus[FILE_CTX_ID].get_sel_item_pos();
+  ctx_menu.pos = this->ctx_menus[FILE_CTX_ID].get_sel_item_pos();
   TRY(ctx_menu.push_item(cfg::locale::TextId::PNG_EXPORT, this->renderer, []() {
     presenter::close_ctx_menus();
     presenter::export_to_png();

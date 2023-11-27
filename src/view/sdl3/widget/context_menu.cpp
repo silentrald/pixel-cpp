@@ -121,6 +121,7 @@ void ContextMenu::update() noexcept {
 
 void ContextMenu::render(const Renderer& renderer) const noexcept {
   for (usize i = 0U; i < this->items.get_size(); ++i) {
+    // TODO: Different theme for ctx menu btns
     renderer.set_color(cfg::theme::get_menu_btn_color(
         this->selected == i ? input::BtnState::HOVER : this->items[i].state
     ));

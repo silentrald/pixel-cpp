@@ -70,18 +70,32 @@ const rgba8 TRANSPARENT_COLOR{0x00, 0x00, 0x00, 0x00};
 // === Geom Types === //
 
 template <typename Type> struct vec {
-  Type x{};
-  Type y{};
+  Type x;
+  Type y;
 
   /**
    * Refer: https://en.wikipedia.org/wiki/Chebyshev_distance
    **/
-  [[nodiscard]] i32 chebyshev_distance(vec<Type> other) noexcept {
+  [[nodiscard]] i32 chebyshev_distance(const vec<Type>& other) noexcept {
     return std::max(std::abs(this->x - other.x), std::abs(this->y - other.y));
   }
 
-  [[nodiscard]] vec<Type> operator-(vec<Type> rhs) {
+  [[nodiscard]] vec<Type> operator+(const vec<Type>& rhs) {
+    return {.x = this->x + rhs.x, .y = this->y + rhs.y};
+  }
+
+  [[nodiscard]] vec<Type> operator-(const vec<Type>& rhs) {
     return {.x = this->x - rhs.x, .y = this->y - rhs.y};
+  }
+
+  [[nodiscard]] friend vec<Type>
+  operator*(const vec<Type>& lhs, Type rhs) noexcept {
+    return {.x = lhs.x * rhs, .y = lhs.y * rhs};
+  }
+
+  [[nodiscard]] friend vec<Type>
+  operator/(const vec<Type>& lhs, Type rhs) noexcept {
+    return {.x = lhs.x / rhs, .y = lhs.y / rhs};
   }
 
   [[nodiscard]] bool operator==(vec<Type> rhs) {
