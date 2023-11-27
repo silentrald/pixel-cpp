@@ -63,7 +63,7 @@ void Button::input(const event::Input& evt, Data& _data) noexcept {
     return;
   }
 
-  switch (evt.mouse.left.state) {
+  switch (evt.mouse.left) {
   case input::MouseState::DOWN:
   case input::MouseState::HOLD:
     this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::DOWN;
@@ -80,7 +80,7 @@ void Button::input(const event::Input& evt, Data& _data) noexcept {
     break;
   }
 
-  switch (evt.mouse.right.state) {
+  switch (evt.mouse.right) {
   case input::MouseState::DOWN:
   case input::MouseState::HOLD:
     this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::DOWN;

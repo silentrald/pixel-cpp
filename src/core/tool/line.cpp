@@ -27,7 +27,7 @@ const f32 RADIANS[]{
 u32 Line::execute(Model& model, const event::Input& evt) noexcept {
   // TODO: Check if there is a bug in priority of mouse type
 
-  switch (evt.mouse.left.state) {
+  switch (evt.mouse.left) {
   case input::MouseState::HOLD:
     this->handle_mouse_motion(model, evt.key.mods, evt.mouse.pos);
     return event::Flag::NONE;
@@ -45,7 +45,7 @@ u32 Line::execute(Model& model, const event::Input& evt) noexcept {
     break;
   }
 
-  switch (evt.mouse.right.state) {
+  switch (evt.mouse.right) {
   case input::MouseState::HOLD:
     this->handle_mouse_motion(model, evt.key.mods, evt.mouse.pos);
     return event::Flag::NONE;

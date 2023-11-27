@@ -16,16 +16,15 @@ namespace tool {
  *   model.tex1 - current image
  **/
 u32 Fill::execute(Model& model, const event::Input& evt) noexcept {
-  if ((evt.mouse.left.state != input::MouseState::UP &&
-       evt.mouse.right.state != input::MouseState::UP) ||
+  if ((evt.mouse.left != input::MouseState::UP &&
+       evt.mouse.right != input::MouseState::UP) ||
       !model.anim.has_point(model.curr_pos) ||
       !model.select_mask[model.get_pixel_index()]) {
     return event::Flag::NONE;
   }
 
-  this->new_color = evt.mouse.left.state == input::MouseState::UP
-                        ? model.fg_color
-                        : model.bg_color;
+  this->new_color =
+      evt.mouse.left == input::MouseState::UP ? model.fg_color : model.bg_color;
   this->old_color = *(rgba8*)model.img.get_pixel(model.get_pixel_index());
 
   if (this->old_color == this->new_color) {

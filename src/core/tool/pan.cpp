@@ -11,7 +11,7 @@
 namespace tool {
 
 u32 Pan::execute(Model& model, const event::Input& evt) noexcept {
-  switch (evt.mouse.middle.state) {
+  switch (evt.mouse.middle) {
   case input::MouseState::HOLD:
   case input::MouseState::UP:
     this->handle_mouse_motion(model, evt.mouse.pos);

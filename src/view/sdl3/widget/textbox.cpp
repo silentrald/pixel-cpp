@@ -54,7 +54,7 @@ void Textbox::locale_updated(const Renderer& renderer) noexcept {
 }
 
 void Textbox::input(const event::Input& evt, Data& data) noexcept {
-  if (evt.mouse.left.state == input::MouseState::UP &&
+  if (evt.mouse.left == input::MouseState::UP &&
       this->rect.has_point(evt.mouse.pos)) {
     this->focused = true;
     data.new_sel_textbox = this;
