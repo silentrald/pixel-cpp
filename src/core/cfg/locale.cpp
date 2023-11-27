@@ -53,7 +53,7 @@ const std::unordered_map<const c8*, locale::Section, SectionHash, SectionCmp>
     section_map{
         SECTION_ENTRY(GENERAL),       SECTION_ENTRY(MENU_ITEM),
         SECTION_ENTRY(FILE_CTX_MENU), SECTION_ENTRY(EXPORT_CTX_MENU),
-        SECTION_ENTRY(MODAL_TITLE),
+        SECTION_ENTRY(MODAL_TITLE),   SECTION_ENTRY(EDIT_CTX_MENU),
     };
 #undef SECTION_ENTRY
 

@@ -54,7 +54,7 @@ void MenuBtn::input(const event::Input& evt, Data& _data) noexcept {
     break;
 
   case input::MouseState::UP:
-    this->state = input::BtnState::DOWN;
+    this->state = input::BtnState::NORMAL;
     if (this->left_click_listener) {
       this->left_click_listener();
     }

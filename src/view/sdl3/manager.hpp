@@ -44,7 +44,7 @@ public:
   Manager(Manager&&) noexcept = delete;
   Manager& operator=(Manager&&) noexcept = delete;
 
-  error_code init() noexcept;
+  [[nodiscard]] error_code init() noexcept;
   ~Manager() noexcept;
 
   [[nodiscard]] i32 get_window_width() const noexcept;
@@ -81,6 +81,13 @@ public:
   modal::Id pop_modal() noexcept;
   void clear_modals() noexcept;
 
+  // === Context Menus === //
+
+  void toggle_file_ctx_menu() noexcept;
+  void toggle_edit_ctx_menu() noexcept;
+  [[nodiscard]] error_code open_export_ctx_menu() noexcept;
+  void close_ctx_menus() noexcept;
+
   void run() noexcept;
 
 private:
@@ -98,7 +105,9 @@ private:
   // NOTE: Better to use a stack here
   ds::vector<widget::Modal*> modals{};
 
-  widget::ContextMenu ctx_menu{};
+  // NOTE: Only for level 1 ctx menu
+  ds::vector<widget::ContextMenu> ctx_menus{};
+  ds::vector<widget::ContextMenu> ctx_menu_stack{};
 
   // TODO: Change to dropdown, and store it in a box
   widget::Button locale_btn{};
@@ -106,8 +115,8 @@ private:
   event::Input input_evt{};
   Data data{};
 
-  i32 select_ticks = 0;
   i32 mouse_box_id = -1; // where is the mouse currently
+  i32 ctx_menu_idx = -1; // which context menu is open
 
   bool running = false;
   bool is_input_evt = false;
@@ -116,7 +125,6 @@ private:
 
   void input() noexcept;
   void handle_input_event() noexcept;
-
   void inline handle_mouse_input(
       const SDL_MouseButtonEvent& mouse, input::MouseState state
   ) noexcept;
@@ -129,6 +137,11 @@ private:
   inline void handle_key_up_input(i32 keycode) noexcept;
 
   void handle_resize(ivec new_size) noexcept;
+
+  // === Context Menu === //
+
+  [[nodiscard]] error_code init_ctx_menus() noexcept;
+  void handle_ctx_menu_event() noexcept;
 
   void reset_data() noexcept;
 

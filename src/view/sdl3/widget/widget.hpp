@@ -18,7 +18,7 @@ namespace view::sdl3 {
 
 class Widget {
 public:
-  Widget() noexcept = default;
+  Widget() noexcept {};
   Widget(const Widget&) noexcept = default;
   Widget& operator=(const Widget&) noexcept = default;
   Widget(Widget&&) noexcept = default;
@@ -36,7 +36,15 @@ public:
   virtual void render(const Renderer& renderer) const noexcept = 0;
 
   // Position where to draw the widget
-  frect rect{};
+  union {
+    frect rect;
+    struct {
+      f32 x = 0.0F;
+      f32 y = 0.0F;
+      f32 w = 0.0F;
+      f32 h = 0.0F;
+    };
+  };
 };
 
 } // namespace view::sdl3

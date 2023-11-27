@@ -185,3 +185,19 @@ void presenter::push_back_layer() noexcept {
   view_.set_selected_on_timeline(model_.frame_id, model_.layer_index);
 }
 
+void presenter::undo_action() noexcept {
+  if (!caretaker_.undo(model_))
+    return;
+
+  logger::info("Undo");
+  update_view();
+}
+
+void presenter::redo_action() noexcept {
+  if (!caretaker_.redo(model_))
+    return;
+
+  logger::info("Redo");
+  update_view();
+}
+

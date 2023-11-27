@@ -45,12 +45,22 @@ void set_selected(u32 frame_id, i32 layer_index) noexcept;
 
 void new_file_clicked() noexcept;
 
+// === Context Menu Events === //
+
+void toggle_file_ctx_menu() noexcept;
+void toggle_edit_ctx_menu() noexcept;
+void open_export_ctx_menu() noexcept;
+
+void close_ctx_menus() noexcept;
+
 // === Anim Mutations === //
 
 void create_anim() noexcept;
 void toggle_visibility(i32 layer_index) noexcept;
 void insert_layer(i32 layer_index) noexcept;
 void push_back_layer() noexcept;
+void undo_action() noexcept;
+void redo_action() noexcept;
 
 // === Tools === //
 

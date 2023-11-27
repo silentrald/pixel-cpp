@@ -22,7 +22,7 @@ constexpr u32 hash_shortcut(const c8* str) noexcept {
     if (str[i] == '\0') {
       break;
     }
-    out = (out << 4) | str[i];
+    out = (out << 8) | str[i];
   }
   return out;
 }

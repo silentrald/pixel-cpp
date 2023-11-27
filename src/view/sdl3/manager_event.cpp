@@ -118,6 +118,11 @@ void Manager::handle_input_event() noexcept {
   }
   this->locale_btn.reset();
 
+  if (this->ctx_menu_idx > -1) {
+    this->handle_ctx_menu_event();
+    return;
+  }
+
   if (this->modals.get_size() > 0) {
     // NOTE: Check if only handle inputs on the top
     this->modals.back()->input(this->input_evt, this->data);
@@ -357,16 +362,30 @@ void Manager::handle_resize(ivec new_size) noexcept {
 void Manager::locale_updated() noexcept {
   this->renderer.locale_updated();
 
-  for (i32 i = 0; i < this->boxes.get_size(); ++i) {
+  for (usize i = 0; i < this->boxes.get_size(); ++i) {
     this->boxes[i]->locale_updated(this->renderer);
   }
 
-  for (i32 i = 0; i < this->modals.get_size(); ++i) {
+  for (usize i = 0; i < this->modals.get_size(); ++i) {
     this->modals[i]->locale_updated(this->renderer);
   }
 
   // NOTE: boxes may have changed dimensions
   this->handle_resize(this->window.size);
+
+  for (usize i = 0; i < this->ctx_menus.get_size(); ++i) {
+    this->ctx_menus[i].rect.pos = {
+        .x = this->menu_box.btns[i].rect.x,
+        .y = this->menu_box.rect.y + this->menu_box.rect.h};
+    this->ctx_menus[i].locale_updated(this->renderer);
+  }
+
+  for (usize i = 0; i < this->ctx_menu_stack.get_size(); ++i) {
+    this->ctx_menu_stack[i].rect.pos =
+        i == 0 ? this->ctx_menus[this->ctx_menu_idx].get_sel_item_pos()
+               : this->ctx_menu_stack[i - 1].get_sel_item_pos();
+    this->ctx_menu_stack[i].locale_updated(this->renderer);
+  }
 }
 
 } // namespace view::sdl3
