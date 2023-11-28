@@ -6,6 +6,7 @@
  *==========================*/
 
 #include "./timeline.hpp"
+#include "core/logger/logger.hpp"
 #include "presenter/presenter.hpp"
 #include "view/input.hpp"
 #include <cstdint>
@@ -18,14 +19,15 @@ inline const f32 LAYERS_WIDTH = LAYERS_NAME_WIDTH + LAYERS_VISIBILITY_WIDTH;
 inline const f32 LINE_WIDTH = 4.0F;
 inline const f32 LAYERS_NAME_PADDING_X = 4.0F;
 
-void TimelineBox::init(const Renderer& renderer) noexcept {
-  this->add_btn.rect.pos = this->rect.pos;
-  this->add_btn.rect.size = renderer.get_text_size("Add Layer");
-  this->add_btn.tex_rect = this->add_btn.rect;
+TimelineBox::TimelineBox() noexcept
+    : start_frame(1U),
+      end_frame(1U),
+      active_layer(0U),
+      active_frame(1U),
+      selected_layer(0U) {}
 
-  this->add_btn.set_texture(renderer.create_text("Add Layer"));
-  this->add_btn.set_theme(input::BtnTheme::TOOL_BTN);
-  this->add_btn.set_left_click_listener(presenter::push_back_layer);
+void TimelineBox::init(const Renderer& renderer) noexcept {
+  // TODO:
 }
 
 error_code TimelineBox::insert_layer_info(
@@ -33,7 +35,7 @@ error_code TimelineBox::insert_layer_info(
 ) noexcept {
   assert(index >= 0 && index <= this->layers.get_size());
 
-  this->selected_layer = index;
+  this->active_layer = index;
 
   frect text_rect{};
   text_rect.x = this->rect.x;
@@ -90,8 +92,6 @@ void TimelineBox::resize(const frect& rect) noexcept {
   this->rect = rect;
 
   auto off = this->rect.pos;
-  this->add_btn.rect.pos = off;
-  this->add_btn.tex_rect.pos = off;
 
   if (this->layers.is_empty()) {
     return;
@@ -107,7 +107,7 @@ void TimelineBox::resize(const frect& rect) noexcept {
 }
 
 void TimelineBox::reset() noexcept {
-  this->add_btn.reset();
+  // TODO:
 }
 
 void TimelineBox::locale_updated(const Renderer& renderer) noexcept {
@@ -118,29 +118,39 @@ void TimelineBox::locale_updated(const Renderer& renderer) noexcept {
 }
 
 void TimelineBox::input(const event::Input& evt, Data& data) noexcept {
-  this->add_btn.input(evt, data);
-
   // NOTE: Only handles changing of frame/layer for now
-  if (this->layers.is_empty() || (evt.mouse.left != input::MouseState::UP)) {
+  if (this->layers.is_empty()) {
     return;
   }
 
+  if (evt.mouse.left != input::MouseState::NONE) {
+    this->handle_mouse_left(evt, data);
+  } else if (evt.mouse.right != input::MouseState::NONE) {
+    this->handle_mouse_right(evt, data);
+  }
+}
+
+void TimelineBox::handle_mouse_left(
+    const event::Input& evt, Data& data
+) noexcept {
   f32 height = this->layers.front().textbox.rect.h;
   frect bounds{};
 
   // Toggle visibility
-  bounds.x = this->rect.x + LAYERS_NAME_WIDTH + 4.0F;
-  bounds.y =
-      this->rect.y + 4.0F + (height + LINE_WIDTH) * this->layers.get_size();
-  bounds.w = LAYERS_VISIBILITY_WIDTH - 8.0F;
-  bounds.h = height - 8.0F;
+  if (evt.mouse.left == input::MouseState::UP) {
+    bounds.x = this->rect.x + LAYERS_NAME_WIDTH + 4.0F;
+    bounds.y =
+        this->rect.y + 4.0F + (height + LINE_WIDTH) * this->layers.get_size();
+    bounds.w = LAYERS_VISIBILITY_WIDTH - 8.0F;
+    bounds.h = height - 8.0F;
 
-  for (i32 i = 0; i < this->layers.get_size(); ++i) {
-    if (bounds.has_point(evt.mouse.pos)) {
-      presenter::toggle_visibility(i);
-      return;
+    for (i32 i = 0; i < this->layers.get_size(); ++i) {
+      if (bounds.has_point(evt.mouse.pos)) {
+        presenter::toggle_visibility(i);
+        return;
+      }
+      bounds.y -= height + LINE_WIDTH;
     }
-    bounds.y -= height + LINE_WIDTH;
   }
 
   // Selecting frame
@@ -152,15 +162,15 @@ void TimelineBox::input(const event::Input& evt, Data& data) noexcept {
     return;
   }
 
-  usize new_sel_layer = this->selected_layer;
-  usize new_sel_frame = this->selected_frame;
+  usize new_active_layer = this->active_layer;
+  usize new_active_frame = this->active_frame;
   bounds.size = {this->rect.w - LAYERS_WIDTH, height};
 
   for (usize i = 0; i < this->layers.get_size(); ++i) {
     bounds.pos = this->layers[i].textbox.rect.pos;
     bounds.x -= LAYERS_WIDTH;
     if (bounds.has_point(evt.mouse.pos)) {
-      new_sel_layer = i;
+      new_active_layer = i;
       break;
     }
   }
@@ -169,18 +179,65 @@ void TimelineBox::input(const event::Input& evt, Data& data) noexcept {
   bounds.size = {height, this->rect.h};
   for (usize i = this->start_frame; i <= this->end_frame; ++i) {
     if (bounds.has_point(evt.mouse.pos)) {
-      new_sel_frame = i;
+      new_active_frame = i;
       break;
     }
     bounds.x += LINE_WIDTH + height;
   }
 
-  if (this->selected_layer == new_sel_layer &&
-      this->selected_frame == new_sel_frame) {
+  if (this->active_layer == new_active_layer &&
+      this->active_frame == new_active_frame) {
     return;
   }
 
-  presenter::set_selected(new_sel_frame, new_sel_layer);
+  if (evt.mouse.left == input::MouseState::UP) {
+    presenter::set_active_image(new_active_frame, new_active_layer);
+  } else {
+    this->active_frame = new_active_frame;
+    this->active_layer = new_active_layer;
+  }
+}
+
+void TimelineBox::handle_mouse_right(
+    const event::Input& evt, Data& data
+) noexcept {
+  if (evt.mouse.right != input::MouseState::UP) {
+    return;
+  }
+
+  frect click_rect{};
+  auto height = this->layers.front().textbox.h + LINE_WIDTH;
+
+  click_rect.x = this->x;
+  click_rect.y = this->y + height;
+  click_rect.w = LAYERS_WIDTH;
+  click_rect.h = this->h - height;
+  // NOTE: reimplement for overflow
+  if (click_rect.has_point(evt.mouse.pos)) {
+    this->selected_layer =
+        this->layers.get_size() -
+        std::clamp(
+            (usize)((evt.mouse.pos.y - click_rect.y) / height), 0U,
+            this->layers.get_size()
+        );
+    presenter::set_selected_layer(this->selected_layer);
+    presenter::open_layers_ctx_menu();
+    return;
+  }
+
+  // NOTE: reimplement for overflow
+  click_rect.x = LAYERS_WIDTH + LINE_WIDTH;
+  click_rect.w = this->w - click_rect.x;
+  if (!click_rect.has_point(evt.mouse.pos)) {
+    return;
+  }
+  this->selected_layer = this->layers.get_size() -
+                         std::clamp(
+                             (usize)((evt.mouse.pos.y - click_rect.y) / height),
+                             0U, this->layers.get_size()
+                         );
+  presenter::set_selected_layer(this->selected_layer);
+  presenter::open_timeline_ctx_menu();
 }
 
 void TimelineBox::update() noexcept {
@@ -194,8 +251,6 @@ void TimelineBox::render(const Renderer& renderer) const noexcept {
   this->render_grid(renderer);
   this->render_frames(renderer);
   this->render_layers(renderer);
-
-  this->add_btn.render(renderer);
 }
 
 void TimelineBox::render_grid(const Renderer& renderer) const noexcept {
@@ -204,7 +259,7 @@ void TimelineBox::render_grid(const Renderer& renderer) const noexcept {
   // Selected frame
   renderer.set_color({0xff, 0xff, 0xff, 0x66});
   line.x = this->rect.x + LAYERS_WIDTH + LINE_WIDTH +
-           (this->selected_frame - this->start_frame) *
+           (this->active_frame - this->start_frame) *
                (renderer.get_text_height() + LINE_WIDTH);
   line.y = this->rect.y;
   line.w = renderer.get_text_height();
@@ -214,7 +269,7 @@ void TimelineBox::render_grid(const Renderer& renderer) const noexcept {
   // Selected layer
   line.x = this->rect.x;
   line.y = this->rect.y + (renderer.get_text_height() + LINE_WIDTH) *
-                              (this->layers.get_size() - this->selected_layer);
+                              (this->layers.get_size() - this->active_layer);
   line.w = this->rect.w;
   line.h = renderer.get_text_height();
   renderer.fill_rect(line);

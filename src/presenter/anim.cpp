@@ -127,19 +127,22 @@ void presenter::toggle_visibility(i32 layer_index) noexcept {
   );
 }
 
-void presenter::insert_layer(i32 layer_index) noexcept {
+void presenter::add_at_selected_layer() noexcept {
   if (!model_.anim) {
     return;
   }
 
+  assert(model_.selected_layer <= model_.anim.get_layer_count());
+
   history::Action action{history::ActionType::INSERT_LAYER};
   action.insert_layer.prev_layer_index = model_.layer_index;
-  action.insert_layer.layer_index = layer_index;
+  action.insert_layer.layer_index = model_.selected_layer;
   caretaker_.prepare_push_action();
   caretaker_.push_action(std::move(action));
 
+  model_.layer_index = model_.selected_layer;
   usize id = *TRY_ABORT_RET(
-      model_.anim.insert_layer(layer_index), "Could not update anim"
+      model_.anim.insert_layer(model_.layer_index), "Could not update anim"
   );
   model_.img_id = id;
   model_.img = *model_.anim.get_image(id); // Should throw an error
@@ -147,42 +150,14 @@ void presenter::insert_layer(i32 layer_index) noexcept {
   TRY_IGNORE(pxl_.try_auto_save(model_.anim), "Could not auto save");
 
   TRY_ABORT(
-      view_.insert_layer(layer_index, model_.anim.get_layer_info(layer_index)),
-      "Could not update view"
-  );
-  update_canvas_textures();
-  view_.set_selected_on_timeline(model_.frame_id, layer_index);
-}
-
-void presenter::push_back_layer() noexcept {
-  if (!model_.anim) {
-    return;
-  }
-  logger::info("New layer");
-
-  history::Action action{history::ActionType::INSERT_LAYER};
-  action.insert_layer.prev_layer_index = model_.layer_index;
-  action.insert_layer.layer_index = model_.anim.get_layer_count();
-  caretaker_.prepare_push_action();
-  caretaker_.push_action(std::move(action));
-
-  model_.layer_index = model_.anim.get_layer_count();
-  usize id = *TRY_ABORT_RET(
-      model_.anim.insert_layer(model_.layer_index), "Could not update anim"
-  );
-  model_.img_id = id;
-  model_.img = *model_.anim.get_image(id); // Shouldn't throw an error
-
-  TRY_IGNORE(pxl_.try_auto_save(model_.anim), "Could not auto save");
-
-  TRY_ABORT(
       view_.insert_layer(
-          model_.layer_index, model_.anim.get_layer_info(model_.layer_index)
+          model_.layer_index,
+          model_.anim.get_layer_info(model_.layer_index)
       ),
       "Could not update view"
   );
   update_canvas_textures();
-  view_.set_selected_on_timeline(model_.frame_id, model_.layer_index);
+  view_.set_active_on_timeline(model_.frame_id, model_.layer_index);
 }
 
 void presenter::undo_action() noexcept {

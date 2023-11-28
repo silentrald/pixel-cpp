@@ -53,6 +53,16 @@ fvec ContextMenu::get_sel_item_pos() const noexcept {
       .y = this->items[this->selected].rect.y};
 }
 
+void ContextMenu::reposition(fvec pos) noexcept {
+  auto off = pos - this->pos;
+  this->pos = pos;
+
+  for (usize i = 0; i < this->items.get_size(); ++i) {
+    this->items[i].rect.pos += off;
+    this->items[i].text.pos += off;
+  }
+}
+
 void ContextMenu::reset() noexcept {
   this->selected = -1;
   for (usize i = 0; i < this->items.get_size(); ++i) {

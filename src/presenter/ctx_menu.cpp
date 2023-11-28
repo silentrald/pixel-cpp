@@ -20,6 +20,14 @@ void presenter::open_export_ctx_menu() noexcept {
   TRY_ABORT(view_.open_export_ctx_menu(), "Could not open export context menu");
 }
 
+void presenter::open_layers_ctx_menu() noexcept {
+  view_.open_layers_ctx_menu();
+}
+
+void presenter::open_timeline_ctx_menu() noexcept {
+  view_.open_timeline_ctx_menu();
+}
+
 void presenter::close_ctx_menus() noexcept {
   view_.close_ctx_menus();
 }

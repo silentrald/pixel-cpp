@@ -8,6 +8,7 @@
 #include "./manager.hpp"
 #include "./widget/context_menu.hpp"
 #include "core/cfg/locale.hpp"
+#include "core/logger/logger.hpp"
 #include "presenter/presenter.hpp"
 
 namespace view::sdl3 {
@@ -16,8 +17,16 @@ namespace view::sdl3 {
 const usize FILE_CTX_ID = 0;
 const usize EDIT_CTX_ID = 1;
 
+const usize MENU_BTN_COUNT = 2;
+
+// NOTE: Adjust these when ctx menus for menu box are added
+const usize LAYERS_CTX_ID = 2;
+const usize TIMELINE_CTX_ID = 3;
+
+const usize CTX_MENUS_COUNT = 4;
+
 error_code Manager::init_ctx_menus() noexcept {
-  TRY(this->ctx_menus.resize(2));
+  TRY(this->ctx_menus.resize(CTX_MENUS_COUNT));
 
   // File Context Menu
   {
@@ -39,9 +48,11 @@ error_code Manager::init_ctx_menus() noexcept {
               presenter::close_ctx_menus();
               presenter::save_file();
             }));
-    TRY(file_ctx_menu.push_item(
-        cfg::locale::TextId::SV_AS, this->renderer, nullptr
-    ));
+    TRY(file_ctx_menu
+            .push_item(cfg::locale::TextId::SV_AS, this->renderer, []() {
+              presenter::close_ctx_menus();
+              logger::debug("Not implemented yet UwU"); // TODO:
+            }));
     TRY(file_ctx_menu.push_item(
         cfg::locale::TextId::EXPORT, this->renderer,
         presenter::open_export_ctx_menu
@@ -62,6 +73,41 @@ error_code Manager::init_ctx_menus() noexcept {
             .push_item(cfg::locale::TextId::REDO, this->renderer, []() {
               presenter::close_ctx_menus();
               presenter::redo_action();
+            }));
+  }
+
+  // Layers Context Menu
+  {
+    auto& layers_ctx_menu = this->ctx_menus[LAYERS_CTX_ID];
+    TRY(layers_ctx_menu
+            .push_item(cfg::locale::TextId::ADD_LAYER, this->renderer, []() {
+              presenter::close_ctx_menus();
+              presenter::add_at_selected_layer();
+            }));
+    TRY(layers_ctx_menu
+            .push_item(cfg::locale::TextId::REM_LAYER, this->renderer, []() {
+              presenter::close_ctx_menus();
+              logger::debug("UwU"); // TODO:
+            }));
+    TRY(layers_ctx_menu
+            .push_item(cfg::locale::TextId::PROPERTIES, this->renderer, []() {
+              presenter::close_ctx_menus();
+              logger::debug("UwU"); // TODO:
+            }));
+  }
+
+  // Timeline Content Menu
+  {
+    auto& timeline_ctx_menu = this->ctx_menus[TIMELINE_CTX_ID];
+    TRY(timeline_ctx_menu
+            .push_item(cfg::locale::TextId::ADD_FRAME, this->renderer, []() {
+              presenter::close_ctx_menus();
+              logger::debug("UwU"); // TODO:
+            }));
+    TRY(timeline_ctx_menu
+            .push_item(cfg::locale::TextId::REM_FRAME, this->renderer, []() {
+              presenter::close_ctx_menus();
+              logger::debug("UwU"); // TODO:
             }));
   }
 
@@ -93,23 +139,42 @@ void Manager::handle_ctx_menu_event() noexcept {
     }
   }
 
-  for (usize i = 0; i < this->menu_box.get_btns_size(); ++i) {
-    if (this->menu_box.get_btn_rect(i).has_point(this->input_evt.mouse.pos)) {
-      if (this->ctx_menu_idx == i) {
+  if (this->ctx_menu_idx < MENU_BTN_COUNT) {
+    for (usize i = 0; i < MENU_BTN_COUNT; ++i) {
+      if (this->menu_box.get_btn_rect(i).has_point(this->input_evt.mouse.pos)) {
+        if (this->ctx_menu_idx == i) {
+          break;
+        }
+
+        this->ctx_menus[this->ctx_menu_idx].reset();
+        this->ctx_menu_idx = i;
+        this->menu_box.selected = i;
+        this->ctx_menu_stack.clear();
         break;
       }
-
-      this->ctx_menus[this->ctx_menu_idx].reset();
-      this->ctx_menu_idx = i;
-      this->menu_box.selected = i;
-      this->ctx_menu_stack.clear();
-      break;
     }
   }
 
   this->ctx_menus[this->ctx_menu_idx].input(this->input_evt, this->data);
   for (usize i = 0; i < this->ctx_menu_stack.get_size(); ++i) {
     this->ctx_menu_stack[i].input(this->input_evt, this->data);
+  }
+}
+
+void Manager::handle_ctx_menu_locale_updated() noexcept {
+  for (usize i = 0; i < this->ctx_menus.get_size(); ++i) {
+    if (i < MENU_BTN_COUNT) {
+      this->ctx_menus[i].x = this->menu_box.get_btn_rect(i).x,
+      this->ctx_menus[i].y = this->menu_box.y + this->menu_box.h;
+    }
+    this->ctx_menus[i].locale_updated(this->renderer);
+  }
+
+  for (usize i = 0; i < this->ctx_menu_stack.get_size(); ++i) {
+    this->ctx_menu_stack[i].pos =
+        i == 0 ? this->ctx_menus[this->ctx_menu_idx].get_sel_item_pos()
+               : this->ctx_menu_stack[i - 1].get_sel_item_pos();
+    this->ctx_menu_stack[i].locale_updated(this->renderer);
   }
 }
 
@@ -135,6 +200,20 @@ error_code Manager::open_export_ctx_menu() noexcept {
   ));
 
   return this->ctx_menu_stack.push_back(std::move(ctx_menu));
+}
+
+void Manager::open_layers_ctx_menu() noexcept {
+  this->ctx_menu_stack.clear();
+
+  this->ctx_menus[LAYERS_CTX_ID].reposition(this->input_evt.mouse.pos);
+  this->ctx_menu_idx = LAYERS_CTX_ID;
+}
+
+void Manager::open_timeline_ctx_menu() noexcept {
+  this->ctx_menu_stack.clear();
+
+  this->ctx_menus[TIMELINE_CTX_ID].reposition(this->input_evt.mouse.pos);
+  this->ctx_menu_idx = TIMELINE_CTX_ID;
 }
 
 void Manager::close_ctx_menus() noexcept {
