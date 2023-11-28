@@ -75,7 +75,7 @@ public:
   insert_layer(usize index, const draw::LayerInfo& layer_info) noexcept;
   void set_layer_visible(usize index, bool visible) noexcept;
   void clear_layers() noexcept;
-  void set_selected_on_timeline(usize frame_id, usize layer_index) noexcept;
+  void set_active_on_timeline(usize frame_id, usize layer_index) noexcept;
 
   [[nodiscard]] error_code push_modal(modal::Id id) noexcept;
   modal::Id pop_modal() noexcept;
@@ -86,6 +86,8 @@ public:
   void toggle_file_ctx_menu() noexcept;
   void toggle_edit_ctx_menu() noexcept;
   [[nodiscard]] error_code open_export_ctx_menu() noexcept;
+  void open_layers_ctx_menu() noexcept;
+  void open_timeline_ctx_menu() noexcept;
   void close_ctx_menus() noexcept;
 
   void run() noexcept;
@@ -142,6 +144,7 @@ private:
 
   [[nodiscard]] error_code init_ctx_menus() noexcept;
   void handle_ctx_menu_event() noexcept;
+  void handle_ctx_menu_locale_updated() noexcept;
 
   void reset_data() noexcept;
 

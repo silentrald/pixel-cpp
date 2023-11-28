@@ -30,6 +30,8 @@ public:
 
   [[nodiscard]] fvec get_sel_item_pos() const noexcept;
 
+  void reposition(fvec pos) noexcept;
+
   void reset() noexcept override;
   void locale_updated(const Renderer& renderer) noexcept override;
 

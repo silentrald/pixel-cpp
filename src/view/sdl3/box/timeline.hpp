@@ -19,7 +19,7 @@ namespace view::sdl3::widget {
 
 class TimelineBox final : public Box {
 public:
-  TimelineBox() noexcept = default;
+  TimelineBox() noexcept;
   TimelineBox(const TimelineBox&) noexcept = delete;
   TimelineBox& operator=(const TimelineBox&) noexcept = delete;
   TimelineBox(TimelineBox&&) noexcept = default;
@@ -41,10 +41,14 @@ public:
   void update() noexcept override;
   void render(const Renderer& renderer) const noexcept override;
 
-  usize start_frame = 1U;
-  usize end_frame = 1U;
-  usize selected_layer = 0;
-  usize selected_frame = 1U;
+  usize start_frame;
+  usize end_frame;
+  // Currently shown image on the canvas
+  usize active_layer;
+  usize active_frame;
+  // NOTE: Selected layer/frame maybe use a vector for this one
+  usize selected_layer;
+  /* usize selected_frame; */
 
 private:
   struct Layer {
@@ -52,8 +56,10 @@ private:
     bool visible = true;
   };
 
-  widget::Button add_btn{};
   ds::vector<Layer> layers{};
+
+  void handle_mouse_left(const event::Input& evt, Data& data) noexcept;
+  void handle_mouse_right(const event::Input& evt, Data& data) noexcept;
 
   void render_grid(const Renderer& renderer) const noexcept;
   void render_frames(const Renderer& renderer) const noexcept;

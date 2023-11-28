@@ -149,7 +149,7 @@ void presenter::new_file_clicked() noexcept {
   );
 }
 
-void presenter::set_selected(u32 frame_id, i32 layer_index) noexcept {
+void presenter::set_active_image(u32 frame_id, i32 layer_index) noexcept {
   logger::info("Selected (Frame %u, Layer %d)", frame_id, layer_index);
 
   history::Action action{history::ActionType::CHANGE_SELECTION};
@@ -176,7 +176,12 @@ void presenter::set_selected(u32 frame_id, i32 layer_index) noexcept {
 
   update_canvas_textures();
 
-  view_.set_selected_on_timeline(frame_id, layer_index);
+  view_.set_active_on_timeline(frame_id, layer_index);
+}
+
+void presenter::set_selected_layer(u32 selected_layer) noexcept {
+  model_.selected_layer = selected_layer;
+  /* std::clamp(selected_layer, 0U, model_.anim.get_layer_count()); */
 }
 
 void presenter::debug_callback() noexcept {

@@ -178,11 +178,11 @@ void Manager::clear_layers() noexcept {
   this->timeline_box.clear_layers();
 }
 
-void Manager::set_selected_on_timeline(
+void Manager::set_active_on_timeline(
     usize frame_id, usize layer_index
 ) noexcept {
-  this->timeline_box.selected_frame = frame_id;
-  this->timeline_box.selected_layer = layer_index;
+  this->timeline_box.active_frame = frame_id;
+  this->timeline_box.active_layer = layer_index;
 }
 
 void Manager::run() noexcept {

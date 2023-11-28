@@ -62,7 +62,7 @@ void presenter::update_view() noexcept {
     );
   }
 
-  view_.set_selected_on_timeline(model_.frame_id, model_.layer_index);
+  view_.set_active_on_timeline(model_.frame_id, model_.layer_index);
 }
 
 void presenter::close_modals() noexcept {

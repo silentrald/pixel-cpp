@@ -41,7 +41,8 @@ void window_resized() noexcept;
  **/
 void key_down_event(input::Keycode keycode, input::KeyMod key_mod) noexcept;
 
-void set_selected(u32 frame_id, i32 layer_index) noexcept;
+void set_active_image(u32 frame_id, i32 layer_index) noexcept;
+void set_selected_layer(u32 selected_layer) noexcept;
 
 void new_file_clicked() noexcept;
 
@@ -50,6 +51,8 @@ void new_file_clicked() noexcept;
 void toggle_file_ctx_menu() noexcept;
 void toggle_edit_ctx_menu() noexcept;
 void open_export_ctx_menu() noexcept;
+void open_layers_ctx_menu() noexcept;
+void open_timeline_ctx_menu() noexcept;
 
 void close_ctx_menus() noexcept;
 
@@ -57,8 +60,7 @@ void close_ctx_menus() noexcept;
 
 void create_anim() noexcept;
 void toggle_visibility(i32 layer_index) noexcept;
-void insert_layer(i32 layer_index) noexcept;
-void push_back_layer() noexcept;
+void add_at_selected_layer() noexcept;
 void undo_action() noexcept;
 void redo_action() noexcept;
 
