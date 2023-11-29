@@ -8,8 +8,8 @@
 #ifndef PXL_VIEW_SDL3_DRAW_BOX_HPP
 #define PXL_VIEW_SDL3_DRAW_BOX_HPP
 
+#include "../input/button.hpp"
 #include "../texture.hpp"
-#include "../widget/button.hpp"
 #include "./box.hpp"
 #include <array>
 

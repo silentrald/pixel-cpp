@@ -10,12 +10,12 @@
 
 #include "../font.hpp"
 #include "../texture.hpp"
-#include "./widget.hpp"
+#include "./input.hpp"
 #include <string>
 
 namespace view::sdl3::widget {
 
-class Textbox : public Widget {
+class Textbox final : public Input {
 public:
   Textbox() noexcept = default;
   Textbox(const Textbox&) noexcept = delete;
