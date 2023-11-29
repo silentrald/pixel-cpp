@@ -85,8 +85,10 @@ bool PngData::save_frame(const draw::Anim& anim, u32 frame_id) noexcept {
   );
   png_write_info(this->png_ptr, this->info_ptr);
 
-  png_bytep* row_pointers =                                      // NOLINT
-      (png_bytep*)malloc(sizeof(png_bytep) * anim.get_height()); // NOLINT
+  // NOLINTNEXTLINE
+  auto* row_pointers =
+      // NOLINTNEXTLINE
+      (png_bytep*)std::malloc(sizeof(png_bytep) * anim.get_height());
   if (row_pointers == nullptr) {
     logger::error("No more memory");
     return false;
@@ -96,7 +98,7 @@ bool PngData::save_frame(const draw::Anim& anim, u32 frame_id) noexcept {
   png_bytep row_pointer = nullptr;
   for (i32 y = 0; y < anim.get_height(); ++y) {
     // NOLINTNEXTLINE
-    row_pointer = (png_bytep)malloc(row_size);
+    row_pointer = (png_bytep)std::malloc(row_size);
     if (row_pointer != nullptr) {
       row_pointers[y] = row_pointer;
       continue;

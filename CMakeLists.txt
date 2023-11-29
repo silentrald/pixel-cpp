@@ -7,7 +7,10 @@ set(CMAKE_CXX_STANDARD 17)
 
 
 if (WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -Wl,-allow-multiple-definition")
+  # For dll files
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 endif (WIN32)
 
 # Copy files
@@ -124,11 +127,12 @@ add_subdirectory(${SDL3_IMG_DIR})
 # Png Lib
 set(PNG_SHARED ON CACHE BOOL "" FORCE)
 set(PNG_STATIC OFF CACHE BOOL "" FORCE)
-set(PNG_EXECUTABLES OFF CACHE BOOL "" FORCE)
 set(PNG_TESTS OFF CACHE BOOL "" FORCE)
+set(PNG_TOOLS OFF CACHE BOOL "" FORCE)
 set(SKIP_INSTALL_ALL OFF CACHE BOOL "" FORCE)
 set(PNG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/libpng)
-set(PNG_TOOLS OFF CACHE BOOL "" FORCE)
+include_directories(${PNG_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/external/libpng)
 add_subdirectory(${PNG_DIR})
 
 # Error Handling
@@ -148,21 +152,12 @@ target_link_libraries(pixel_draw PRIVATE Catch2::Catch2WithMain)
 add_executable(pixel_vector test/vector.cpp ${logger_srcs})
 target_link_libraries(pixel_vector PRIVATE Catch2::Catch2WithMain)
 
-if (UNIX)
-  set(pxl_lib
-    SDL3::SDL3
-    SDL3_ttf-shared
-    SDL3_image-shared
-    png
-  )
-elseif (WIN32)
-  set(pxl_lib
-    SDL3::SDL3
-    SDL3_ttf-shared
-    SDL3_image-shared
-    png z
-  )
-endif (UNIX)
+set(pxl_lib
+  SDL3::SDL3
+  SDL3_ttf-shared
+  SDL3_image-shared
+  png_shared
+)
 
 add_executable(${PROJECT_NAME} ${srcs})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${pxl_lib})
