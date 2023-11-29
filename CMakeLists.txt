@@ -55,13 +55,15 @@ set(view_srcs src/view/sdl3/manager.cpp
   src/view/sdl3/box/timeline.cpp
   src/view/sdl3/box/tool.cpp
 
+  # Inputs
+  src/view/sdl3/input/button.cpp
+  src/view/sdl3/input/textbox.cpp
+
   # Modal
   src/view/sdl3/modal/file.cpp
 
   # Widgets
-  src/view/sdl3/widget/button.cpp
   src/view/sdl3/widget/text.cpp
-  src/view/sdl3/widget/textbox.cpp
   src/view/sdl3/widget/context_menu.cpp
 )
 

@@ -9,11 +9,11 @@
 #define PXL_VIEW_SDL3_WIDGET_BTN_HPP
 
 #include "../texture.hpp"
-#include "./widget.hpp"
+#include "./input.hpp"
 
 namespace view::sdl3::widget {
 
-class Button final : public Widget {
+class Button final : public Input {
 public:
   Button() noexcept = default;
   Button(const Button&) noexcept = delete;

@@ -293,9 +293,9 @@ void Manager::handle_key_down_text_input(i32 keycode) noexcept {
     SDL_StopTextInput();
     break;
 
-    /* case SDLK_TAB: */
+  case SDLK_TAB:
     // TODO: Refocus to another input
-    /* break; */
+    break;
 
   default:
     break;

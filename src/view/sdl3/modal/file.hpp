@@ -9,9 +9,9 @@
 #define PXL_VIEW_SDL3_FILE_MODAL_HPP
 
 #include "../font.hpp"
+#include "../input/button.hpp"
+#include "../input/textbox.hpp"
 #include "../texture.hpp"
-#include "../widget/button.hpp"
-#include "../widget/textbox.hpp"
 #include "./modal.hpp"
 #include "view/sdl3/widget/text.hpp"
 

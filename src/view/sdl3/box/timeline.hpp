@@ -8,9 +8,9 @@
 #ifndef PXL_VIEW_SDL3_TIMELINE_BOX_HPP
 #define PXL_VIEW_SDL3_TIMELINE_BOX_HPP
 
+#include "../input/button.hpp"
+#include "../input/textbox.hpp"
 #include "../texture.hpp"
-#include "../widget/button.hpp"
-#include "../widget/textbox.hpp"
 #include "./box.hpp"
 #include "core/draw/anim.hpp"
 #include "core/ds/vector.hpp"

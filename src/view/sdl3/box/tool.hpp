@@ -8,7 +8,7 @@
 #ifndef PXL_VIEW_SDL3_TOOL_BOX_HPP
 #define PXL_VIEW_SDL3_TOOL_BOX_HPP
 
-#include "../widget/button.hpp"
+#include "../input/button.hpp"
 #include "./box.hpp"
 #include "core/ds/vector.hpp"
 
