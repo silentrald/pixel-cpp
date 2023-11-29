@@ -47,7 +47,6 @@ sudo apt install make cmake clang
 
 ### Steps
 
-In the `pixel-cpp` folder
 
 Build the executable
 ```sh
