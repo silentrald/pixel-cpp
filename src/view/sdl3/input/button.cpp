@@ -40,6 +40,8 @@ void Button::disable() noexcept {
 }
 
 void Button::reset() noexcept {
+  this->focused = false;
+
   if ((this->info & input::BtnMask::STATES) == input::BtnState::DISABLED) {
     return;
   }
@@ -47,11 +49,15 @@ void Button::reset() noexcept {
   this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::NORMAL;
 }
 
+void Button::unfocused(const Renderer& _renderer) noexcept {
+  this->focused = false;
+}
+
 void Button::locale_updated(const Renderer& renderer) noexcept {
   // Do nothing UwU
 }
 
-void Button::input(const event::Input& evt, Data& _data) noexcept {
+void Button::input(const event::Input& evt, InputData& _data) noexcept {
   if ((this->info & input::BtnMask::STATES) == input::BtnState::DISABLED) {
     return;
   }
@@ -100,6 +106,23 @@ void Button::input(const event::Input& evt, Data& _data) noexcept {
   }
 }
 
+void Button::key_input(
+    const event::KeyPress& keypress, const Renderer& _renderer
+) noexcept {
+  if (((this->info & input::BtnMask::STATES) == input::BtnState::DISABLED) ||
+      this->left_click_listener == nullptr || !this->focused) {
+    return;
+  }
+
+  for (usize i = 0; i < keypress.keys.get_size(); ++i) {
+    if (keypress.keys[i] == input::Keycode::ENTER) {
+      this->left_click_listener();
+      this->focused = false;
+      break;
+    }
+  }
+}
+
 void Button::update() noexcept {
   // Do nothing UwU
 }
@@ -108,6 +131,12 @@ void Button::render(const Renderer& renderer) const noexcept {
   // Draw bg
   renderer.set_color(cfg::theme::get_button_color(this->info));
   renderer.fill_rect(this->rect);
+
+  // Draw Outline
+  if (this->focused) {
+    renderer.set_color({0x00, 0x00, 0x00, 0xff});
+    renderer.draw_rect(this->rect);
+  }
 
   // Draw tex
   renderer.render_texture(this->tex, this->tex_rect);

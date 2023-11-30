@@ -65,8 +65,9 @@ void Manager::input() noexcept {
       if (!SDL_TextInputActive()) {
         break;
       }
-      this->data.sel_textbox->push_text(event.text.text);
-      this->is_text_input_changed = true;
+      for (auto* ptr = event.text.text; *ptr != '\0'; ++ptr) {
+        this->keypress_evt.keys.push_back(*ptr);
+      }
       break;
 
     case SDL_EVENT_TEXT_EDITING:
@@ -96,14 +97,34 @@ void Manager::input() noexcept {
 
   this->handle_input_event();
 
+  // TODO: Can be a separate function call
+  if (this->data.new_selected_input) {
+    if (this->data.selected_input) {
+      this->data.selected_input->unfocused(this->renderer);
+    }
+    this->data.selected_input = this->data.new_selected_input;
+    this->data.selected_input->focused = true;
+
+    this->data.new_selected_input = nullptr;
+    SDL_StartTextInput();
+  } else if (this->data.clear_selected || (this->input_evt.mouse.left == input::MouseState::UP && this->data.selected_input)) {
+    this->data.clear_selected = false;
+    this->data.selected_input->unfocused(this->renderer);
+    this->data.selected_input = nullptr;
+    SDL_StopTextInput();
+  }
+
+  if (!this->keypress_evt.keys.is_empty() &&
+      this->data.selected_input != nullptr) {
+    this->data.selected_input->key_input(this->keypress_evt, this->renderer);
+  }
+
   update_mouse_state(this->input_evt.mouse.left, this->is_input_evt);
   update_mouse_state(this->input_evt.mouse.right, this->is_input_evt);
   update_mouse_state(this->input_evt.mouse.middle, this->is_input_evt);
-  this->input_evt.mouse.wheel = {};
 
-  if (this->is_text_input_changed && this->data.sel_textbox) {
-    this->data.sel_textbox->reposition_text_rect(this->renderer);
-  }
+  this->input_evt.mouse.wheel = {};
+  this->keypress_evt.keys.clear();
 }
 
 void Manager::handle_input_event() noexcept {
@@ -126,20 +147,6 @@ void Manager::handle_input_event() noexcept {
   if (this->modals.get_size() > 0) {
     // NOTE: Check if only handle inputs on the top
     this->modals.back()->input(this->input_evt, this->data);
-    if (this->data.new_sel_textbox) {
-      if (this->data.sel_textbox) {
-        this->data.sel_textbox->focused = false;
-        this->data.sel_textbox->update_texture(this->renderer);
-      }
-      this->data.sel_textbox = this->data.new_sel_textbox;
-      this->data.new_sel_textbox = nullptr;
-      SDL_StartTextInput();
-    } else if (this->input_evt.mouse.left == input::MouseState::UP && this->data.sel_textbox) {
-      this->data.sel_textbox->focused = false;
-      this->data.sel_textbox->update_texture(this->renderer);
-      this->data.sel_textbox = nullptr;
-      SDL_StopTextInput();
-    }
     return;
   }
 
@@ -265,6 +272,10 @@ void Manager::handle_key_down_key(i32 keycode) noexcept {
     this->input_evt.key.mods.alt = true;
     break;
 
+  case SDLK_TAB:
+    this->data.new_selected_input = this->data.first_input;
+    break;
+
   default:
     presenter::key_down_event(
         (input::Keycode)keycode, this->input_evt.key.mods
@@ -274,27 +285,31 @@ void Manager::handle_key_down_key(i32 keycode) noexcept {
 }
 
 void Manager::handle_key_down_text_input(i32 keycode) noexcept {
-  if (!this->data.sel_textbox) {
+  if (!this->data.selected_input) {
     return;
   }
 
   switch (keycode) {
   case SDLK_BACKSPACE:
-    if (this->data.sel_textbox->pop_char() != '\0') {
-      this->is_text_input_changed = true;
-    }
+    this->keypress_evt.keys.push_back(input::Keycode::BACKSPACE);
     break;
 
   case SDLK_RETURN:
-    this->data.sel_textbox->focused = false;
-    this->data.sel_textbox->update_texture(this->renderer);
-    this->data.sel_textbox = nullptr;
-    this->is_text_input_changed = false;
+    this->keypress_evt.keys.push_back(input::Keycode::ENTER);
     SDL_StopTextInput();
     break;
 
   case SDLK_TAB:
-    // TODO: Refocus to another input
+    if (this->data.new_selected_input) {
+      this->data.new_selected_input = this->data.new_selected_input->next_input;
+    } else {
+      this->data.new_selected_input = this->data.selected_input->next_input;
+    }
+    this->data.clear_selected = this->data.new_selected_input == nullptr;
+    break;
+
+  case SDLK_ESCAPE:
+    this->data.clear_selected = true;
     break;
 
   default:

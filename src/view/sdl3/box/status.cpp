@@ -23,7 +23,7 @@ void StatusBox::locale_updated(const Renderer& renderer) noexcept {
   // NOTE: Do nothing for now UwU
 }
 
-void StatusBox::input(const event::Input& evt, Data& _data) noexcept {
+void StatusBox::input(const event::Input& evt, InputData& _data) noexcept {
   //
 }
 

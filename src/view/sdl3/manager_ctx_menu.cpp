@@ -36,7 +36,7 @@ error_code Manager::init_ctx_menus() noexcept {
 
     TRY(file_ctx_menu.push_item(cfg::locale::TextId::NEW, this->renderer, []() {
       presenter::close_ctx_menus();
-      presenter::new_file_clicked();
+      presenter::new_file();
     }));
     TRY(file_ctx_menu
             .push_item(cfg::locale::TextId::OPEN, this->renderer, []() {

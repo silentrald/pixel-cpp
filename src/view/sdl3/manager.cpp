@@ -204,8 +204,10 @@ void Manager::run() noexcept {
 }
 
 void Manager::reset_data() noexcept {
-  this->data.sel_textbox = nullptr;
-  this->data.new_sel_textbox = nullptr;
+  this->data.selected_input = nullptr;
+  this->data.new_selected_input = nullptr;
+  this->data.first_input = nullptr;
+  this->data.clear_selected = false;
 
   SDL_StopTextInput();
 }

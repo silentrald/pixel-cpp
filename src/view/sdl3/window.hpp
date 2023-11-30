@@ -30,14 +30,11 @@ public:
       std::abort();
     }
 
-// Maximize and get the size of the window
-#ifdef NDEBUG
     SDL_MaximizeWindow(this->window);
-#endif
-
     SDL_GetWindowSize(this->window, &this->size.x, &this->size.y);
     SDL_SetWindowMaximumSize(this->window, this->size.x, this->size.y);
     SDL_SetWindowMinimumSize(this->window, 800, 600);
+    SDL_SetWindowSize(this->window, 800, 600);
   }
 
   inline ~Window() noexcept {

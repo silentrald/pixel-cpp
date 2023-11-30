@@ -44,6 +44,12 @@ enum Keycode : u32 {
   Y = SDLK_y,
   Z = SDLK_z,
 
+  // Special
+  TAB = SDLK_TAB,
+  ESCAPE = SDLK_ESCAPE,
+  ENTER = SDLK_RETURN,
+  BACKSPACE = SDLK_BACKSPACE,
+
   // MODIFIERS
   CTRL = 1 << 29,
   SHIFT = 1 << 28,

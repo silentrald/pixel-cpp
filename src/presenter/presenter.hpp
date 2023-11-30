@@ -44,7 +44,7 @@ void key_down_event(input::Keycode keycode, input::KeyMod key_mod) noexcept;
 void set_active_image(u32 frame_id, i32 layer_index) noexcept;
 void set_selected_layer(u32 selected_layer) noexcept;
 
-void new_file_clicked() noexcept;
+void new_file() noexcept;
 
 // === Context Menu Events === //
 

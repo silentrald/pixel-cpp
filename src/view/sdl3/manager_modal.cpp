@@ -41,7 +41,8 @@ error_code Manager::push_modal(modal::Id id) noexcept {
 
     ((widget::FileModal*)modal)
         ->init(
-            {(f32)this->window.size.x, (f32)this->window.size.y}, this->renderer
+            {(f32)this->window.size.x, (f32)this->window.size.y},
+            this->renderer, this->data
         );
     break;
 

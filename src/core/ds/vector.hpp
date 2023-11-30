@@ -36,7 +36,7 @@ public:
   vector(const vector&) noexcept = delete;
   vector& operator=(const vector&) noexcept = delete;
 
-  vector() noexcept = default;
+  vector() noexcept : data(nullptr), top(0), capacity(0){};
 
   ~vector() noexcept {
     if (!this->data) {
@@ -109,6 +109,15 @@ public:
     return code;
   }
 
+  [[nodiscard]] error_code push_back(cref elem) noexcept {
+    TRY(this->check_allocation());
+
+    this->data[this->top] = elem;
+    ++this->top;
+
+    return error_code::OK;
+  }
+
   [[nodiscard]] error_code push_back(rref elem) noexcept {
     TRY(this->check_allocation());
 
@@ -131,7 +140,7 @@ public:
 
     // Shift
     for (usize i = this->top; i > index; --i) {
-      this->data[i] = std::move(data[i - 1]);
+      this->data[i] = std::move(this->data[i - 1]);
     }
     this->data[index] = std::move(elem);
     ++this->top;
@@ -149,7 +158,7 @@ public:
   }
 
   void clear() noexcept {
-    // TODO: Check this if this is really needed
+    // TODO: Check this if clearing the data is needed
     this->top = 0;
   }
 
@@ -186,9 +195,9 @@ public:
   }
 
 private:
-  ptr data = nullptr;
-  usize top = 0;
-  usize capacity = 0;
+  ptr data;
+  usize top;
+  usize capacity;
 
   /**
    * Check whether the current allocation is enough, else try to alloc/realloc
