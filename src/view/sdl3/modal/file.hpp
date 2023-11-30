@@ -29,7 +29,9 @@ public:
   FileModal& operator=(FileModal&&) noexcept = default;
   ~FileModal() noexcept override = default;
 
-  void init(fvec window_size, const Renderer& renderer) noexcept;
+  // TODO: Check if this can be generalized
+  void
+  init(fvec window_size, const Renderer& renderer, InputData& data) noexcept;
 
   [[nodiscard]] void* get_data() const noexcept override;
 
@@ -37,7 +39,7 @@ public:
   void reposition(fvec pos) noexcept override;
   void locale_updated(const Renderer& renderer) noexcept override;
   void reset() noexcept override;
-  void input(const event::Input& evt, Data& data) noexcept override;
+  void input(const event::Input& evt, InputData& data) noexcept override;
   void update() noexcept override;
   void render(const Renderer& renderer) const noexcept override;
 

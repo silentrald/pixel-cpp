@@ -37,7 +37,7 @@ public:
   void resize(const frect& rect) noexcept override;
   void reset() noexcept override;
   void locale_updated(const Renderer& renderer) noexcept override;
-  void input(const event::Input& evt, Data& data) noexcept override;
+  void input(const event::Input& evt, InputData& data) noexcept override;
   void update() noexcept override;
   void render(const Renderer& renderer) const noexcept override;
 
@@ -58,8 +58,8 @@ private:
 
   ds::vector<Layer> layers{};
 
-  void handle_mouse_left(const event::Input& evt, Data& data) noexcept;
-  void handle_mouse_right(const event::Input& evt, Data& data) noexcept;
+  void handle_mouse_left(const event::Input& evt, InputData& data) noexcept;
+  void handle_mouse_right(const event::Input& evt, InputData& data) noexcept;
 
   void render_grid(const Renderer& renderer) const noexcept;
   void render_frames(const Renderer& renderer) const noexcept;

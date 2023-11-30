@@ -74,7 +74,7 @@ void DrawBox::locale_updated(const Renderer& renderer) noexcept {
   // Do nothing UwU
 }
 
-void DrawBox::input(const event::Input& evt, Data& data) noexcept {
+void DrawBox::input(const event::Input& evt, InputData& data) noexcept {
   presenter::canvas_mouse_event(evt);
 }
 

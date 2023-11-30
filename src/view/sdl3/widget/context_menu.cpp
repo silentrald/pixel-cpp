@@ -91,7 +91,7 @@ void ContextMenu::locale_updated(const Renderer& renderer) noexcept {
   }
 }
 
-void ContextMenu::input(const event::Input& evt, Data& data) noexcept {
+void ContextMenu::input(const event::Input& evt, InputData& data) noexcept {
   if (!this->rect.has_point(evt.mouse.pos)) {
     for (usize i = 0; i < this->items.get_size(); ++i) {
       this->items[i].state = input::BtnState::NORMAL;

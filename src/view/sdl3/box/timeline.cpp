@@ -117,7 +117,7 @@ void TimelineBox::locale_updated(const Renderer& renderer) noexcept {
   }
 }
 
-void TimelineBox::input(const event::Input& evt, Data& data) noexcept {
+void TimelineBox::input(const event::Input& evt, InputData& data) noexcept {
   // NOTE: Only handles changing of frame/layer for now
   if (this->layers.is_empty()) {
     return;
@@ -131,7 +131,7 @@ void TimelineBox::input(const event::Input& evt, Data& data) noexcept {
 }
 
 void TimelineBox::handle_mouse_left(
-    const event::Input& evt, Data& data
+    const event::Input& evt, InputData& data
 ) noexcept {
   f32 height = this->layers.front().textbox.rect.h;
   frect bounds{};
@@ -199,7 +199,7 @@ void TimelineBox::handle_mouse_left(
 }
 
 void TimelineBox::handle_mouse_right(
-    const event::Input& evt, Data& data
+    const event::Input& evt, InputData& data
 ) noexcept {
   if (evt.mouse.right != input::MouseState::UP) {
     return;

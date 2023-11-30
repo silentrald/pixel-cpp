@@ -48,17 +48,50 @@ void Textbox::reset() noexcept {
   this->focused = false;
 }
 
+void Textbox::unfocused(const Renderer& renderer) noexcept {
+  this->focused = false;
+  this->tex = std::move(renderer.create_text(this->text.c_str()));
+  this->tex_rect.size = renderer.get_text_size(this->text.c_str());
+
+  this->reposition_text_rect(renderer);
+}
+
 void Textbox::locale_updated(const Renderer& renderer) noexcept {
   this->tex = renderer.create_text(this->text.c_str());
   this->reposition_text_rect(renderer);
 }
 
-void Textbox::input(const event::Input& evt, Data& data) noexcept {
+void Textbox::input(const event::Input& evt, InputData& data) noexcept {
   if (evt.mouse.left == input::MouseState::UP &&
       this->rect.has_point(evt.mouse.pos)) {
-    this->focused = true;
-    data.new_sel_textbox = this;
+    data.new_selected_input = this;
   }
+}
+
+void Textbox::key_input(
+    const event::KeyPress& keypress, const Renderer& renderer
+) noexcept {
+  if (!this->focused) {
+    return;
+  }
+
+  for (usize i = 0; i < keypress.keys.get_size(); ++i) {
+    auto c = keypress.keys[i];
+    if (c == input::Keycode::ENTER) {
+      this->unfocused(renderer);
+      return;
+    }
+
+    if (c == input::Keycode::BACKSPACE) {
+      if (!this->text.empty()) {
+        this->text.pop_back();
+      }
+    } else {
+      this->text.push_back(c);
+    }
+  }
+
+  this->reposition_text_rect(renderer);
 }
 
 void Textbox::update() noexcept {

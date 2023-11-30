@@ -116,6 +116,10 @@ void presenter::key_down_event(
     presenter::set_select_tool();
     break;
 
+  case cfg::ShortcutKey::ACTION_NEW:
+    presenter::new_file();
+    break;
+
   case cfg::ShortcutKey::ACTION_SAVE:
     presenter::save_file();
     break;
@@ -142,7 +146,7 @@ void presenter::key_down_event(
   }
 }
 
-void presenter::new_file_clicked() noexcept {
+void presenter::new_file() noexcept {
   TRY_ABORT(
       view_.push_modal(view::modal::Id::NEW_FILE_MODAL),
       "Could not add new file modal"

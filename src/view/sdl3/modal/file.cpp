@@ -18,7 +18,9 @@ namespace view::sdl3::widget {
 const f32 FILE_MODAL_WIDTH = 320.0F;
 const f32 FILE_MODAL_HEIGHT = 144.0F;
 
-void FileModal::init(fvec window_size, const Renderer& renderer) noexcept {
+void FileModal::init(
+    fvec window_size, const Renderer& renderer, InputData& data
+) noexcept {
   this->x = (window_size.x - FILE_MODAL_WIDTH) * 0.5F;
   this->y = (window_size.y - FILE_MODAL_HEIGHT) * 0.5F;
   this->size = {FILE_MODAL_WIDTH, FILE_MODAL_HEIGHT};
@@ -49,8 +51,11 @@ void FileModal::init(fvec window_size, const Renderer& renderer) noexcept {
   off.x = this->x + 8.0F + std::max(this->width_text.w, this->height_text.w);
   this->width_textbox.pos = {off.x, this->width_text.y};
   this->width_textbox.size = {this->px_rect1.x - off.x - 8.0F, size.y};
+  this->width_textbox.next_input = &this->height_textbox;
+
   this->height_textbox.pos = {off.x, this->height_text.y};
   this->height_textbox.size = {this->px_rect1.x - off.x - 8.0F, size.y};
+  this->height_textbox.next_input = &this->cancel_btn;
 
   text = cfg::locale::get_text(cfg::locale::TextId::NEW);
   this->new_btn.set_theme(input::BtnTheme::TOOL_BTN); // TODO: Primary btn
@@ -72,6 +77,9 @@ void FileModal::init(fvec window_size, const Renderer& renderer) noexcept {
   this->cancel_btn.size = size + fvec{8.0F, 8.0F};
   this->cancel_btn.tex_rect = {.pos = off, .size = size};
   this->cancel_btn.set_left_click_listener(presenter::close_modals);
+  this->cancel_btn.next_input = &this->new_btn;
+
+  data.first_input = &this->width_textbox;
 }
 
 void* FileModal::get_data() const noexcept {
@@ -153,7 +161,7 @@ void FileModal::locale_updated(const Renderer& renderer) noexcept {
   this->cancel_btn.tex_rect = {.pos = off, .size = size};
 }
 
-void FileModal::input(const event::Input& evt, Data& data) noexcept {
+void FileModal::input(const event::Input& evt, InputData& data) noexcept {
   if (data.dragging) {
     this->reposition(data.orig_pos + evt.mouse.pos - data.orig_mouse);
     if (evt.mouse.left != input::MouseState::HOLD) {

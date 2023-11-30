@@ -14,7 +14,7 @@ namespace view::sdl3 {
 
 namespace widget {
 
-class Textbox;
+class Input;
 
 } // namespace widget
 
@@ -22,14 +22,15 @@ class Textbox;
  * Mutable data being passed on the input functions of widgets.
  * Mostly references of selected widgets.
  **/
-struct Data {
-  // TODO: Convert to widget::Input
-  widget::Textbox* sel_textbox = nullptr;
-  widget::Textbox* new_sel_textbox = nullptr;
+struct InputData {
+  widget::Input* selected_input = nullptr;
+  widget::Input* new_selected_input = nullptr;
+  widget::Input* first_input = nullptr;
 
   fvec orig_pos{};
   fvec orig_mouse{};
   bool dragging = false;
+  bool clear_selected = false;
 };
 
 } // namespace view::sdl3

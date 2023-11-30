@@ -32,8 +32,13 @@ public:
   void disable() noexcept;
 
   void reset() noexcept override;
+  void unfocused(const Renderer& renderer) noexcept override;
+
   void locale_updated(const Renderer& renderer) noexcept override;
-  void input(const event::Input& evt, Data& data) noexcept override;
+  void input(const event::Input& evt, InputData& data) noexcept override;
+  void key_input(
+      const event::KeyPress& keypress, const Renderer& renderer
+  ) noexcept override;
   void update() noexcept override;
   void render(const Renderer& renderer) const noexcept override;
 

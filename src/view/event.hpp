@@ -8,9 +8,9 @@
 #ifndef PXL_EVENT_HPP
 #define PXL_EVENT_HPP
 
+#include "core/ds/stack_vector.hpp"
 #include "types.hpp"
 #include "view/input.hpp"
-#include <array>
 
 namespace event {
 
@@ -39,7 +39,6 @@ struct Input {
   } mouse;
 
   struct {
-    std::array<c8, 8> pressed{}; // limit to only 8 chars
     input::KeyMod mods{};
   } key;
 
@@ -48,6 +47,10 @@ struct Input {
     return this->mouse.left == state || this->mouse.right == state ||
            this->mouse.middle == state;
   }
+};
+
+struct KeyPress {
+  ds::stack_vector<c8, 8> keys{};
 };
 
 } // namespace event

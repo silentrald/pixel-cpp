@@ -59,7 +59,7 @@ void ToolBox::locale_updated(const Renderer& renderer) noexcept {
   // created
 }
 
-void ToolBox::input(const event::Input& evt, Data& data) noexcept {
+void ToolBox::input(const event::Input& evt, InputData& data) noexcept {
   for (i32 i = 0; i < this->btns.get_size(); ++i) {
     this->btns[i].input(evt, data);
   }

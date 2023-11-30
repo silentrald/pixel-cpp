@@ -28,4 +28,5 @@ Checks: >
   -readability-suspicious-call-argument,
   -bugprone-copy-constructor-init,
   -readability-const-return-type,
-  -misc-no-recursion
+  -misc-no-recursion,
+  -modernize-use-default-member-init

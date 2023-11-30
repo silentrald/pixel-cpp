@@ -115,14 +115,14 @@ private:
   widget::Button locale_btn{};
 
   event::Input input_evt{};
-  Data data{};
+  event::KeyPress keypress_evt{};
+  InputData data{};
 
   i32 mouse_box_id = -1; // where is the mouse currently
   i32 ctx_menu_idx = -1; // which context menu is open
 
   bool running = false;
   bool is_input_evt = false;
-  bool is_text_input_changed = false;
   bool is_draw_box_clicked = false;
 
   void input() noexcept;

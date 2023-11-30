@@ -31,7 +31,7 @@ public:
   virtual void reset() noexcept = 0;
   virtual void locale_updated(const Renderer& renderer) noexcept = 0;
 
-  virtual void input(const event::Input& evt, Data& data) noexcept = 0;
+  virtual void input(const event::Input& evt, InputData& data) noexcept = 0;
   virtual void update() noexcept = 0;
   virtual void render(const Renderer& renderer) const noexcept = 0;
 
