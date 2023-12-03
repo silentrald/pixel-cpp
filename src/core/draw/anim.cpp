@@ -215,8 +215,8 @@ void Anim::get_flatten(
 
   // NOTE: Only supports rgba8 for now
   usize psize = this->size.x * this->size.y;
-  auto* pixels_ptr = (rgba8*)pixels.get_data();
-  rgba8* img_ptr = nullptr;
+  auto* dst_ptr = (rgba8*)pixels.get_data();
+  rgba8* src_ptr = nullptr;
   auto frame = this->timeline.get_frame(frame_id);
   for (usize i = start_layer; i <= end_layer; ++i) {
     if (!this->timeline.is_layer_visible(i)) {
@@ -224,12 +224,22 @@ void Anim::get_flatten(
     }
 
     // NOTE: Might abort, must precall a load of images to cache
-    img_ptr = (rgba8*)this->images.get_pixels_fast(frame.get_image_id(i));
+    src_ptr = (rgba8*)this->images.get_pixels_fast(frame.get_image_id(i));
     // NOTE: Add blending calculations here
     for (i32 i = 0; i < psize; ++i) {
-      if (img_ptr[i].a) {
-        pixels_ptr[i] = img_ptr[i];
-      }
+      // NOTE: Check for gpu libraries to offload this to the gpu
+      // Simple alpha compositing algo
+      u32 alpha = src_ptr[i].a;
+      u32 inv_alpha = 255U - src_ptr[i].a;
+      // Porter and Duff over func
+      f32 out_alpha = alpha + math::normalize(dst_ptr[i].a) * inv_alpha;
+      dst_ptr[i].r =
+          (src_ptr[i].r * alpha + dst_ptr[i].r * inv_alpha) / out_alpha;
+      dst_ptr[i].g =
+          (src_ptr[i].g * alpha + dst_ptr[i].g * inv_alpha) / out_alpha;
+      dst_ptr[i].b =
+          (src_ptr[i].b * alpha + dst_ptr[i].b * inv_alpha) / out_alpha;
+      dst_ptr[i].a = out_alpha;
     }
   }
 }

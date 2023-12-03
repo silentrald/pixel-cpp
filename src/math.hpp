@@ -30,6 +30,11 @@ u64 get_next_pow2(u64 num) noexcept;
 
 [[nodiscard]] bool is_nearly_equal(f32 f1, f32 f2) noexcept;
 
+/**
+ * Normalizes the u8 datatype to a value from 0.0F to 1.0F
+ **/
+[[nodiscard]] f32 normalize(u8 num) noexcept;
+
 } // namespace math
 
 #endif

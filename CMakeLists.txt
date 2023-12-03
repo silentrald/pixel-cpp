@@ -63,6 +63,7 @@ set(view_srcs src/view/sdl3/manager.cpp
   src/view/sdl3/modal/file.cpp
 
   # Widgets
+  src/view/sdl3/widget/color_picker.cpp
   src/view/sdl3/widget/text.cpp
   src/view/sdl3/widget/context_menu.cpp
 )

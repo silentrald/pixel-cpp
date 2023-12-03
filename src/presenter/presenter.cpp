@@ -15,6 +15,7 @@
 #include "core/history/caretaker.hpp"
 #include "core/logger/logger.hpp"
 #include "model/model.hpp"
+#include "types.hpp"
 #include "view/modal.hpp"
 #include <algorithm>
 #include <cstdio>
@@ -35,6 +36,8 @@ void presenter::init() noexcept {
 
   pxl_.set_auto_save(50U);
   TRY_ABORT(view_.init(), "Could not init view");
+  view_.set_fg_color(model_.fg_color);
+  view_.set_bg_color(model_.bg_color);
 }
 
 void presenter::run() noexcept {
@@ -191,4 +194,25 @@ void presenter::set_selected_layer(u32 selected_layer) noexcept {
 void presenter::debug_callback() noexcept {
   logger::info("Debug callback UwU");
 }
+
+#ifndef NDEBUG
+
+void presenter::debug_pixels() noexcept {
+  if (!logger::lock(logger::DEBUG_LVL, "Printing pixels")) {
+    return;
+  }
+
+  // NOTE: Only works for 4 bytes for now
+  usize i = 0;
+  for (usize y = 0; y < model_.anim.get_height(); ++y) {
+    for (usize x = 0; x < model_.anim.get_width(); ++x) {
+      logger::print(color::to_hex_string(*(rgba8*)&model_.pixels[i]).c_str());
+      i += 4;
+    }
+    logger::print("\n");
+  }
+  logger::unlock();
+}
+
+#endif
 

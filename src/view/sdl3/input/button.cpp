@@ -107,16 +107,23 @@ void Button::input(const event::Input& evt, InputData& _data) noexcept {
 }
 
 void Button::key_input(
-    const event::KeyPress& keypress, const Renderer& _renderer
+    event::KeyPress& keypress, const Renderer& _renderer
 ) noexcept {
   if (((this->info & input::BtnMask::STATES) == input::BtnState::DISABLED) ||
       this->left_click_listener == nullptr || !this->focused) {
+    keypress.to_next_section();
     return;
   }
 
-  for (usize i = 0; i < keypress.keys.get_size(); ++i) {
-    if (keypress.keys[i] == input::Keycode::ENTER) {
+  while (keypress.has_next()) {
+    auto c = keypress.get_next_char();
+    if (c == input::Keycode::ENTER) {
       this->left_click_listener();
+      this->focused = false;
+      break;
+    }
+
+    if (c == input::Keycode::TAB) {
       this->focused = false;
       break;
     }

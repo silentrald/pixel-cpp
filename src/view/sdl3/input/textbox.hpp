@@ -37,7 +37,7 @@ public:
   void locale_updated(const Renderer& renderer) noexcept override;
   void input(const event::Input& evt, InputData& data) noexcept override;
   void key_input(
-      const event::KeyPress& keypress, const Renderer& renderer
+      event::KeyPress& keypress, const Renderer& renderer
   ) noexcept override;
   void update() noexcept override;
   void render(const Renderer& renderer) const noexcept override;
@@ -49,6 +49,7 @@ private:
 
 public:
   frect tex_rect{};
+  void (*on_change)(const std::string& new_text) = nullptr;
 };
 
 } // namespace view::sdl3::widget

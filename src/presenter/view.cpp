@@ -12,6 +12,16 @@
 #include "./presenter.hpp"
 #include "model/model.hpp"
 
+void presenter::set_fg_color(const std::string& hex_str) noexcept {
+  model_.fg_color = color::parse_hex_string(hex_str.c_str());
+  view_.set_fg_color(model_.fg_color);
+}
+
+void presenter::set_bg_color(const std::string& hex_str) noexcept {
+  model_.bg_color = color::parse_hex_string(hex_str.c_str());
+  view_.set_bg_color(model_.bg_color);
+}
+
 void presenter::update_canvas_textures() noexcept {
   std::memset(model_.pixels.get_data(), 0, model_.pixels.get_size());
 
@@ -21,6 +31,7 @@ void presenter::update_canvas_textures() noexcept {
         model_.frame_id, 0, model_.layer_index - 1, model_.pixels
     );
   }
+
   view_.get_bot_texture().set_pixels(
       (rgba8*)model_.pixels.get_data(), model_.anim.get_size()
   );
