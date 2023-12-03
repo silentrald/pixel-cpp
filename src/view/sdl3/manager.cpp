@@ -16,6 +16,7 @@
 #include "SDL_timer.h"
 #include "core/cfg/locale.hpp"
 #include "core/logger/logger.hpp"
+#include "model/model.hpp"
 #include "presenter/presenter.hpp"
 #include <cmath>
 #include <cstdio>
@@ -94,6 +95,14 @@ error_code Manager::init() noexcept {
 
   TRY(this->init_ctx_menus());
 
+  this->fg_color.init(
+      {40.0F, 32.0F}, this->renderer.get_text_height(), presenter::set_fg_color
+  );
+  this->bg_color.init(
+      {40.0F, 40.0F + this->renderer.get_text_height()},
+      this->renderer.get_text_height(), presenter::set_bg_color
+  );
+
   return error_code::OK;
 }
 
@@ -133,6 +142,14 @@ void Manager::set_canvas_rect(const frect& canvas_rect) noexcept {
 
 void Manager::set_cursor_canvas_pos(ivec pos) noexcept {
   this->status_box.pos = pos;
+}
+
+void Manager::set_fg_color(rgba8 color) noexcept {
+  this->fg_color.set_color(color, this->renderer);
+}
+
+void Manager::set_bg_color(rgba8 color) noexcept {
+  this->bg_color.set_color(color, this->renderer);
 }
 
 Texture& Manager::get_bg_texture() noexcept {
@@ -230,6 +247,10 @@ void Manager::render() noexcept {
     this->boxes[i]->render(this->renderer);
   }
 
+  // TODO: Temp
+  this->fg_color.render(this->renderer);
+  this->bg_color.render(this->renderer);
+
   for (usize i = 0; i < this->modals.get_size(); ++i) {
     this->modals[i]->render(this->renderer);
   }
@@ -243,7 +264,7 @@ void Manager::render() noexcept {
     this->ctx_menu_stack[i].render(this->renderer);
   }
 
-  this->locale_btn.render(renderer);
+  this->locale_btn.render(this->renderer);
 
   this->renderer.present();
 }

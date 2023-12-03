@@ -14,11 +14,8 @@
 #include "core/ds/vector.hpp"
 #include "core/tool/enum.hpp"
 #include "types.hpp"
+#include "view/core.hpp"
 #include <vector>
-
-// TODO: Depends on the frontend renderer
-#include "view/sdl3/texture.hpp"
-using Texture = view::sdl3::Texture;
 
 struct Model {
   draw::Anim anim{};

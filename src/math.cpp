@@ -35,3 +35,7 @@ bool math::is_nearly_equal(f32 f1, f32 f2) noexcept {
   return std::fabs(f1 - f2) < EPSILON;
 }
 
+f32 math::normalize(u8 num) noexcept {
+  return num * (1.0F / 255.0F);
+}
+

@@ -192,9 +192,6 @@ void TimelineBox::handle_mouse_left(
 
   if (evt.mouse.left == input::MouseState::UP) {
     presenter::set_active_image(new_active_frame, new_active_layer);
-  } else {
-    this->active_frame = new_active_frame;
-    this->active_layer = new_active_layer;
   }
 }
 

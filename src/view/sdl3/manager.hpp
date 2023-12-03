@@ -32,6 +32,7 @@
 #include "view/event.hpp"
 #include "view/input.hpp"
 #include "view/modal.hpp"
+#include "view/sdl3/widget/color_picker.hpp"
 #include "view/sdl3/widget/context_menu.hpp"
 
 namespace view::sdl3 {
@@ -55,6 +56,9 @@ public:
   void set_draw_size(ivec size) noexcept;
   void set_canvas_rect(const frect& canvas_rect) noexcept;
   void set_cursor_canvas_pos(ivec pos) noexcept;
+
+  void set_fg_color(rgba8 color) noexcept;
+  void set_bg_color(rgba8 color) noexcept;
 
   // NOTE: Might add index or id to reference which drawbox
   [[nodiscard]] Texture& get_bg_texture() noexcept;
@@ -118,6 +122,9 @@ private:
   event::KeyPress keypress_evt{};
   InputData data{};
 
+  widget::ColorPicker fg_color{};
+  widget::ColorPicker bg_color{};
+
   i32 mouse_box_id = -1; // where is the mouse currently
   i32 ctx_menu_idx = -1; // which context menu is open
 
@@ -127,6 +134,7 @@ private:
 
   void input() noexcept;
   void handle_input_event() noexcept;
+  void handle_key_event() noexcept;
   void inline handle_mouse_input(
       const SDL_MouseButtonEvent& mouse, input::MouseState state
   ) noexcept;

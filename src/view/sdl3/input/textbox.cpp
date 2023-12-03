@@ -69,16 +69,20 @@ void Textbox::input(const event::Input& evt, InputData& data) noexcept {
 }
 
 void Textbox::key_input(
-    const event::KeyPress& keypress, const Renderer& renderer
+    event::KeyPress& keypress, const Renderer& renderer
 ) noexcept {
   if (!this->focused) {
+    keypress.to_next_section();
     return;
   }
 
-  for (usize i = 0; i < keypress.keys.get_size(); ++i) {
-    auto c = keypress.keys[i];
-    if (c == input::Keycode::ENTER) {
+  while (keypress.has_next()) {
+    auto c = keypress.get_next_char();
+    if (c == input::Keycode::ENTER || c == input::Keycode::TAB) {
       this->unfocused(renderer);
+      if (this->on_change) {
+        this->on_change(this->text);
+      }
       return;
     }
 

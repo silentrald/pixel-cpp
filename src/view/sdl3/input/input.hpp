@@ -22,9 +22,8 @@ public:
 
   virtual void unfocused(const Renderer& renderer) noexcept = 0;
 
-  virtual void key_input(
-      const event::KeyPress& keypress, const Renderer& renderer
-  ) noexcept = 0;
+  virtual void
+  key_input(event::KeyPress& keypress, const Renderer& renderer) noexcept = 0;
 
   // For tabbing feature
   Input* next_input = nullptr;

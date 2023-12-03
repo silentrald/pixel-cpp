@@ -9,13 +9,11 @@
 #define PXL_PRESENTER_HPP
 
 #include "types.hpp"
+#include "view/core.hpp"
 #include "view/event.hpp"
 #include "view/input.hpp"
-
-// NOTE: Can be changed depending on the gui to be used
 #include "view/modal.hpp"
-#include "view/sdl3/manager.hpp"
-using View = view::sdl3::Manager;
+#include <string>
 
 class Model;
 
@@ -28,6 +26,10 @@ void run() noexcept;
 
 // NOTE: For debugging purposes
 void debug_callback() noexcept;
+
+#ifndef NDEBUG
+void debug_pixels() noexcept;
+#endif
 
 // === Unknown === //
 // TODO: Add the param of the new value
@@ -83,6 +85,8 @@ void set_select_tool() noexcept;
 
 // === Update View === //
 
+void set_fg_color(const std::string& hex_str) noexcept;
+void set_bg_color(const std::string& hex_str) noexcept;
 void update_canvas_textures() noexcept;
 void update_view() noexcept;
 void close_modals() noexcept;

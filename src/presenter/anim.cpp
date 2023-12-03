@@ -13,6 +13,7 @@
 #include "core/file/pxl.hpp"
 #include "core/history/action.hpp"
 #include "core/history/caretaker.hpp"
+#include "core/logger/logger.hpp"
 #include "model/model.hpp"
 
 void presenter::create_anim() noexcept {
@@ -145,14 +146,13 @@ void presenter::add_at_selected_layer() noexcept {
       model_.anim.insert_layer(model_.layer_index), "Could not update anim"
   );
   model_.img_id = id;
-  model_.img = *model_.anim.get_image(id); // Should throw an error
+  model_.img = model_.anim.get_image_fast(id);
 
   TRY_IGNORE(pxl_.try_auto_save(model_.anim), "Could not auto save");
 
   TRY_ABORT(
       view_.insert_layer(
-          model_.layer_index,
-          model_.anim.get_layer_info(model_.layer_index)
+          model_.layer_index, model_.anim.get_layer_info(model_.layer_index)
       ),
       "Could not update view"
   );

@@ -36,11 +36,15 @@ u8 parse_char(c8 c) noexcept {
     return c - 'a' + 10U;
   }
 
+  if (c >= 'A' && c <= 'F') {
+    return c - 'A' + 10U;
+  }
+
   return 0U;
 }
 
 rgba8 color::parse_hex_string(const c8* hex) noexcept {
-  if (hex[9] != '\0' || hex[0] != '#') {
+  if ((hex[7] != '\0' && hex[9] != '\0') || hex[0] != '#') {
     return {};
   }
 
@@ -48,7 +52,8 @@ rgba8 color::parse_hex_string(const c8* hex) noexcept {
   out.r = (parse_char(hex[1]) << 4) | parse_char(hex[2]);
   out.g = (parse_char(hex[3]) << 4) | parse_char(hex[4]);
   out.b = (parse_char(hex[5]) << 4) | parse_char(hex[6]);
-  out.a = (parse_char(hex[7]) << 4) | parse_char(hex[8]);
+  out.a =
+      hex[7] == '\0' ? 0xff : (parse_char(hex[7]) << 4) | parse_char(hex[8]);
   return out;
 }
 
