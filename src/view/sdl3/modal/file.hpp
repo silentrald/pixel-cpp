@@ -30,18 +30,17 @@ public:
   ~FileModal() noexcept override = default;
 
   // TODO: Check if this can be generalized
-  void
-  init(fvec window_size, const Renderer& renderer, InputData& data) noexcept;
+  void init(fvec window_size, InputData& data) noexcept;
 
   [[nodiscard]] void* get_data() const noexcept override;
 
   void resize(const frect& rect) noexcept override;
   void reposition(fvec pos) noexcept override;
-  void locale_updated(const Renderer& renderer) noexcept override;
+  void locale_updated() noexcept override;
   void reset() noexcept override;
   void input(const event::Input& evt, InputData& data) noexcept override;
-  void update() noexcept override;
-  void render(const Renderer& renderer) noexcept override;
+  void update(f32 delta) noexcept override;
+  void render() noexcept override;
 
 private:
   // === Texts === //

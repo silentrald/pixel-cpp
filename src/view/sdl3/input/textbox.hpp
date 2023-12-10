@@ -25,22 +25,20 @@ public:
   ~Textbox() noexcept override = default;
 
   [[nodiscard]] const std::string& get_text() const noexcept;
-  void set_text(const c8* str, const Renderer& renderer) noexcept;
+  void set_text(const c8* str) noexcept;
   void push_text(const c8* str) noexcept;
   c8 pop_char() noexcept;
-  void update_texture(const Renderer& renderer) noexcept;
-  void reposition_text_rect(const Renderer& renderer) noexcept;
+  void update_texture() noexcept;
+  void reposition_text_rect() noexcept;
 
   void reset() noexcept override;
-  void unfocused(const Renderer& renderer) noexcept override;
+  void unfocused() noexcept override;
 
-  void locale_updated(const Renderer& renderer) noexcept override;
+  void locale_updated() noexcept override;
   void input(const event::Input& evt, InputData& data) noexcept override;
-  void key_input(
-      event::KeyPress& keypress, const Renderer& renderer
-  ) noexcept override;
-  void update() noexcept override;
-  void render(const Renderer& renderer) noexcept override;
+  void key_input(event::KeyPress& keypress) noexcept override;
+  void update(f32 delta) noexcept override;
+  void render() noexcept override;
 
 private:
   i32 cursor_blink_tick = 0;

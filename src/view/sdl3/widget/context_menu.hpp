@@ -24,20 +24,19 @@ public:
   ContextMenu& operator=(ContextMenu&&) noexcept = default;
   ~ContextMenu() noexcept override = default;
 
-  [[nodiscard]] error_code push_item(
-      cfg::locale::TextId text_id, const Renderer& renderer, void (*listener)()
-  ) noexcept;
+  [[nodiscard]] error_code
+  push_item(cfg::locale::TextId text_id, void (*listener)()) noexcept;
 
   [[nodiscard]] fvec get_sel_item_pos() const noexcept;
 
   void reposition(fvec pos) noexcept;
 
   void reset() noexcept override;
-  void locale_updated(const Renderer& renderer) noexcept override;
+  void locale_updated() noexcept override;
 
   void input(const event::Input& evt, InputData& data) noexcept override;
-  void update() noexcept override;
-  void render(const Renderer& renderer) noexcept override;
+  void update(f32 delta) noexcept override;
+  void render() noexcept override;
 
 private:
   struct Item {

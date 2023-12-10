@@ -9,31 +9,31 @@
 
 namespace view::sdl3::widget {
 
-void Text::set_text(cfg::locale::TextId id, const Renderer& renderer) noexcept {
+void Text::set_text(cfg::locale::TextId id) noexcept {
   this->id = id;
-  this->locale_updated(renderer);
+  this->locale_updated();
 }
 
 void Text::reset() noexcept {
   // Do nothing UwU
 }
 
-void Text::locale_updated(const Renderer& renderer) noexcept {
+void Text::locale_updated() noexcept {
   const auto* str = cfg::locale::get_text(this->id);
-  this->tex = renderer.create_text(str);
-  this->rect.size = renderer.get_text_size(str);
+  this->tex = renderer::create_text(str);
+  this->rect.size = renderer::get_text_size(str);
 }
 
 void Text::input(const event::Input& evt, InputData& data) noexcept {
   // Do nothing UwU
 }
 
-void Text::update() noexcept {
+void Text::update(f32 _delta) noexcept {
   // Do nothing UwU
 }
 
-void Text::render(const Renderer& renderer) noexcept {
-  renderer.render_texture(this->tex, this->rect);
+void Text::render() noexcept {
+  renderer::render_texture(this->tex, this->rect);
 }
 
 } // namespace view::sdl3::widget

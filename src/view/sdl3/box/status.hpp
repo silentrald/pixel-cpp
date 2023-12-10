@@ -23,10 +23,10 @@ public:
 
   void resize(const frect& rect) noexcept override;
   void reset() noexcept override;
-  void locale_updated(const Renderer& renderer) noexcept override;
+  void locale_updated() noexcept override;
   void input(const event::Input& evt, InputData& data) noexcept override;
-  void update() noexcept override;
-  void render(const Renderer& renderer) noexcept override;
+  void update(f32 delta) noexcept override;
+  void render() noexcept override;
 
   ivec pos{};
   ivec size{};

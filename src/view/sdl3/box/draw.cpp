@@ -11,8 +11,7 @@
 
 namespace view::sdl3::widget {
 
-error_code
-DrawBox::init_textures(const Renderer& renderer, ivec size) noexcept {
+error_code DrawBox::init_textures(ivec size) noexcept {
   ds::vector<rgba8> pixels{};
   TRY(pixels.resize(size.x * size.y));
 
@@ -25,7 +24,7 @@ DrawBox::init_textures(const Renderer& renderer, ivec size) noexcept {
   }
 
   for (i32 i = 0; i <= 6; ++i) {
-    this->textures[i] = renderer.create_texture(size);
+    this->textures[i] = renderer::create_texture(size);
   }
   this->textures[0].set_pixels(pixels.get_data(), size);
 
@@ -70,7 +69,7 @@ void DrawBox::reset() noexcept {
   //
 }
 
-void DrawBox::locale_updated(const Renderer& renderer) noexcept {
+void DrawBox::locale_updated() noexcept {
   // Do nothing UwU
 }
 
@@ -78,18 +77,18 @@ void DrawBox::input(const event::Input& evt, InputData& data) noexcept {
   presenter::canvas_mouse_event(evt);
 }
 
-void DrawBox::update() noexcept {
+void DrawBox::update(f32 _delta) noexcept {
   this->tick = (this->tick + 1) % 60;
 }
 
-void DrawBox::render(const Renderer& renderer) noexcept {
-  renderer.set_color({0xff, 0xc0, 0xcb, 0xff});
-  renderer.fill_rect(this->rect);
+void DrawBox::render() noexcept {
+  renderer::set_color({0xff, 0xc0, 0xcb, 0xff});
+  renderer::fill_rect(this->rect);
 
   for (i32 i = 0; i <= 4; ++i) {
-    renderer.render_texture(this->textures[i], this->draw_rect);
+    renderer::render_texture(this->textures[i], this->draw_rect);
   }
-  renderer.render_texture(
+  renderer::render_texture(
       this->textures[5 + (this->tick < 30)], this->draw_rect
   );
 }

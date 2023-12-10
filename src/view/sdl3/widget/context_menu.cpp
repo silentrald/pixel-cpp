@@ -13,10 +13,10 @@
 namespace view::sdl3::widget {
 
 error_code ContextMenu::push_item(
-    cfg::locale::TextId text_id, const Renderer& renderer, void (*listener)()
+    cfg::locale::TextId text_id, void (*listener)()
 ) noexcept {
   widget::Text text{};
-  text.set_text(text_id, renderer);
+  text.set_text(text_id);
 
   frect rect_btn{};
   rect_btn.x = this->rect.x;
@@ -70,10 +70,10 @@ void ContextMenu::reset() noexcept {
   }
 }
 
-void ContextMenu::locale_updated(const Renderer& renderer) noexcept {
+void ContextMenu::locale_updated() noexcept {
   this->rect.size = {0.0F, 0.0F};
   for (u32 i = 0; i < this->items.get_size(); ++i) {
-    this->items[i].text.locale_updated(renderer);
+    this->items[i].text.locale_updated();
     // Repositioning
     this->items[i].rect.x = this->rect.x;
     this->items[i].rect.y = this->rect.y + this->rect.h;
@@ -82,8 +82,8 @@ void ContextMenu::locale_updated(const Renderer& renderer) noexcept {
 
     // Set the new heights for the text rect and context menu
     this->rect.w = std::max(this->rect.w, this->items[i].text.rect.w + 8.0F);
-    this->items[i].rect.h = renderer.get_text_height() + 4.0F;
-    this->rect.h += renderer.get_text_height() + 4.0F;
+    this->items[i].rect.h = renderer::get_text_height() + 4.0F;
+    this->rect.h += renderer::get_text_height() + 4.0F;
   }
 
   for (u32 i = 0; i < this->items.get_size(); ++i) {
@@ -125,18 +125,18 @@ void ContextMenu::input(const event::Input& evt, InputData& data) noexcept {
   }
 }
 
-void ContextMenu::update() noexcept {
+void ContextMenu::update(f32 _delta) noexcept {
   // Do nothing UwU
 }
 
-void ContextMenu::render(const Renderer& renderer) noexcept {
+void ContextMenu::render() noexcept {
   for (usize i = 0U; i < this->items.get_size(); ++i) {
     // TODO: Different theme for ctx menu btns
-    renderer.set_color(cfg::theme::get_menu_btn_color(
+    renderer::set_color(cfg::theme::get_menu_btn_color(
         this->selected == i ? input::BtnState::HOVER : this->items[i].state
     ));
-    renderer.fill_rect(this->items[i].rect);
-    this->items[i].text.render(renderer);
+    renderer::fill_rect(this->items[i].rect);
+    this->items[i].text.render();
   }
 }
 

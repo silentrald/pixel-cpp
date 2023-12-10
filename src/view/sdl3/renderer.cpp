@@ -21,69 +21,62 @@
 
 namespace view::sdl3 {
 
-void Renderer::init(SDL_Window* window) noexcept {
-  this->renderer =
-      SDL_CreateRenderer(window, nullptr, SDL_RENDERER_ACCELERATED);
-  if (!this->renderer) {
-    logger::fatal("Renderer could not be created");
+SDL_Renderer* renderer_ = nullptr;
+Font font_{};
+CachedTextures textures_{};
+
+// === renderer Implementation === //
+
+void renderer::init(SDL_Window* window) noexcept {
+  renderer_ = SDL_CreateRenderer(window, nullptr, SDL_RENDERER_ACCELERATED);
+  if (renderer_ == nullptr) {
+    logger::fatal("renderer could not be created");
     std::abort();
   }
 
-  this->font.init(cfg::locale::get_font(), cfg::locale::get_size());
+  font_.init(cfg::locale::get_font(), cfg::locale::get_size());
 
   // For transparency of textures
-  SDL_SetRenderDrawBlendMode(this->renderer, SDL_BLENDMODE_BLEND);
+  SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_BLEND);
 
-  this->textures.init(*this);
+  textures_.init();
 }
 
-void Renderer::locale_updated() noexcept {
-  this->font.set(cfg::locale::get_font(), cfg::locale::get_size());
-  this->textures.locale_updated(*this);
-}
+void renderer::destroy() noexcept {
+  font_.~Font();
+  textures_.~CachedTextures();
 
-Renderer::~Renderer() noexcept {
-  if (this->renderer) {
-    SDL_DestroyRenderer(this->renderer);
-    this->renderer = nullptr;
+  if (renderer_) {
+    SDL_DestroyRenderer(renderer_);
+    renderer_ = nullptr;
   }
 }
 
-Renderer::Renderer(Renderer&& rhs) noexcept : renderer(rhs.renderer) {
-  rhs.renderer = nullptr;
+void renderer::locale_updated() noexcept {
+  font_.set(cfg::locale::get_font(), cfg::locale::get_size());
+  textures_.locale_updated();
 }
 
-Renderer& Renderer::operator=(Renderer&& rhs) noexcept {
-  if (this == &rhs) {
-    return *this;
-  }
-
-  this->renderer = rhs.renderer;
-  rhs.renderer = nullptr;
-
-  return *this;
+void renderer::clear() noexcept {
+  SDL_RenderClear(renderer_);
 }
 
-void Renderer::clear() noexcept {
-  SDL_RenderClear(this->renderer);
+void renderer::present() noexcept {
+  SDL_RenderPresent(renderer_);
 }
 
-void Renderer::present() noexcept {
-  SDL_RenderPresent(this->renderer);
+void renderer::set_color(rgba8 color) noexcept {
+  SDL_SetRenderDrawColor(renderer_, color.r, color.g, color.b, color.a);
 }
 
-void Renderer::set_color(rgba8 color) const noexcept {
-  SDL_SetRenderDrawColor(this->renderer, color.r, color.g, color.b, color.a);
+void renderer::fill_rect(const frect& rect) noexcept {
+  SDL_RenderFillRect(renderer_, (SDL_FRect*)&rect);
 }
 
-void Renderer::fill_rect(const frect& rect) const noexcept {
-  SDL_RenderFillRect(this->renderer, (SDL_FRect*)&rect);
-}
-
-Texture Renderer::create_texture(ivec size) const noexcept {
+Texture renderer::create_texture(ivec size) noexcept {
   SDL_Texture* tex = SDL_CreateTexture(
-      this->renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING,
-      size.x, size.y
+      renderer_, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, size.x,
+      size.y
   );
 
   if (tex) {
@@ -94,31 +87,30 @@ Texture Renderer::create_texture(ivec size) const noexcept {
   return Texture{tex};
 }
 
-fvec Renderer::get_text_size(const c8* str) const noexcept {
-  return this->font.get_text_size(str);
+fvec renderer::get_text_size(const c8* str) noexcept {
+  return font_.get_text_size(str);
 }
 
-f32 Renderer::get_text_height() const noexcept {
-  return this->textures.get_height();
+f32 renderer::get_text_height() noexcept {
+  return textures_.get_height();
 }
 
-Texture Renderer::create_text(const c8* str) const noexcept {
+Texture renderer::create_text(const c8* str) noexcept {
   assert(str != nullptr);
 
   if (str[0] == '\0') {
     return Texture{};
   }
 
-  SDL_Surface* surface = TTF_RenderUTF8_Solid(
-      this->font.get_font(), str, {0x00U, 0x00U, 0x00U, 0xffU}
-  );
+  SDL_Surface* surface =
+      TTF_RenderUTF8_Solid(font_.get_font(), str, {0x00U, 0x00U, 0x00U, 0xffU});
   if (surface == nullptr) {
     logger::error("Could not create text texture: surface error");
     return Texture{};
   }
 
   // tex can be nullptr
-  SDL_Texture* tex = SDL_CreateTextureFromSurface(this->renderer, surface);
+  SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer_, surface);
   SDL_DestroySurface(surface);
   if (tex == nullptr) {
     logger::error("Could not create text texture: texture error");
@@ -129,10 +121,10 @@ Texture Renderer::create_text(const c8* str) const noexcept {
   return Texture{tex};
 }
 
-Texture Renderer::load_img(const c8* path) const noexcept {
+Texture renderer::load_img(const c8* path) noexcept {
   assert(path != nullptr);
 
-  SDL_Texture* tex = IMG_LoadTexture(this->renderer, path);
+  SDL_Texture* tex = IMG_LoadTexture(renderer_, path);
   if (tex == nullptr) {
     logger::error("Could not load image %s", path);
   }
@@ -140,25 +132,26 @@ Texture Renderer::load_img(const c8* path) const noexcept {
   return Texture{tex};
 }
 
-void Renderer::render_texture(const Texture& texture, const frect& rect)
-    const noexcept {
+void renderer::render_texture(
+    const Texture& texture, const frect& rect
+) noexcept {
   SDL_RenderTexture(
-      this->renderer, texture.get_texture(), nullptr, (SDL_FRect*)&rect
+      renderer_, texture.get_texture(), nullptr, (SDL_FRect*)&rect
   );
 }
 
-void Renderer::draw_rect(const frect& rect) const noexcept {
-  SDL_RenderRect(this->renderer, (SDL_FRect*)&rect);
+void renderer::draw_rect(const frect& rect) noexcept {
+  SDL_RenderRect(renderer_, (SDL_FRect*)&rect);
 }
 
-frect Renderer::render_number(i32 num, fvec pos) const noexcept {
-  frect rect{.pos = pos, .size = {.y = this->textures.get_height()}};
+frect renderer::render_number(i32 num, fvec pos) noexcept {
+  frect rect{.pos = pos, .size = {.y = textures_.get_height()}};
 
   if (num == 0) {
     // only draw the 0
-    rect.w = this->textures.get_number_width(0);
+    rect.w = textures_.get_number_width(0);
     rect.x -= rect.w;
-    this->render_texture(this->textures.get_number_texture(0), rect);
+    renderer::render_texture(textures_.get_number_texture(0), rect);
     return rect;
   }
 
@@ -168,25 +161,26 @@ frect Renderer::render_number(i32 num, fvec pos) const noexcept {
     tmp = num % 10;
     num /= 10;
 
-    rect.w = this->textures.get_number_width(tmp);
+    rect.w = textures_.get_number_width(tmp);
     rect.x -= rect.w;
     total_width += rect.w;
-    this->render_texture(this->textures.get_number_texture(tmp), rect);
+    render_texture(textures_.get_number_texture(tmp), rect);
   }
 
   return rect;
 }
 
-void Renderer::render_text(const c8* str, fvec pos) const noexcept {
+void renderer::render_text(const c8* str, fvec pos) noexcept {
   assert(str != nullptr);
 
-  frect rect{.pos = pos, .size = {.y = this->textures.get_height()}};
+  frect rect{.pos = pos, .size = {.y = textures_.get_height()}};
 
   for (i32 i = 0; str[i] != '\0'; ++i) {
-    rect.w = this->textures.get_char_width(str[i]);
-    this->render_texture(this->textures.get_char_texture(str[i]), rect);
+    rect.w = textures_.get_char_width(str[i]);
+    render_texture(textures_.get_char_texture(str[i]), rect);
     rect.x += rect.w;
   }
 }
 
 } // namespace view::sdl3
+

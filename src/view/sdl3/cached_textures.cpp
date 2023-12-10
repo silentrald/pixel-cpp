@@ -12,19 +12,19 @@
 namespace view::sdl3 {
 
 // TODO: Depends on locale, check utf-8 logic
-void CachedTextures::init(const Renderer& renderer) noexcept {
-  this->locale_updated(renderer);
+void CachedTextures::init() noexcept {
+  this->locale_updated();
 }
 
-void CachedTextures::locale_updated(const Renderer& renderer) noexcept {
+void CachedTextures::locale_updated() noexcept {
   c8 str[2] = {' ', '\0'}; // NOLINT
-  this->height = renderer.get_text_size(str).y;
+  this->height = renderer::get_text_size(str).y;
 
   // Initialize the number textures
   for (i32 i = 0; i <= '~' - ' '; ++i) {
     str[0] = i + ' ';
-    this->textures[i] = std::move(renderer.create_text(str));
-    this->widths[i] = renderer.get_text_size(str).x;
+    this->textures[i] = std::move(renderer::create_text(str));
+    this->widths[i] = renderer::get_text_size(str).x;
   }
 }
 

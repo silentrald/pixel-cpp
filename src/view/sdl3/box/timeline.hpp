@@ -26,21 +26,20 @@ public:
   TimelineBox& operator=(TimelineBox&&) noexcept = default;
   ~TimelineBox() noexcept override = default;
 
-  [[nodiscard]] error_code init(const Renderer& renderer) noexcept;
+  [[nodiscard]] error_code init() noexcept;
 
-  [[nodiscard]] error_code insert_layer_info(
-      usize index, const draw::LayerInfo& layer_info, const Renderer& renderer
-  ) noexcept;
+  [[nodiscard]] error_code
+  insert_layer_info(usize index, const draw::LayerInfo& layer_info) noexcept;
   void set_layer_visible(usize index, bool visible) noexcept;
   void set_anim(const draw::Anim* anim) noexcept;
   void clear_layers() noexcept;
 
   void resize(const frect& rect) noexcept override;
   void reset() noexcept override;
-  void locale_updated(const Renderer& renderer) noexcept override;
+  void locale_updated() noexcept override;
   void input(const event::Input& evt, InputData& data) noexcept override;
-  void update() noexcept override;
-  void render(const Renderer& renderer) noexcept override;
+  void update(f32 delta) noexcept override;
+  void render() noexcept override;
 
   usize start_frame;
   usize end_frame;
@@ -64,10 +63,10 @@ private:
   void handle_mouse_left(const event::Input& evt, InputData& data) noexcept;
   void handle_mouse_right(const event::Input& evt, InputData& data) noexcept;
 
-  void render_grid(const Renderer& renderer) const noexcept;
-  void render_frame_numbers(const Renderer& renderer) const noexcept;
-  void render_frames(const Renderer& renderer) noexcept;
-  void render_layers(const Renderer& renderer) noexcept;
+  void render_grid() const noexcept;
+  void render_frame_numbers() const noexcept;
+  void render_frames() noexcept;
+  void render_layers() noexcept;
 };
 
 } // namespace view::sdl3::widget

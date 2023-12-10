@@ -66,12 +66,12 @@ void Image::paint(ivec pos, rgba8 color) noexcept {
       pos.x >= 0 && pos.y >= 0 && pos.x < this->size.x && pos.y < this->size.y
   );
   // NOLINTNEXTLINE
-  ((rgba8*)this->pixels)[pos.x * pos.y] = color;
+  reinterpret_cast<rgba8*>(this->pixels)[pos.x * pos.y] = color;
 }
 
 void Image::paint(usize index, rgba8 color) noexcept {
   assert(index < this->size.x * this->size.y);
-  ((rgba8*)this->pixels)[index] = color;
+  reinterpret_cast<rgba8*>(this->pixels)[index] = color;
 }
 
 Image::operator bool() const noexcept {

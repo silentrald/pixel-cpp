@@ -27,13 +27,13 @@ public:
   Text& operator=(Text&&) noexcept = default;
   ~Text() noexcept override = default;
 
-  void set_text(cfg::locale::TextId id, const Renderer& renderer) noexcept;
+  void set_text(cfg::locale::TextId id) noexcept;
 
   void reset() noexcept override;
-  void locale_updated(const Renderer& renderer) noexcept override;
+  void locale_updated() noexcept override;
   void input(const event::Input& evt, InputData& data) noexcept override;
-  void update() noexcept override;
-  void render(const Renderer& renderer) noexcept override;
+  void update(f32 delta) noexcept override;
+  void render() noexcept override;
 
 private:
   // Use the rect as the text_rect

@@ -54,7 +54,7 @@ void ToolBox::reset() noexcept {
   }
 }
 
-void ToolBox::locale_updated(const Renderer& renderer) noexcept {
+void ToolBox::locale_updated() noexcept {
   // NOTE: Do nothing for now UwU, just add logic here once tool tips/hints are
   // created
 }
@@ -65,18 +65,18 @@ void ToolBox::input(const event::Input& evt, InputData& data) noexcept {
   }
 }
 
-void ToolBox::update() noexcept {
+void ToolBox::update(f32 delta) noexcept {
   for (i32 i = 0; i < this->btns.get_size(); ++i) {
-    this->btns[i].update();
+    this->btns[i].update(delta);
   }
 }
 
-void ToolBox::render(const Renderer& renderer) noexcept {
-  renderer.set_color({0x66, 0x33, 0x33, 0xff});
-  renderer.fill_rect(this->rect);
+void ToolBox::render() noexcept {
+  renderer::set_color({0x66, 0x33, 0x33, 0xff});
+  renderer::fill_rect(this->rect);
 
   for (i32 i = 0; i < this->btns.get_size(); ++i) {
-    this->btns[i].render(renderer);
+    this->btns[i].render();
   }
 }
 

@@ -22,10 +22,14 @@ void presenter::save_file() noexcept {
   // TODO: If no file name set, ask the user for a file to save to
 
   logger::info("Saving");
-  TRY_ABORT(
-      model_.anim.write_pixels_to_disk(model_.img_id), "Could not write to disk"
-  );
+  if (model_.img_id > 0U) {
+    TRY_ABORT(
+        model_.anim.write_pixels_to_disk(model_.img_id),
+        "Could not write to disk"
+    );
+  }
   TRY_ABORT(pxl_.save(model_.anim, "save.pxl"), "Could not save anim");
+
   logger::info("Save successful");
 }
 
@@ -71,8 +75,10 @@ void presenter::open_file() noexcept {
   );
 
   // Update view
-  view_.set_anim(&model_.anim);
+  TRY_ABORT(view_.set_anim(&model_.anim), "Could not set anim");
   view_.set_frame_range(0U, model_.anim.get_frame_count() - 1U);
+  view_.set_active_on_timeline(0U, 0U);
+
   update_view();
 
   logger::info("Open successful");

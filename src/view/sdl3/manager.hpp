@@ -20,7 +20,6 @@
 #include "./input/textbox.hpp"
 #include "./modal/file.hpp"
 #include "./modal/modal.hpp"
-#include "./renderer.hpp"
 #include "./texture.hpp"
 #include "./window.hpp"
 #include "SDL_events.h"
@@ -32,6 +31,7 @@
 #include "view/event.hpp"
 #include "view/input.hpp"
 #include "view/modal.hpp"
+#include "view/sdl3/box/preview.hpp"
 #include "view/sdl3/widget/color_picker.hpp"
 #include "view/sdl3/widget/context_menu.hpp"
 
@@ -72,7 +72,8 @@ public:
 
   void set_fg_color(rgba8 color) noexcept;
   void set_bg_color(rgba8 color) noexcept;
-  void set_anim(const draw::Anim* anim) noexcept;
+  [[nodiscard]] error_code set_anim(const draw::Anim* anim) noexcept;
+  void set_preview_playing(bool play) noexcept;
 
   // === Modifiers === //
 
@@ -103,7 +104,6 @@ public:
 
 private:
   Window window{};
-  Renderer renderer{};
 
   // NOTE: There can be multiple drawbox
   widget::DrawBox draw_box{};
@@ -111,6 +111,7 @@ private:
   widget::ToolBox tool_box{};
   widget::StatusBox status_box{};
   widget::MenuBox menu_box{};
+  widget::PreviewBox preview_box{};
 
   ds::vector<widget::Box*> boxes{};
   // NOTE: Better to use a stack here
@@ -161,7 +162,7 @@ private:
 
   void reset_data() noexcept;
 
-  void update() noexcept;
+  void update(f32 delta) noexcept;
   void render() noexcept;
 };
 

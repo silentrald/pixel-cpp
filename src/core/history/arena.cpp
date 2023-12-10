@@ -17,7 +17,7 @@ error_code Arena::init(usize alloc_size) noexcept {
   this->alloc_size = alloc_size;
   this->cursor = 0U;
 
-  this->data = (u8*)std::malloc(alloc_size); // NOLINT
+  this->data = static_cast<u8*>(std::malloc(alloc_size)); // NOLINT
   return this->data == nullptr ? error_code::BAD_ALLOC : error_code::OK;
 }
 
@@ -52,7 +52,7 @@ void Arena::set_cursor_with_ptr(void* new_data) noexcept {
   assert(new_data != nullptr);
   assert(new_data >= this->data && new_data < this->data + this->alloc_size);
 
-  this->cursor = (u8*)new_data - this->data;
+  this->cursor = static_cast<u8*>(new_data) - this->data;
 }
 
 void* Arena::allocate(usize size) noexcept {
