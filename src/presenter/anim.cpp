@@ -22,8 +22,8 @@ void presenter::create_anim() noexcept {
     return;
   }
 
-  auto* data = (view::modal::NewFileData*)view_.get_modal_data(
-      view::modal::Id::NEW_FILE_MODAL
+  auto* data = static_cast<view::modal::NewFileData*>(
+      view_.get_modal_data(view::modal::Id::NEW_FILE_MODAL)
   );
   if (data == nullptr) {
     logger::fatal("Data is null");
@@ -68,9 +68,10 @@ void presenter::create_anim() noexcept {
   );
 
   // View Update
-  view_.set_anim(&model_.anim);
+  TRY_ABORT(view_.set_anim(&model_.anim), "Could not set anim");
   view_.set_canvas_rect(model_.rect);
   view_.set_draw_size(size);
+  view_.set_active_on_timeline(0U, 0U);
 
   TRY_ABORT(
       view_.insert_layer(0U, model_.anim.get_layer_info(0U)),
@@ -97,7 +98,7 @@ void presenter::toggle_visibility(i32 layer_index) noexcept {
           model_.anim.get_image(model_.img_id), "Could not read anim"
       );
       view_.get_curr_texture().set_pixels(
-          (rgba8*)layer.get_pixels(), model_.anim.get_size()
+          reinterpret_cast<rgba8*>(layer.get_pixels()), model_.anim.get_size()
       );
     } else {
       view_.get_curr_texture().clear(model_.anim.get_height());
@@ -113,7 +114,8 @@ void presenter::toggle_visibility(i32 layer_index) noexcept {
         model_.frame_index, 0, model_.layer_index - 1, model_.pixels
     );
     view_.get_bot_texture().set_pixels(
-        (rgba8*)model_.pixels.get_data(), model_.anim.get_size()
+        reinterpret_cast<rgba8*>(model_.pixels.get_data()),
+        model_.anim.get_size()
     );
     return;
   }
@@ -124,7 +126,7 @@ void presenter::toggle_visibility(i32 layer_index) noexcept {
       model_.anim.get_layer_count() - 1, model_.pixels
   );
   view_.get_top_texture().set_pixels(
-      (rgba8*)model_.pixels.get_data(), model_.anim.get_size()
+      reinterpret_cast<rgba8*>(model_.pixels.get_data()), model_.anim.get_size()
   );
 }
 
@@ -176,6 +178,8 @@ void presenter::insert_at_selected_frame() noexcept {
 
   model_.frame_index = model_.selected_frame;
   model_.img_id = 0U;
+
+  model_.anim.print_timeline_info(); // TODO:
 
   view_.set_active_on_timeline(model_.selected_frame, model_.layer_index);
   update_canvas_textures();

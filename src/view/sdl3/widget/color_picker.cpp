@@ -21,36 +21,36 @@ void ColorPicker::init(
   this->hex_str.on_change = on_change;
 }
 
-void ColorPicker::set_color(rgba8 color, const Renderer& renderer) noexcept {
+void ColorPicker::set_color(rgba8 color) noexcept {
   this->color = color;
-  this->hex_str.set_text(color::to_hex_string(color).c_str(), renderer);
+  this->hex_str.set_text(color::to_hex_string(color).c_str());
 }
 
 void ColorPicker::reset() noexcept {
   //
 }
 
-void ColorPicker::locale_updated(const Renderer& renderer) noexcept {
-  this->size = {renderer.get_text_height(), renderer.get_text_height()};
+void ColorPicker::locale_updated() noexcept {
+  this->size = {renderer::get_text_height(), renderer::get_text_height()};
 
-  this->hex_str.x = this->pos.x + renderer.get_text_height() + 4.0F;
-  this->hex_str.h = renderer.get_text_height();
-  this->hex_str.locale_updated(renderer);
+  this->hex_str.x = this->pos.x + renderer::get_text_height() + 4.0F;
+  this->hex_str.h = renderer::get_text_height();
+  this->hex_str.locale_updated();
 }
 
 void ColorPicker::input(const event::Input& evt, InputData& data) noexcept {
   this->hex_str.input(evt, data);
 }
 
-void ColorPicker::update() noexcept {
+void ColorPicker::update(f32 _delta) noexcept {
   //
 }
 
-void ColorPicker::render(const Renderer& renderer) noexcept {
-  renderer.set_color(this->color);
-  renderer.fill_rect(this->rect);
+void ColorPicker::render() noexcept {
+  renderer::set_color(this->color);
+  renderer::fill_rect(this->rect);
 
-  this->hex_str.render(renderer);
+  this->hex_str.render();
 }
 
 } // namespace view::sdl3::widget

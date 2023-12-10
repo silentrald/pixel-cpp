@@ -88,7 +88,8 @@ bool PngData::save_frame(const draw::Anim& anim, u32 frame_index) noexcept {
   // NOLINTNEXTLINE
   auto* row_pointers =
       // NOLINTNEXTLINE
-      (png_bytep*)std::malloc(sizeof(png_bytep) * anim.get_height());
+      static_cast<png_bytep*>(std::malloc(sizeof(png_bytep) * anim.get_height())
+      );
   if (row_pointers == nullptr) {
     logger::error("No more memory");
     return false;

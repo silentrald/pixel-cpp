@@ -6,6 +6,7 @@
  *==========================*/
 
 #include "./manager.hpp"
+#include "./renderer.hpp"
 #include "SDL3_image/SDL_image.h"
 #include "SDL3_ttf/SDL_ttf.h"
 #include "SDL_blendmode.h"
@@ -30,7 +31,7 @@ const u64 SPF = 1000 / FPS;
 
 error_code Manager::init() noexcept {
   this->window.init();
-  this->renderer.init(this->window.get_window());
+  renderer::init(this->window.get_window());
 
   this->handle_resize(this->window.size);
 
@@ -39,32 +40,33 @@ error_code Manager::init() noexcept {
   TRY(this->boxes.push_back(&this->tool_box));
   TRY(this->boxes.push_back(&this->status_box));
   TRY(this->boxes.push_back(&this->menu_box));
+  TRY(this->boxes.push_back(&this->preview_box));
 
   // Tool box
   widget::Button btn{};
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(this->renderer.load_img("assets/tools/pencil.png"));
+  btn.set_texture(renderer::load_img("assets/tools/pencil.png"));
   btn.set_left_click_listener(presenter::set_pencil_tool);
   TRY(this->tool_box.push_btn(std::move(btn)));
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(this->renderer.load_img("assets/tools/eraser.png"));
+  btn.set_texture(renderer::load_img("assets/tools/eraser.png"));
   btn.set_left_click_listener(presenter::set_eraser_tool);
   TRY(this->tool_box.push_btn(std::move(btn)));
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(this->renderer.load_img("assets/tools/line.png"));
+  btn.set_texture(renderer::load_img("assets/tools/line.png"));
   btn.set_left_click_listener(presenter::set_line_tool);
   TRY(this->tool_box.push_btn(std::move(btn)));
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(this->renderer.load_img("assets/tools/fill.png"));
+  btn.set_texture(renderer::load_img("assets/tools/fill.png"));
   btn.set_left_click_listener(presenter::set_fill_tool);
   TRY(this->tool_box.push_btn(std::move(btn)));
 
   btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(this->renderer.load_img("assets/tools/fill.png"));
+  btn.set_texture(renderer::load_img("assets/tools/fill.png"));
   btn.set_left_click_listener(presenter::set_select_tool);
   TRY(this->tool_box.push_btn(std::move(btn)));
 
@@ -72,21 +74,20 @@ error_code Manager::init() noexcept {
   fvec size{};
 
   TRY(this->menu_box.push_menu_btn(
-      cfg::locale::TextId::FILE_, this->renderer,
-      presenter::toggle_file_ctx_menu
+      cfg::locale::TextId::FILE_, presenter::toggle_file_ctx_menu
   ));
 
   TRY(this->menu_box.push_menu_btn(
-      cfg::locale::TextId::EDIT, this->renderer, presenter::toggle_edit_ctx_menu
+      cfg::locale::TextId::EDIT, presenter::toggle_edit_ctx_menu
   ));
 
-  TRY(this->timeline_box.init(this->renderer));
+  TRY(this->timeline_box.init());
 
   // NOTE: Locale
   const auto* text = "Change Language";
   this->locale_btn.set_theme(input::BtnTheme::TOOL_BTN); // TODO:
-  this->locale_btn.set_texture(this->renderer.create_text(text));
-  size = this->renderer.get_text_size(text);
+  this->locale_btn.set_texture(renderer::create_text(text));
+  size = renderer::get_text_size(text);
   this->locale_btn.pos = {this->window.size.x - size.x, 0.0F};
   this->locale_btn.tex_rect.pos = {this->window.size.x - size.x, 0.0F};
   this->locale_btn.size = size;
@@ -96,18 +97,22 @@ error_code Manager::init() noexcept {
   TRY(this->init_ctx_menus());
 
   this->fg_color.init(
-      {40.0F, 32.0F}, this->renderer.get_text_height(), presenter::set_fg_color
+      {40.0F, 32.0F}, renderer::get_text_height(), presenter::set_fg_color
   );
   this->bg_color.init(
-      {40.0F, 40.0F + this->renderer.get_text_height()},
-      this->renderer.get_text_height(), presenter::set_bg_color
+      {40.0F, 40.0F + renderer::get_text_height()}, renderer::get_text_height(),
+      presenter::set_bg_color
   );
+
+  // NOTE: Preview
+  this->preview_box.init();
 
   return error_code::OK;
 }
 
 Manager::~Manager() noexcept {
   this->clear_modals();
+  renderer::destroy();
 }
 
 i32 Manager::get_window_width() const noexcept {
@@ -157,7 +162,7 @@ Texture& Manager::get_select2_texture() noexcept {
 // === Setters === //
 
 void Manager::set_draw_size(ivec size) noexcept {
-  auto code = this->draw_box.init_textures(this->renderer, size);
+  auto code = this->draw_box.init_textures(size);
   if (is_error(code)) {
     logger::fatal("Could not initialize draw box");
     std::abort();
@@ -175,24 +180,28 @@ void Manager::set_cursor_canvas_pos(ivec pos) noexcept {
 }
 
 void Manager::set_fg_color(rgba8 color) noexcept {
-  this->fg_color.set_color(color, this->renderer);
+  this->fg_color.set_color(color);
 }
 
 void Manager::set_bg_color(rgba8 color) noexcept {
-  this->bg_color.set_color(color, this->renderer);
+  this->bg_color.set_color(color);
 }
 
-void Manager::set_anim(const draw::Anim* anim) noexcept {
+error_code Manager::set_anim(const draw::Anim* anim) noexcept {
   this->timeline_box.set_anim(anim);
+  TRY(this->preview_box.set_anim(anim));
+  return error_code::OK;
+}
+
+void Manager::set_preview_playing(bool playing) noexcept {
+  this->preview_box.set_playing(playing);
 }
 
 // === Modifiers === //
 
 error_code
 Manager::insert_layer(usize index, const draw::LayerInfo& layer_info) noexcept {
-  return this->timeline_box.insert_layer_info(
-      index, layer_info, this->renderer
-  );
+  return this->timeline_box.insert_layer_info(index, layer_info);
 }
 
 void Manager::set_layer_visible(usize index, bool visible) noexcept {
@@ -208,6 +217,7 @@ void Manager::set_active_on_timeline(
 ) noexcept {
   this->timeline_box.active_frame = frame_index;
   this->timeline_box.active_layer = layer_index;
+  this->preview_box.set_active_frame(frame_index);
 }
 
 void Manager::set_frame_range(usize start_frame, usize end_frame) noexcept {
@@ -218,19 +228,28 @@ void Manager::set_frame_range(usize start_frame, usize end_frame) noexcept {
 
 void Manager::run() noexcept {
   u64 start = SDL_GetTicks();
+  u64 end = 0U;
   u64 duration = 0U;
+  f32 delta = 0.0F;
 
   this->running = true;
   while (this->running) {
     this->input();
-    this->update();
+    this->update(delta);
     this->render();
 
-    duration = SDL_GetTicks() - start;
+    end = SDL_GetTicks();
+    duration = end - start;
     if (duration < SPF) {
+      // Fixed update
+      delta = SPF / 1000.0F;
       SDL_Delay(SPF - duration);
+      start = SDL_GetTicks();
+    } else {
+      // Lag update
+      delta = duration / 1000.0F;
+      start = end;
     }
-    start = SDL_GetTicks();
   }
 }
 
@@ -243,44 +262,44 @@ void Manager::reset_data() noexcept {
   SDL_StopTextInput();
 }
 
-void Manager::update() noexcept {
+void Manager::update(f32 delta) noexcept {
   for (i32 i = 0; i < this->modals.get_size(); ++i) {
-    this->modals[i]->update();
+    this->modals[i]->update(delta);
   }
 
   for (i32 i = 0; i < this->boxes.get_size(); ++i) {
-    this->boxes[i]->update();
+    this->boxes[i]->update(delta);
   }
 }
 
 void Manager::render() noexcept {
-  this->renderer.set_color({0x33, 0x33, 0x33, 0xff});
-  this->renderer.clear();
+  renderer::set_color({0x33, 0x33, 0x33, 0xff});
+  renderer::clear();
 
   for (usize i = 0; i < this->boxes.get_size(); ++i) {
-    this->boxes[i]->render(this->renderer);
+    this->boxes[i]->render();
   }
 
   // TODO: Temp
-  this->fg_color.render(this->renderer);
-  this->bg_color.render(this->renderer);
+  this->fg_color.render();
+  this->bg_color.render();
 
   for (usize i = 0; i < this->modals.get_size(); ++i) {
-    this->modals[i]->render(this->renderer);
+    this->modals[i]->render();
   }
 
   if (this->ctx_menu_idx > -1 &&
       this->ctx_menu_idx < this->ctx_menus.get_size()) {
-    this->ctx_menus[this->ctx_menu_idx].render(this->renderer);
+    this->ctx_menus[this->ctx_menu_idx].render();
   }
 
   for (usize i = 0; i < this->ctx_menu_stack.get_size(); ++i) {
-    this->ctx_menu_stack[i].render(this->renderer);
+    this->ctx_menu_stack[i].render();
   }
 
-  this->locale_btn.render(this->renderer);
+  this->locale_btn.render();
 
-  this->renderer.present();
+  renderer::present();
 }
 
 } // namespace view::sdl3

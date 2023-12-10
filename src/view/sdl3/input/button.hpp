@@ -32,15 +32,13 @@ public:
   void disable() noexcept;
 
   void reset() noexcept override;
-  void unfocused(const Renderer& renderer) noexcept override;
+  void unfocused() noexcept override;
 
-  void locale_updated(const Renderer& renderer) noexcept override;
+  void locale_updated() noexcept override;
   void input(const event::Input& evt, InputData& data) noexcept override;
-  void key_input(
-      event::KeyPress& keypress, const Renderer& renderer
-  ) noexcept override;
-  void update() noexcept override;
-  void render(const Renderer& renderer) noexcept override;
+  void key_input(event::KeyPress& keypress) noexcept override;
+  void update(f32 delta) noexcept override;
+  void render() noexcept override;
 
 private:
   Texture tex{};

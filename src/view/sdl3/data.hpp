@@ -29,8 +29,13 @@ struct InputData {
 
   fvec orig_pos{};
   fvec orig_mouse{};
+
   bool dragging = false;
   bool clear_selected = false;
+
+  // For events
+  bool left_click = false;
+  bool right_click = false;
 };
 
 } // namespace view::sdl3

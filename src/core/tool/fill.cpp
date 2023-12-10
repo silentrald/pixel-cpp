@@ -25,7 +25,8 @@ u32 Fill::execute(Model& model, const event::Input& evt) noexcept {
 
   this->new_color =
       evt.mouse.left == input::MouseState::UP ? model.fg_color : model.bg_color;
-  this->old_color = *(rgba8*)model.img.get_pixel(model.get_pixel_index());
+  this->old_color =
+      *reinterpret_cast<rgba8*>(model.img.get_pixel(model.get_pixel_index()));
 
   if (this->old_color == this->new_color) {
     return event::Flag::NONE;
@@ -46,7 +47,8 @@ bool Fill::check_pixel(
     const std::vector<bool>& mask, const draw::Image& image, ivec pos, i32 width
 ) const noexcept {
   return mask[get_index(pos, width)] &&
-         *(rgba8*)image.get_pixel(get_index(pos, width)) == this->old_color;
+         *reinterpret_cast<rgba8*>(image.get_pixel(get_index(pos, width))) ==
+             this->old_color;
 }
 
 void Fill::scan_fill(

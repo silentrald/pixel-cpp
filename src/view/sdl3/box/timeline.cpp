@@ -27,14 +27,14 @@ TimelineBox::TimelineBox() noexcept
       selected_layer(0U),
       selected_frame(0U) {}
 
-error_code TimelineBox::init(const Renderer& renderer) noexcept {
+error_code TimelineBox::init() noexcept {
   // TODO: Only temps, grow this for every add layer
   TRY(this->rects.resize(8U));
   return error_code::OK;
 }
 
 error_code TimelineBox::insert_layer_info(
-    usize index, const draw::LayerInfo& layer_info, const Renderer& renderer
+    usize index, const draw::LayerInfo& layer_info
 ) noexcept {
   assert(index >= 0 && index <= this->layers.get_size());
 
@@ -42,13 +42,13 @@ error_code TimelineBox::insert_layer_info(
 
   frect text_rect{};
   text_rect.x = this->rect.x;
-  text_rect.size = renderer.get_text_size(layer_info.name);
+  text_rect.size = renderer::get_text_size(layer_info.name);
 
   Textbox textbox{};
-  textbox.set_text(layer_info.name, renderer);
+  textbox.set_text(layer_info.name);
 
   if (this->layers.is_empty()) {
-    text_rect.y = this->rect.y + renderer.get_text_height() + LINE_WIDTH;
+    text_rect.y = this->rect.y + renderer::get_text_height() + LINE_WIDTH;
     textbox.rect.pos = text_rect.pos;
     textbox.rect.size = {LAYERS_NAME_WIDTH, text_rect.h};
     textbox.tex_rect.pos = {text_rect.x + LAYERS_NAME_PADDING_X, text_rect.y};
@@ -60,7 +60,7 @@ error_code TimelineBox::insert_layer_info(
     );
   }
 
-  text_rect.y = this->rect.y + (renderer.get_text_height() + LINE_WIDTH) *
+  text_rect.y = this->rect.y + (renderer::get_text_height() + LINE_WIDTH) *
                                    (this->layers.get_size() - index + 1);
   textbox.rect.pos = text_rect.pos;
   textbox.rect.size = {LAYERS_NAME_WIDTH, text_rect.h};
@@ -74,7 +74,7 @@ error_code TimelineBox::insert_layer_info(
 
   // NOTE: Underflows
   for (index = index - 1U; index < USIZE_MAX; --index) {
-    text_rect.y += renderer.get_text_height() + LINE_WIDTH;
+    text_rect.y += renderer::get_text_height() + LINE_WIDTH;
     this->layers[index].textbox.rect.pos = text_rect.pos;
     this->layers[index].textbox.tex_rect.pos = {
         text_rect.pos.x + LAYERS_NAME_PADDING_X, text_rect.pos.y};
@@ -117,9 +117,9 @@ void TimelineBox::reset() noexcept {
   // TODO:
 }
 
-void TimelineBox::locale_updated(const Renderer& renderer) noexcept {
+void TimelineBox::locale_updated() noexcept {
   for (i32 i = 0; i < this->layers.get_size(); ++i) {
-    this->layers[i].textbox.locale_updated(renderer);
+    this->layers[i].textbox.locale_updated();
     this->layers[i].textbox.rect.h = this->layers[i].textbox.tex_rect.h;
   }
 }
@@ -244,87 +244,86 @@ void TimelineBox::handle_mouse_right(
   presenter::open_timeline_ctx_menu();
 }
 
-void TimelineBox::update() noexcept {
+void TimelineBox::update(f32 _delta) noexcept {
   //
 }
 
-void TimelineBox::render(const Renderer& renderer) noexcept {
-  renderer.set_color({0x44, 0x44, 0xff, 0xff});
-  renderer.fill_rect(this->rect);
+void TimelineBox::render() noexcept {
+  renderer::set_color({0x44, 0x44, 0xff, 0xff});
+  renderer::fill_rect(this->rect);
 
-  this->render_grid(renderer);
-  this->render_frame_numbers(renderer);
-  this->render_frames(renderer);
-  this->render_layers(renderer);
+  this->render_grid();
+  this->render_frame_numbers();
+  this->render_frames();
+  this->render_layers();
 }
 
-void TimelineBox::render_grid(const Renderer& renderer) const noexcept {
+void TimelineBox::render_grid() const noexcept {
   frect line{};
 
   // Selected frame
-  renderer.set_color({0xff, 0xff, 0xff, 0x66});
+  renderer::set_color({0xff, 0xff, 0xff, 0x66});
   line.x = this->rect.x + LAYERS_WIDTH + LINE_WIDTH +
            (this->active_frame - this->start_frame) *
-               (renderer.get_text_height() + LINE_WIDTH);
+               (renderer::get_text_height() + LINE_WIDTH);
   line.y = this->rect.y;
-  line.w = renderer.get_text_height();
+  line.w = renderer::get_text_height();
   line.h = this->rect.h;
-  renderer.fill_rect(line);
+  renderer::fill_rect(line);
 
   // Selected layer
   line.x = this->rect.x;
-  line.y = this->rect.y + (renderer.get_text_height() + LINE_WIDTH) *
+  line.y = this->rect.y + (renderer::get_text_height() + LINE_WIDTH) *
                               (this->layers.get_size() - this->active_layer);
   line.w = this->rect.w;
-  line.h = renderer.get_text_height();
-  renderer.fill_rect(line);
+  line.h = renderer::get_text_height();
+  renderer::fill_rect(line);
 
   // Horizontal lines
-  renderer.set_color({0x00, 0x00, 0x00, 0xff});
+  renderer::set_color({0x00, 0x00, 0x00, 0xff});
   line.x = this->rect.x;
-  line.y = this->rect.y + renderer.get_text_height();
+  line.y = this->rect.y + renderer::get_text_height();
   line.w = this->rect.w;
   line.h = LINE_WIDTH;
-  renderer.fill_rect(line);
+  renderer::fill_rect(line);
 
   // Vertical lines
   line.x = this->rect.x + LAYERS_WIDTH;
   line.y = this->rect.y;
   line.w = LINE_WIDTH;
   line.h = this->rect.h;
-  renderer.fill_rect(line);
+  renderer::fill_rect(line);
 }
 
-void TimelineBox::render_frame_numbers(const Renderer& renderer
-) const noexcept {
+void TimelineBox::render_frame_numbers() const noexcept {
   fvec off{
-      .x =
-          this->rect.x + LAYERS_WIDTH + LINE_WIDTH + renderer.get_text_height(),
+      .x = this->rect.x + LAYERS_WIDTH + LINE_WIDTH +
+           renderer::get_text_height(),
       .y = this->rect.y};
   for (usize i = this->start_frame; i <= this->end_frame; ++i) {
-    (void)renderer.render_number(i, off);
-    off.x += renderer.get_text_height() + 4.0F; // SQUARE
+    static_cast<void>(renderer::render_number(i, off));
+    off.x += renderer::get_text_height() + 4.0F; // SQUARE
   }
 }
 
-void TimelineBox::render_frames(const Renderer& renderer) noexcept {
+void TimelineBox::render_frames() noexcept {
   if (this->anim == nullptr || this->anim->get_layer_count() == 0U) {
     return;
   }
 
-  renderer.set_color({0x00, 0x00, 0x00, 0xff});
+  renderer::set_color({0x00, 0x00, 0x00, 0xff});
 
   frect def_rect{.pos = this->pos};
-  def_rect.w = def_rect.h = renderer.get_text_height() - 4.0F;
+  def_rect.w = def_rect.h = renderer::get_text_height() - 4.0F;
   def_rect.x += LAYERS_WIDTH + LINE_WIDTH + 2.0F;
-  def_rect.y += renderer.get_text_height() + LINE_WIDTH + 2.0F;
+  def_rect.y += renderer::get_text_height() + LINE_WIDTH + 2.0F;
 
   // Reverse the order
   for (usize l = this->anim->get_layer_count() - 1U; l < USIZE_MAX; --l) {
     this->rects[l].pos = def_rect.pos;
     this->rects[l].w = 0.0F;
     this->rects[l].h = def_rect.h;
-    def_rect.y += renderer.get_text_height() + LINE_WIDTH;
+    def_rect.y += renderer::get_text_height() + LINE_WIDTH;
   }
 
   usize id = 0U;
@@ -339,7 +338,7 @@ void TimelineBox::render_frames(const Renderer& renderer) noexcept {
 
     def_rect.pos = rects[l].pos;
     rects[l].x += def_rect.w;
-    renderer.draw_rect(def_rect);
+    renderer::draw_rect(def_rect);
   }
   ++curr_iter;
 
@@ -350,7 +349,7 @@ void TimelineBox::render_frames(const Renderer& renderer) noexcept {
       if (id == 0U) {
         // Empty image
         if (rects[l].w > 0.0F) {
-          renderer.fill_rect(rects[l]);
+          renderer::fill_rect(rects[l]);
         }
 
         def_rect.x = rects[l].x + rects[l].w + 8.0F;
@@ -358,18 +357,18 @@ void TimelineBox::render_frames(const Renderer& renderer) noexcept {
         rects[l].x = def_rect.x + def_rect.w;
         rects[l].w = 0.0F;
 
-        renderer.draw_rect(def_rect);
+        renderer::draw_rect(def_rect);
       } else if (id != prev_iter.get_image_id(l)) {
         // New id
         if (rects[l].w > 0.0F) {
-          renderer.fill_rect(rects[l]);
+          renderer::fill_rect(rects[l]);
         }
 
         rects[l].x += rects[l].w + 8.0F;
         rects[l].w = def_rect.w;
       } else {
         // Extend Prev id
-        rects[l].w += renderer.get_text_height();
+        rects[l].w += renderer::get_text_height();
       }
     }
   }
@@ -377,12 +376,12 @@ void TimelineBox::render_frames(const Renderer& renderer) noexcept {
   --curr_iter;
   for (usize l = 0; l < this->anim->get_layer_count(); ++l) {
     if (curr_iter.get_image_id(l) != 0U) {
-      renderer.fill_rect(rects[l]);
+      renderer::fill_rect(rects[l]);
     }
   }
 }
 
-void TimelineBox::render_layers(const Renderer& renderer) noexcept {
+void TimelineBox::render_layers() noexcept {
   if (this->layers.is_empty()) {
     return;
   }
@@ -395,13 +394,13 @@ void TimelineBox::render_layers(const Renderer& renderer) noexcept {
   vis_rect.h = height - 8.0F;
 
   for (i32 i = 0; i < this->layers.get_size(); ++i) {
-    this->layers[i].textbox.render(renderer);
+    this->layers[i].textbox.render();
 
-    renderer.set_color(
+    renderer::set_color(
         this->layers[i].visible ? rgba8{0x00, 0xff, 0x00, 0xff}
                                 : rgba8{0xff, 0x00, 0x00, 0xff}
     );
-    renderer.fill_rect(vis_rect);
+    renderer::fill_rect(vis_rect);
     vis_rect.y -= height + LINE_WIDTH;
   }
 }

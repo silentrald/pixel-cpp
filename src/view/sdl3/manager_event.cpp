@@ -10,7 +10,6 @@
 #include "SDL_keyboard.h"
 #include "SDL_keycode.h"
 #include "SDL_mouse.h"
-#include "core/logger/logger.hpp"
 #include "presenter/presenter.hpp"
 
 namespace view::sdl3 {
@@ -138,22 +137,6 @@ void Manager::handle_input_event() noexcept {
   }
   presenter::canvas_mouse_scroll_event(this->input_evt);
 
-  // Only handle inputs on draw box when it was initially clicked
-  if (!this->is_draw_box_clicked &&
-      this->input_evt.is_mouse_state(input::MouseState::DOWN) &&
-      this->draw_box.rect.has_point(this->input_evt.mouse.pos)) {
-    this->is_draw_box_clicked = true;
-  }
-
-  if (this->is_draw_box_clicked) {
-    this->draw_box.input(this->input_evt, this->data);
-    if (this->input_evt.is_mouse_state(input::MouseState::UP)) {
-      this->is_draw_box_clicked = false;
-    }
-    return;
-  }
-  //
-
   for (i32 i = 1; i < this->boxes.get_size(); ++i) {
     if (this->boxes[i]->rect.has_point(this->input_evt.mouse.pos)) {
       if (this->mouse_box_id == -1) {
@@ -172,6 +155,22 @@ void Manager::handle_input_event() noexcept {
     this->boxes[this->mouse_box_id]->reset();
     this->mouse_box_id = -1;
   }
+
+  // Only handle inputs on draw box when it was initially clicked
+  if (!this->is_draw_box_clicked &&
+      this->input_evt.is_mouse_state(input::MouseState::DOWN) &&
+      this->draw_box.rect.has_point(this->input_evt.mouse.pos)) {
+    this->is_draw_box_clicked = true;
+  }
+
+  if (this->is_draw_box_clicked) {
+    this->draw_box.input(this->input_evt, this->data);
+    if (this->input_evt.is_mouse_state(input::MouseState::UP)) {
+      this->is_draw_box_clicked = false;
+    }
+    return;
+  }
+  //
 }
 
 // === Mouse Input === //
@@ -240,9 +239,7 @@ void Manager::handle_key_event() noexcept {
   if (this->keypress_evt.has_keys()) {
     while (this->keypress_evt.has_next()) {
       if (this->data.selected_input) {
-        this->data.selected_input->key_input(
-            this->keypress_evt, this->renderer
-        );
+        this->data.selected_input->key_input(this->keypress_evt);
         if (this->keypress_evt.get_prev_char() == input::Keycode::TAB) {
           this->data.selected_input = this->data.selected_input->next_input;
           if (this->data.selected_input) {
@@ -277,7 +274,7 @@ void Manager::handle_key_event() noexcept {
 
   if (this->data.new_selected_input) {
     if (this->data.selected_input) {
-      this->data.selected_input->unfocused(this->renderer);
+      this->data.selected_input->unfocused();
     }
     this->data.selected_input = this->data.new_selected_input;
     this->data.selected_input->focused = true;
@@ -286,7 +283,7 @@ void Manager::handle_key_event() noexcept {
     SDL_StartTextInput();
   } else if ((this->data.clear_selected || this->input_evt.mouse.left == input::MouseState::UP) && this->data.selected_input) {
     this->data.clear_selected = false;
-    this->data.selected_input->unfocused(this->renderer);
+    this->data.selected_input->unfocused();
     this->data.selected_input = nullptr;
     SDL_StopTextInput();
   }
@@ -387,7 +384,7 @@ void Manager::handle_key_up_input(i32 keycode) noexcept { // NOLINT
 void Manager::handle_resize(ivec new_size) noexcept {
   this->window.size = new_size;
 
-  f32 text_height = this->renderer.get_text_height();
+  f32 text_height = renderer::get_text_height();
   f32 menu_box_height = text_height + 4.0F;
 
   this->menu_box.resize({0.0F, 0.0F, (f32)new_size.x, menu_box_height});
@@ -414,19 +411,19 @@ void Manager::handle_resize(ivec new_size) noexcept {
 // Other events
 
 void Manager::locale_updated() noexcept {
-  this->renderer.locale_updated();
+  renderer::locale_updated();
 
   for (usize i = 0; i < this->boxes.get_size(); ++i) {
-    this->boxes[i]->locale_updated(this->renderer);
+    this->boxes[i]->locale_updated();
   }
 
   for (usize i = 0; i < this->modals.get_size(); ++i) {
-    this->modals[i]->locale_updated(this->renderer);
+    this->modals[i]->locale_updated();
   }
 
   // TODO: Temp
-  this->fg_color.locale_updated(this->renderer);
-  this->bg_color.locale_updated(this->renderer);
+  this->fg_color.locale_updated();
+  this->bg_color.locale_updated();
 
   // NOTE: boxes may have changed dimensions
   this->handle_resize(this->window.size);

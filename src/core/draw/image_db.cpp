@@ -541,12 +541,12 @@ error_code ImageDb::allocate(usize alloc_size) noexcept {
 // === Private Accessors === //
 
 usize* ImageDb::get_id_ptr() const noexcept {
-  return (usize*)this->ptr;
+  return reinterpret_cast<usize*>(this->ptr);
 }
 
 ImageDb::Indexing* ImageDb::get_index_ptr() const noexcept {
   // NOLINTNEXTLINE
-  return (Indexing*)(this->ptr + this->capacity * ID_SIZE);
+  return reinterpret_cast<Indexing*>(this->ptr + this->capacity * ID_SIZE);
 }
 
 data_ptr ImageDb::get_pixels_ptr() const noexcept {
@@ -571,7 +571,7 @@ error_code ImageDb::seek_disk_pixels(usize id) const noexcept {
 ImageDbIter::ImageDbIter(
     data_ptr ptr, usize size, usize capacity, usize bytes
 ) noexcept
-    : id_ptr((usize*)ptr),
+    : id_ptr(reinterpret_cast<usize*>(ptr)),
       image_ptr(ptr + capacity * LAYER_HEADER_SIZE), // NOLINT
       size(size),
       bytes(bytes) {

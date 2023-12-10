@@ -20,10 +20,9 @@ public:
   Input(Input&&) noexcept = default;
   Input& operator=(Input&&) noexcept = default;
 
-  virtual void unfocused(const Renderer& renderer) noexcept = 0;
+  virtual void unfocused() noexcept = 0;
 
-  virtual void
-  key_input(event::KeyPress& keypress, const Renderer& renderer) noexcept = 0;
+  virtual void key_input(event::KeyPress& keypress) noexcept = 0;
 
   // For tabbing feature
   Input* next_input = nullptr;

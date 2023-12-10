@@ -34,7 +34,7 @@ void presenter::update_canvas_textures() noexcept {
   }
 
   view_.get_bot_texture().set_pixels(
-      (rgba8*)model_.pixels.get_data(), model_.anim.get_size()
+      reinterpret_cast<rgba8*>(model_.pixels.get_data()), model_.anim.get_size()
   );
 
   // Clear
@@ -48,12 +48,13 @@ void presenter::update_canvas_textures() noexcept {
     );
   }
   view_.get_top_texture().set_pixels(
-      (rgba8*)model_.pixels.get_data(), model_.anim.get_size()
+      reinterpret_cast<rgba8*>(model_.pixels.get_data()), model_.anim.get_size()
   );
 
   if (model_.img_id > 0U && model_.anim.is_layer_visible(model_.layer_index)) {
     view_.get_curr_texture().set_pixels(
-        (rgba8*)model_.img.get_pixels(), model_.anim.get_size()
+        reinterpret_cast<rgba8*>(model_.img.get_pixels()),
+        model_.anim.get_size()
     );
   } else {
     view_.get_curr_texture().clear(model_.anim.get_height());

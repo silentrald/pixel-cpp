@@ -34,28 +34,24 @@ error_code Manager::init_ctx_menus() noexcept {
     file_ctx_menu.pos = {
         this->menu_box.get_btn_rect(FILE_CTX_ID).x, this->menu_box.h};
 
-    TRY(file_ctx_menu.push_item(cfg::locale::TextId::NEW, this->renderer, []() {
+    TRY(file_ctx_menu.push_item(cfg::locale::TextId::NEW, []() {
       presenter::close_ctx_menus();
       presenter::new_file();
     }));
-    TRY(file_ctx_menu
-            .push_item(cfg::locale::TextId::OPEN, this->renderer, []() {
-              presenter::close_ctx_menus();
-              presenter::open_file();
-            }));
-    TRY(file_ctx_menu
-            .push_item(cfg::locale::TextId::SAVE, this->renderer, []() {
-              presenter::close_ctx_menus();
-              presenter::save_file();
-            }));
-    TRY(file_ctx_menu
-            .push_item(cfg::locale::TextId::SV_AS, this->renderer, []() {
-              presenter::close_ctx_menus();
-              logger::debug("Not implemented yet UwU"); // TODO:
-            }));
+    TRY(file_ctx_menu.push_item(cfg::locale::TextId::OPEN, []() {
+      presenter::close_ctx_menus();
+      presenter::open_file();
+    }));
+    TRY(file_ctx_menu.push_item(cfg::locale::TextId::SAVE, []() {
+      presenter::close_ctx_menus();
+      presenter::save_file();
+    }));
+    TRY(file_ctx_menu.push_item(cfg::locale::TextId::SV_AS, []() {
+      presenter::close_ctx_menus();
+      logger::debug("Not implemented yet UwU"); // TODO:
+    }));
     TRY(file_ctx_menu.push_item(
-        cfg::locale::TextId::EXPORT, this->renderer,
-        presenter::open_export_ctx_menu
+        cfg::locale::TextId::EXPORT, presenter::open_export_ctx_menu
     ));
   }
 
@@ -64,53 +60,44 @@ error_code Manager::init_ctx_menus() noexcept {
     auto& edit_ctx_menu = this->ctx_menus[EDIT_CTX_ID];
     edit_ctx_menu.pos = {
         this->menu_box.get_btn_rect(EDIT_CTX_ID).x, this->menu_box.h};
-    TRY(edit_ctx_menu
-            .push_item(cfg::locale::TextId::UNDO, this->renderer, []() {
-              presenter::close_ctx_menus();
-              presenter::undo_action();
-            }));
-    TRY(edit_ctx_menu
-            .push_item(cfg::locale::TextId::REDO, this->renderer, []() {
-              presenter::close_ctx_menus();
-              presenter::redo_action();
-            }));
+    TRY(edit_ctx_menu.push_item(cfg::locale::TextId::UNDO, []() {
+      presenter::close_ctx_menus();
+      presenter::undo_action();
+    }));
+    TRY(edit_ctx_menu.push_item(cfg::locale::TextId::REDO, []() {
+      presenter::close_ctx_menus();
+      presenter::redo_action();
+    }));
   }
 
   // Layers Context Menu
   {
     auto& layers_ctx_menu = this->ctx_menus[LAYERS_CTX_ID];
-    TRY(layers_ctx_menu
-            .push_item(cfg::locale::TextId::INS_LAYER, this->renderer, []() {
-              presenter::close_ctx_menus();
-              presenter::insert_at_selected_layer();
-            }));
-    TRY(layers_ctx_menu
-            .push_item(cfg::locale::TextId::REM_LAYER, this->renderer, []() {
-              presenter::close_ctx_menus();
-              logger::debug("UwU"); // TODO:
-            }));
-    TRY(layers_ctx_menu
-            .push_item(cfg::locale::TextId::PROPERTIES, this->renderer, []() {
-              presenter::close_ctx_menus();
-              logger::debug("UwU"); // TODO:
-            }));
+    TRY(layers_ctx_menu.push_item(cfg::locale::TextId::INS_LAYER, []() {
+      presenter::close_ctx_menus();
+      presenter::insert_at_selected_layer();
+    }));
+    TRY(layers_ctx_menu.push_item(cfg::locale::TextId::REM_LAYER, []() {
+      presenter::close_ctx_menus();
+      logger::debug("UwU"); // TODO:
+    }));
+    TRY(layers_ctx_menu.push_item(cfg::locale::TextId::PROPERTIES, []() {
+      presenter::close_ctx_menus();
+      logger::debug("UwU"); // TODO:
+    }));
   }
 
   // Timeline Content Menu
   {
     auto& timeline_ctx_menu = this->ctx_menus[TIMELINE_CTX_ID];
-    TRY(timeline_ctx_menu.push_item(
-        cfg::locale::TextId::BLANK_FRAME_INS, this->renderer,
-        []() {
-          presenter::close_ctx_menus();
-          presenter::insert_at_selected_frame();
-        }
-    ));
-    TRY(timeline_ctx_menu
-            .push_item(cfg::locale::TextId::REM_FRAME, this->renderer, []() {
-              presenter::close_ctx_menus();
-              logger::debug("UwU"); // TODO:
-            }));
+    TRY(timeline_ctx_menu.push_item(cfg::locale::TextId::BLANK_FRAME_INS, []() {
+      presenter::close_ctx_menus();
+      presenter::insert_at_selected_frame();
+    }));
+    TRY(timeline_ctx_menu.push_item(cfg::locale::TextId::REM_FRAME, []() {
+      presenter::close_ctx_menus();
+      logger::debug("UwU"); // TODO:
+    }));
   }
 
   return error_code::OK;
@@ -169,14 +156,14 @@ void Manager::handle_ctx_menu_locale_updated() noexcept {
       this->ctx_menus[i].x = this->menu_box.get_btn_rect(i).x,
       this->ctx_menus[i].y = this->menu_box.y + this->menu_box.h;
     }
-    this->ctx_menus[i].locale_updated(this->renderer);
+    this->ctx_menus[i].locale_updated();
   }
 
   for (usize i = 0; i < this->ctx_menu_stack.get_size(); ++i) {
     this->ctx_menu_stack[i].pos =
         i == 0 ? this->ctx_menus[this->ctx_menu_idx].get_sel_item_pos()
                : this->ctx_menu_stack[i - 1].get_sel_item_pos();
-    this->ctx_menu_stack[i].locale_updated(this->renderer);
+    this->ctx_menu_stack[i].locale_updated();
   }
 }
 
@@ -193,13 +180,11 @@ error_code Manager::open_export_ctx_menu() noexcept {
 
   widget::ContextMenu ctx_menu{};
   ctx_menu.pos = this->ctx_menus[FILE_CTX_ID].get_sel_item_pos();
-  TRY(ctx_menu.push_item(cfg::locale::TextId::PNG_EXPORT, this->renderer, []() {
+  TRY(ctx_menu.push_item(cfg::locale::TextId::PNG_EXPORT, []() {
     presenter::close_ctx_menus();
     presenter::export_to_png();
   }));
-  TRY(ctx_menu.push_item(
-      cfg::locale::TextId::JPG_EXPORT, this->renderer, nullptr
-  ));
+  TRY(ctx_menu.push_item(cfg::locale::TextId::JPG_EXPORT, nullptr));
 
   return this->ctx_menu_stack.push_back(std::move(ctx_menu));
 }

@@ -51,6 +51,7 @@ set(view_srcs src/view/sdl3/manager.cpp
   # Boxes
   src/view/sdl3/box/draw.cpp
   src/view/sdl3/box/menu.cpp
+  src/view/sdl3/box/preview.cpp
   src/view/sdl3/box/status.cpp
   src/view/sdl3/box/timeline.cpp
   src/view/sdl3/box/tool.cpp

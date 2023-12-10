@@ -26,8 +26,8 @@ public:
   CachedTextures& operator=(CachedTextures&& rhs) noexcept = delete;
   ~CachedTextures() noexcept = default;
 
-  void init(const Renderer& renderer) noexcept;
-  void locale_updated(const Renderer& renderer) noexcept;
+  void init() noexcept;
+  void locale_updated() noexcept;
 
   [[nodiscard]] const Texture& get_char_texture(c8 chr) const noexcept;
   [[nodiscard]] const Texture& get_number_texture(i32 num) const noexcept;

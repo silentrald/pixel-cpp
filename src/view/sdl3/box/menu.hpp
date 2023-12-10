@@ -24,19 +24,18 @@ public:
   ~MenuBox() noexcept override = default;
   MenuBox& operator=(MenuBox&&) noexcept = default;
 
-  [[nodiscard]] error_code push_menu_btn(
-      cfg::locale::TextId text_id, const Renderer& renderer, void (*listener)()
-  ) noexcept;
+  [[nodiscard]] error_code
+  push_menu_btn(cfg::locale::TextId text_id, void (*listener)()) noexcept;
 
   [[nodiscard]] const frect& get_btn_rect(usize index) const noexcept;
   [[nodiscard]] usize get_btns_size() const noexcept;
 
   void resize(const frect& rect) noexcept override;
   void reset() noexcept override;
-  void locale_updated(const Renderer& renderer) noexcept override;
+  void locale_updated() noexcept override;
   void input(const event::Input& evt, InputData& data) noexcept override;
-  void update() noexcept override;
-  void render(const Renderer& renderer) noexcept override;
+  void update(f32 delta) noexcept override;
+  void render() noexcept override;
 
 private:
   struct MenuBtn {

@@ -49,15 +49,15 @@ void Button::reset() noexcept {
   this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::NORMAL;
 }
 
-void Button::unfocused(const Renderer& _renderer) noexcept {
+void Button::unfocused() noexcept {
   this->focused = false;
 }
 
-void Button::locale_updated(const Renderer& renderer) noexcept {
+void Button::locale_updated() noexcept {
   // Do nothing UwU
 }
 
-void Button::input(const event::Input& evt, InputData& _data) noexcept {
+void Button::input(const event::Input& evt, InputData& data) noexcept {
   if ((this->info & input::BtnMask::STATES) == input::BtnState::DISABLED) {
     return;
   }
@@ -77,6 +77,8 @@ void Button::input(const event::Input& evt, InputData& _data) noexcept {
 
   case input::MouseState::UP:
     this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::DOWN;
+    data.left_click = true;
+    // TODO: Just remove listener and use the InputData object instead
     if (this->left_click_listener) {
       this->left_click_listener();
     }
@@ -94,6 +96,8 @@ void Button::input(const event::Input& evt, InputData& _data) noexcept {
 
   case input::MouseState::UP:
     this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::DOWN;
+    data.right_click = true;
+    // TODO: Just remove listener and use the InputData object instead
     if (this->right_click_listener) {
       this->right_click_listener();
     }
@@ -106,9 +110,7 @@ void Button::input(const event::Input& evt, InputData& _data) noexcept {
   }
 }
 
-void Button::key_input(
-    event::KeyPress& keypress, const Renderer& _renderer
-) noexcept {
+void Button::key_input(event::KeyPress& keypress) noexcept {
   if (((this->info & input::BtnMask::STATES) == input::BtnState::DISABLED) ||
       this->left_click_listener == nullptr || !this->focused) {
     keypress.to_next_section();
@@ -130,23 +132,23 @@ void Button::key_input(
   }
 }
 
-void Button::update() noexcept {
+void Button::update(f32 _delta) noexcept {
   // Do nothing UwU
 }
 
-void Button::render(const Renderer& renderer) noexcept {
+void Button::render() noexcept {
   // Draw bg
-  renderer.set_color(cfg::theme::get_button_color(this->info));
-  renderer.fill_rect(this->rect);
+  renderer::set_color(cfg::theme::get_button_color(this->info));
+  renderer::fill_rect(this->rect);
 
   // Draw Outline
   if (this->focused) {
-    renderer.set_color({0x00, 0x00, 0x00, 0xff});
-    renderer.draw_rect(this->rect);
+    renderer::set_color({0x00, 0x00, 0x00, 0xff});
+    renderer::draw_rect(this->rect);
   }
 
   // Draw tex
-  renderer.render_texture(this->tex, this->tex_rect);
+  renderer::render_texture(this->tex, this->tex_rect);
 }
 
 } // namespace view::sdl3::widget

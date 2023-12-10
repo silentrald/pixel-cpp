@@ -13,10 +13,10 @@ namespace view::sdl3::widget {
 const fvec PADDING = {8.0F, 2.0F};
 
 error_code MenuBox::push_menu_btn(
-    cfg::locale::TextId text_id, const Renderer& renderer, void (*listener)()
+    cfg::locale::TextId text_id, void (*listener)()
 ) noexcept {
   Text text{};
-  text.set_text(text_id, renderer);
+  text.set_text(text_id);
 
   fvec off{this->rect.pos};
   if (!this->btns.is_empty()) {
@@ -64,10 +64,10 @@ void MenuBox::reset() noexcept {
   }
 }
 
-void MenuBox::locale_updated(const Renderer& renderer) noexcept {
+void MenuBox::locale_updated() noexcept {
   fvec off = this->rect.pos;
   for (i32 i = 0; i < this->btns.get_size(); ++i) {
-    this->btns[i].text.locale_updated(renderer);
+    this->btns[i].text.locale_updated();
     this->btns[i].rect.pos = off;
     this->btns[i].rect.size = this->btns[i].text.rect.size + PADDING * 2.0F;
   }
@@ -107,22 +107,22 @@ void MenuBox::input(const event::Input& evt, InputData& data) noexcept {
   }
 }
 
-void MenuBox::update() noexcept {
+void MenuBox::update(f32 _delta) noexcept {
   // Do nothing UwU
 }
 
-void MenuBox::render(const Renderer& renderer) noexcept {
+void MenuBox::render() noexcept {
   // Draw bg
-  renderer.set_color({0x44, 0x44, 0xff, 0xff});
-  renderer.fill_rect(this->rect);
+  renderer::set_color({0x44, 0x44, 0xff, 0xff});
+  renderer::fill_rect(this->rect);
 
   for (i32 i = 0; i < this->btns.get_size(); ++i) {
-    renderer.set_color(cfg::theme::get_menu_btn_color(
+    renderer::set_color(cfg::theme::get_menu_btn_color(
         this->selected == i ? input::BtnState::HOVER : this->btns[i].state
     ));
-    renderer.fill_rect(this->btns[i].rect);
+    renderer::fill_rect(this->btns[i].rect);
 
-    this->btns[i].text.render(renderer);
+    this->btns[i].text.render();
   }
 }
 
