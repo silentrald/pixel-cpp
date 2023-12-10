@@ -41,10 +41,11 @@ struct Model {
   //
   cfg::locale::Locale locale = cfg::locale::Locale::ENGLISH;
   tool::Type tool = tool::Type::PENCIL;
-  u32 frame_id = 1U;
-  u32 layer_index = 0U;
-  u32 selected_layer = 0U;
-  u32 img_id = 1U;
+  usize frame_index = 0U;
+  usize layer_index = 0U;
+  usize selected_frame = 0U;
+  usize selected_layer = 0U;
+  usize img_id = 1U;
   rgba8 fg_color{0x00, 0x00, 0x00, 0xff};
   rgba8 bg_color{0xff, 0xff, 0xff, 0xff};
   // NOTE: ds::vector<bool> is not optimized like std::vector<bool>

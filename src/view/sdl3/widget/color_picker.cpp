@@ -46,7 +46,7 @@ void ColorPicker::update() noexcept {
   //
 }
 
-void ColorPicker::render(const Renderer& renderer) const noexcept {
+void ColorPicker::render(const Renderer& renderer) noexcept {
   renderer.set_color(this->color);
   renderer.fill_rect(this->rect);
 

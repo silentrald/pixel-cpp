@@ -18,6 +18,7 @@
 #include "types.hpp"
 #include "view/modal.hpp"
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -143,6 +144,18 @@ void presenter::key_down_event(
     handle_unselect();
     break;
 
+  case cfg::ShortcutKey::TIMELINE_NEXT_FRAME:
+    if (model_.frame_index < model_.anim.get_frame_count() - 1U) {
+      presenter::set_active_image(model_.frame_index + 1U, model_.layer_index);
+    }
+    break;
+
+  case cfg::ShortcutKey::TIMELINE_PREV_FRAME:
+    if (model_.frame_index > 0U) {
+      presenter::set_active_image(model_.frame_index - 1U, model_.layer_index);
+    }
+    break;
+
   default:
     // Do nothing
     break;
@@ -156,39 +169,51 @@ void presenter::new_file() noexcept {
   );
 }
 
-void presenter::set_active_image(u32 frame_id, i32 layer_index) noexcept {
-  logger::info("Selected (Frame %u, Layer %d)", frame_id, layer_index);
+void presenter::set_active_image(u32 frame_index, i32 layer_index) noexcept {
+  if (model_.frame_index == frame_index && model_.layer_index == layer_index) {
+    return;
+  }
 
-  history::Action action{history::ActionType::CHANGE_SELECTION};
-  action.change_selection.prev_frame_id = model_.frame_id;
-  action.change_selection.prev_layer_index = model_.layer_index;
-  action.change_selection.frame_id = frame_id;
-  action.change_selection.layer_index = layer_index;
-  caretaker_.prepare_push_action();
-  caretaker_.push_action(std::move(action));
+  logger::info("Selected (Frame %u, Layer %d)", frame_index, layer_index);
 
-  model_.frame_id = frame_id;
+  model_.frame_index = frame_index;
   model_.layer_index = layer_index;
-  auto id = model_.anim.get_image_id(frame_id, layer_index);
+  auto id = model_.anim.get_image_id(frame_index, layer_index);
   if (id != model_.img_id) {
-    TRY_ABORT(
-        model_.anim.write_pixels_to_disk(model_.img_id),
-        "Could not write to disk"
-    );
+    if (model_.img_id > 0U) {
+      TRY_ABORT(
+          model_.anim.write_pixels_to_disk(model_.img_id),
+          "Could not write to disk"
+      );
+    }
     model_.img_id = id;
   }
-  model_.img = *TRY_ABORT_RET(
-      model_.anim.get_image(model_.img_id), "Could not read anim"
-  );
+
+  if (model_.img_id > 0U) {
+    model_.img = *TRY_ABORT_RET(
+        model_.anim.get_image(model_.img_id), "Could not read anim"
+    );
+  }
 
   update_canvas_textures();
 
-  view_.set_active_on_timeline(frame_id, layer_index);
+  view_.set_active_on_timeline(frame_index, layer_index);
 }
 
 void presenter::set_selected_layer(u32 selected_layer) noexcept {
   model_.selected_layer = selected_layer;
-  /* std::clamp(selected_layer, 0U, model_.anim.get_layer_count()); */
+}
+
+void presenter::set_selected_frame(usize selected_frame) noexcept {
+  model_.selected_frame = selected_frame;
+}
+
+void presenter::set_cursor_position(fvec mouse) noexcept {
+  model_.curr_pos.x =
+      static_cast<i32>(std::floor((mouse.x - model_.rect.x) / model_.scale));
+  model_.curr_pos.y =
+      static_cast<i32>(std::floor((mouse.y - model_.rect.y) / model_.scale));
+  view_.set_cursor_canvas_pos(model_.curr_pos);
 }
 
 void presenter::debug_callback() noexcept {

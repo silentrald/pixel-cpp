@@ -7,9 +7,9 @@
 
 #include "./timeline.hpp"
 #include "core/logger/logger.hpp"
+#include "math.hpp"
 #include "presenter/presenter.hpp"
 #include "view/input.hpp"
-#include <cstdint>
 
 namespace view::sdl3::widget {
 
@@ -20,14 +20,17 @@ inline const f32 LINE_WIDTH = 4.0F;
 inline const f32 LAYERS_NAME_PADDING_X = 4.0F;
 
 TimelineBox::TimelineBox() noexcept
-    : start_frame(1U),
-      end_frame(1U),
+    : start_frame(0U),
+      end_frame(0U),
       active_layer(0U),
-      active_frame(1U),
-      selected_layer(0U) {}
+      active_frame(0U),
+      selected_layer(0U),
+      selected_frame(0U) {}
 
-void TimelineBox::init(const Renderer& renderer) noexcept {
-  // TODO:
+error_code TimelineBox::init(const Renderer& renderer) noexcept {
+  // TODO: Only temps, grow this for every add layer
+  TRY(this->rects.resize(8U));
+  return error_code::OK;
 }
 
 error_code TimelineBox::insert_layer_info(
@@ -70,7 +73,7 @@ error_code TimelineBox::insert_layer_info(
   ));
 
   // NOTE: Underflows
-  for (index = index - 1U; index < UINT32_MAX; --index) {
+  for (index = index - 1U; index < USIZE_MAX; --index) {
     text_rect.y += renderer.get_text_height() + LINE_WIDTH;
     this->layers[index].textbox.rect.pos = text_rect.pos;
     this->layers[index].textbox.tex_rect.pos = {
@@ -82,6 +85,10 @@ error_code TimelineBox::insert_layer_info(
 
 void TimelineBox::set_layer_visible(usize index, bool visible) noexcept {
   this->layers[index].visible = visible;
+}
+
+void TimelineBox::set_anim(const draw::Anim* anim) noexcept {
+  this->anim = anim;
 }
 
 void TimelineBox::clear_layers() noexcept {
@@ -203,18 +210,18 @@ void TimelineBox::handle_mouse_right(
   }
 
   frect click_rect{};
-  auto height = this->layers.front().textbox.h + LINE_WIDTH;
+  auto size = this->layers.front().textbox.h + LINE_WIDTH;
 
   click_rect.x = this->x;
-  click_rect.y = this->y + height;
+  click_rect.y = this->y + size;
   click_rect.w = LAYERS_WIDTH;
-  click_rect.h = this->h - height;
+  click_rect.h = this->h - size;
   // NOTE: reimplement for overflow
   if (click_rect.has_point(evt.mouse.pos)) {
     this->selected_layer =
         this->layers.get_size() -
         std::clamp(
-            (usize)((evt.mouse.pos.y - click_rect.y) / height), 0U,
+            static_cast<usize>((evt.mouse.pos.y - click_rect.y) / size), 0U,
             this->layers.get_size()
         );
     presenter::set_selected_layer(this->selected_layer);
@@ -223,17 +230,17 @@ void TimelineBox::handle_mouse_right(
   }
 
   // NOTE: reimplement for overflow
-  click_rect.x = LAYERS_WIDTH + LINE_WIDTH;
+  click_rect.x = this->x + LAYERS_WIDTH + LINE_WIDTH;
   click_rect.w = this->w - click_rect.x;
   if (!click_rect.has_point(evt.mouse.pos)) {
     return;
   }
-  this->selected_layer = this->layers.get_size() -
-                         std::clamp(
-                             (usize)((evt.mouse.pos.y - click_rect.y) / height),
-                             0U, this->layers.get_size()
-                         );
-  presenter::set_selected_layer(this->selected_layer);
+  size = this->layers.front().textbox.h;
+  this->selected_frame = std::clamp(
+      static_cast<usize>((evt.mouse.pos.x - click_rect.x) / size), 0U,
+      this->anim->get_frame_count()
+  );
+  presenter::set_selected_frame(this->selected_frame);
   presenter::open_timeline_ctx_menu();
 }
 
@@ -241,11 +248,12 @@ void TimelineBox::update() noexcept {
   //
 }
 
-void TimelineBox::render(const Renderer& renderer) const noexcept {
+void TimelineBox::render(const Renderer& renderer) noexcept {
   renderer.set_color({0x44, 0x44, 0xff, 0xff});
   renderer.fill_rect(this->rect);
 
   this->render_grid(renderer);
+  this->render_frame_numbers(renderer);
   this->render_frames(renderer);
   this->render_layers(renderer);
 }
@@ -287,18 +295,94 @@ void TimelineBox::render_grid(const Renderer& renderer) const noexcept {
   renderer.fill_rect(line);
 }
 
-void TimelineBox::render_frames(const Renderer& renderer) const noexcept {
+void TimelineBox::render_frame_numbers(const Renderer& renderer
+) const noexcept {
   fvec off{
       .x =
           this->rect.x + LAYERS_WIDTH + LINE_WIDTH + renderer.get_text_height(),
       .y = this->rect.y};
-  for (i32 i = this->start_frame; i <= this->end_frame; ++i) {
+  for (usize i = this->start_frame; i <= this->end_frame; ++i) {
     (void)renderer.render_number(i, off);
-    off.x += renderer.get_text_height() + LINE_WIDTH; // SQUARE
+    off.x += renderer.get_text_height() + 4.0F; // SQUARE
   }
 }
 
-void TimelineBox::render_layers(const Renderer& renderer) const noexcept {
+void TimelineBox::render_frames(const Renderer& renderer) noexcept {
+  if (this->anim == nullptr || this->anim->get_layer_count() == 0U) {
+    return;
+  }
+
+  renderer.set_color({0x00, 0x00, 0x00, 0xff});
+
+  frect def_rect{.pos = this->pos};
+  def_rect.w = def_rect.h = renderer.get_text_height() - 4.0F;
+  def_rect.x += LAYERS_WIDTH + LINE_WIDTH + 2.0F;
+  def_rect.y += renderer.get_text_height() + LINE_WIDTH + 2.0F;
+
+  // Reverse the order
+  for (usize l = this->anim->get_layer_count() - 1U; l < USIZE_MAX; --l) {
+    this->rects[l].pos = def_rect.pos;
+    this->rects[l].w = 0.0F;
+    this->rects[l].h = def_rect.h;
+    def_rect.y += renderer.get_text_height() + LINE_WIDTH;
+  }
+
+  usize id = 0U;
+  auto curr_iter = this->anim->get_frame_iter();
+
+  // Handle first frame
+  for (usize l = 0; l < this->anim->get_layer_count(); ++l) {
+    if (curr_iter.get_image_id(l) != 0U) {
+      rects[l].w += def_rect.w;
+      continue;
+    }
+
+    def_rect.pos = rects[l].pos;
+    rects[l].x += def_rect.w;
+    renderer.draw_rect(def_rect);
+  }
+  ++curr_iter;
+
+  for (auto prev_iter = this->anim->get_frame_iter(); curr_iter;
+       ++curr_iter, ++prev_iter) {
+    for (usize l = 0; l < this->anim->get_layer_count(); ++l) {
+      id = curr_iter.get_image_id(l);
+      if (id == 0U) {
+        // Empty image
+        if (rects[l].w > 0.0F) {
+          renderer.fill_rect(rects[l]);
+        }
+
+        def_rect.x = rects[l].x + rects[l].w + 8.0F;
+        def_rect.y = rects[l].y;
+        rects[l].x = def_rect.x + def_rect.w;
+        rects[l].w = 0.0F;
+
+        renderer.draw_rect(def_rect);
+      } else if (id != prev_iter.get_image_id(l)) {
+        // New id
+        if (rects[l].w > 0.0F) {
+          renderer.fill_rect(rects[l]);
+        }
+
+        rects[l].x += rects[l].w + 8.0F;
+        rects[l].w = def_rect.w;
+      } else {
+        // Extend Prev id
+        rects[l].w += renderer.get_text_height();
+      }
+    }
+  }
+
+  --curr_iter;
+  for (usize l = 0; l < this->anim->get_layer_count(); ++l) {
+    if (curr_iter.get_image_id(l) != 0U) {
+      renderer.fill_rect(rects[l]);
+    }
+  }
+}
+
+void TimelineBox::render_layers(const Renderer& renderer) noexcept {
   if (this->layers.is_empty()) {
     return;
   }

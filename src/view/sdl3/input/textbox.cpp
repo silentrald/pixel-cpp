@@ -102,7 +102,7 @@ void Textbox::update() noexcept {
   this->cursor_blink_tick = (this->cursor_blink_tick + 1) % 120;
 }
 
-void Textbox::render(const Renderer& renderer) const noexcept {
+void Textbox::render(const Renderer& renderer) noexcept {
   renderer.set_color({0xff, 0xff, 0xff, 0xff});
   renderer.fill_rect(this->rect);
 

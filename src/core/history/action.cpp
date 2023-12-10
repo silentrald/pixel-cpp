@@ -64,7 +64,7 @@ void Action::undo(Model& model) const noexcept {
         "Anim remove layer"
     );
     model.layer_index = this->insert_layer.prev_layer_index;
-    model.img_id = model.anim.get_image_id(model.frame_id, model.layer_index);
+    model.img_id = model.anim.get_image_id(model.frame_index, model.layer_index);
     model.img = *TRY_ABORT_RET(model.anim.get_image(model.img_id), "Anim Read");
     break;
 
@@ -75,9 +75,9 @@ void Action::undo(Model& model) const noexcept {
     break;
 
   case ActionType::CHANGE_SELECTION:
-    model.frame_id = this->change_selection.prev_frame_id;
+    model.frame_index = this->change_selection.prev_frame_index;
     model.layer_index = this->change_selection.prev_layer_index;
-    model.img_id = model.anim.get_image_id(model.frame_id, model.layer_index);
+    model.img_id = model.anim.get_image_id(model.frame_index, model.layer_index);
     model.img = *TRY_ABORT_RET(model.anim.get_image(model.img_id), "Anim Read");
     break;
 
@@ -102,7 +102,7 @@ void Action::redo(Model& model) const noexcept {
         model.anim.insert_layer(this->insert_layer.layer_index),
         "Anim insert layer"
     );
-    model.img_id = model.anim.get_image_id(model.frame_id, model.layer_index);
+    model.img_id = model.anim.get_image_id(model.frame_index, model.layer_index);
     model.img = *TRY_ABORT_RET(model.anim.get_image(model.img_id), "Anim Read");
     break;
 
@@ -113,9 +113,9 @@ void Action::redo(Model& model) const noexcept {
     break;
 
   case ActionType::CHANGE_SELECTION:
-    model.frame_id = this->change_selection.frame_id;
+    model.frame_index = this->change_selection.frame_index;
     model.layer_index = this->change_selection.layer_index;
-    model.img_id = model.anim.get_image_id(model.frame_id, model.layer_index);
+    model.img_id = model.anim.get_image_id(model.frame_index, model.layer_index);
     model.img = *TRY_ABORT_RET(model.anim.get_image(model.img_id), "Anim Read");
     break;
 

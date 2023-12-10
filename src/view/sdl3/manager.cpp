@@ -80,7 +80,7 @@ error_code Manager::init() noexcept {
       cfg::locale::TextId::EDIT, this->renderer, presenter::toggle_edit_ctx_menu
   ));
 
-  this->timeline_box.init(this->renderer);
+  TRY(this->timeline_box.init(this->renderer));
 
   // NOTE: Locale
   const auto* text = "Change Language";
@@ -126,32 +126,6 @@ const frect& Manager::get_canvas_rect() const noexcept {
   return this->draw_box.draw_rect;
 }
 
-void Manager::set_draw_size(ivec size) noexcept {
-  auto code = this->draw_box.init_textures(this->renderer, size);
-  if (is_error(code)) {
-    logger::fatal("Could not initialize draw box");
-    std::abort();
-  }
-
-  this->status_box.size = size;
-}
-
-void Manager::set_canvas_rect(const frect& canvas_rect) noexcept {
-  this->draw_box.draw_rect = canvas_rect;
-}
-
-void Manager::set_cursor_canvas_pos(ivec pos) noexcept {
-  this->status_box.pos = pos;
-}
-
-void Manager::set_fg_color(rgba8 color) noexcept {
-  this->fg_color.set_color(color, this->renderer);
-}
-
-void Manager::set_bg_color(rgba8 color) noexcept {
-  this->bg_color.set_color(color, this->renderer);
-}
-
 Texture& Manager::get_bg_texture() noexcept {
   return this->draw_box.get_bg_texture();
 }
@@ -180,6 +154,40 @@ Texture& Manager::get_select2_texture() noexcept {
   return this->draw_box.get_select2_texture();
 }
 
+// === Setters === //
+
+void Manager::set_draw_size(ivec size) noexcept {
+  auto code = this->draw_box.init_textures(this->renderer, size);
+  if (is_error(code)) {
+    logger::fatal("Could not initialize draw box");
+    std::abort();
+  }
+
+  this->status_box.size = size;
+}
+
+void Manager::set_canvas_rect(const frect& canvas_rect) noexcept {
+  this->draw_box.draw_rect = canvas_rect;
+}
+
+void Manager::set_cursor_canvas_pos(ivec pos) noexcept {
+  this->status_box.pos = pos;
+}
+
+void Manager::set_fg_color(rgba8 color) noexcept {
+  this->fg_color.set_color(color, this->renderer);
+}
+
+void Manager::set_bg_color(rgba8 color) noexcept {
+  this->bg_color.set_color(color, this->renderer);
+}
+
+void Manager::set_anim(const draw::Anim* anim) noexcept {
+  this->timeline_box.set_anim(anim);
+}
+
+// === Modifiers === //
+
 error_code
 Manager::insert_layer(usize index, const draw::LayerInfo& layer_info) noexcept {
   return this->timeline_box.insert_layer_info(
@@ -196,10 +204,16 @@ void Manager::clear_layers() noexcept {
 }
 
 void Manager::set_active_on_timeline(
-    usize frame_id, usize layer_index
+    usize frame_index, usize layer_index
 ) noexcept {
-  this->timeline_box.active_frame = frame_id;
+  this->timeline_box.active_frame = frame_index;
   this->timeline_box.active_layer = layer_index;
+}
+
+void Manager::set_frame_range(usize start_frame, usize end_frame) noexcept {
+  assert(start_frame <= end_frame);
+  this->timeline_box.start_frame = start_frame;
+  this->timeline_box.end_frame = end_frame;
 }
 
 void Manager::run() noexcept {

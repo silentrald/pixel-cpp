@@ -195,7 +195,7 @@ void FileModal::update() noexcept {
   }
 }
 
-void FileModal::render(const Renderer& renderer) const noexcept {
+void FileModal::render(const Renderer& renderer) noexcept {
   renderer.set_color({0xdd, 0xdd, 0xdd, 0xff});
   renderer.fill_rect(this->rect);
 

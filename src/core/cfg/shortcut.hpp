@@ -42,6 +42,9 @@ enum class ShortcutKey : u32 {
   TEXT_ID(ACTION, UNDO),
   TEXT_ID(ACTION, REDO),
   TEXT_ID(ACTION, UNSELECT),
+
+  TEXT_ID(TIMELINE, NEXT_FRAME),
+  TEXT_ID(TIMELINE, PREV_FRAME),
 };
 
 class Shortcut {

@@ -26,12 +26,13 @@ public:
   TimelineBox& operator=(TimelineBox&&) noexcept = default;
   ~TimelineBox() noexcept override = default;
 
-  void init(const Renderer& renderer) noexcept;
+  [[nodiscard]] error_code init(const Renderer& renderer) noexcept;
 
   [[nodiscard]] error_code insert_layer_info(
       usize index, const draw::LayerInfo& layer_info, const Renderer& renderer
   ) noexcept;
   void set_layer_visible(usize index, bool visible) noexcept;
+  void set_anim(const draw::Anim* anim) noexcept;
   void clear_layers() noexcept;
 
   void resize(const frect& rect) noexcept override;
@@ -39,7 +40,7 @@ public:
   void locale_updated(const Renderer& renderer) noexcept override;
   void input(const event::Input& evt, InputData& data) noexcept override;
   void update() noexcept override;
-  void render(const Renderer& renderer) const noexcept override;
+  void render(const Renderer& renderer) noexcept override;
 
   usize start_frame;
   usize end_frame;
@@ -48,9 +49,11 @@ public:
   usize active_frame;
   // NOTE: Selected layer/frame maybe use a vector for this one
   usize selected_layer;
-  /* usize selected_frame; */
+  usize selected_frame;
 
 private:
+  const draw::Anim* anim = nullptr;
+  ds::vector<frect> rects{};
   struct Layer {
     Textbox textbox{};
     bool visible = true;
@@ -62,8 +65,9 @@ private:
   void handle_mouse_right(const event::Input& evt, InputData& data) noexcept;
 
   void render_grid(const Renderer& renderer) const noexcept;
-  void render_frames(const Renderer& renderer) const noexcept;
-  void render_layers(const Renderer& renderer) const noexcept;
+  void render_frame_numbers(const Renderer& renderer) const noexcept;
+  void render_frames(const Renderer& renderer) noexcept;
+  void render_layers(const Renderer& renderer) noexcept;
 };
 
 } // namespace view::sdl3::widget

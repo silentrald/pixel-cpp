@@ -40,7 +40,7 @@ public:
       event::KeyPress& keypress, const Renderer& renderer
   ) noexcept override;
   void update() noexcept override;
-  void render(const Renderer& renderer) const noexcept override;
+  void render(const Renderer& renderer) noexcept override;
 
 private:
   i32 cursor_blink_tick = 0;

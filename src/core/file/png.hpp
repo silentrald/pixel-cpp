@@ -18,7 +18,7 @@ namespace file {
  **/
 class Png {
 public:
-  void export_frame(const draw::Anim& anim, u32 frame_id, const c8* path)
+  void export_frame(const draw::Anim& anim, u32 frame_index, const c8* path)
       const noexcept;
 
 private:

@@ -16,21 +16,21 @@ namespace draw {
 class Frame {
 public:
   Frame() noexcept = default;
-  Frame(usize* ptr, usize layer_count, usize id) noexcept;
+  Frame(usize* ptr, usize layer_count, usize index) noexcept;
   Frame(const Frame&) noexcept = default;
   Frame& operator=(const Frame&) noexcept = default;
   Frame(Frame&&) noexcept = default;
   Frame& operator=(Frame&&) noexcept = default;
   ~Frame() noexcept = default;
 
-  [[nodiscard]] u32 get_id() const noexcept;
-  [[nodiscard]] u32 get_image_id(usize index) const noexcept;
-  [[nodiscard]] i32 get_layer_count() const noexcept;
+  [[nodiscard]] usize get_index() const noexcept;
+  [[nodiscard]] usize get_image_id(usize index) const noexcept;
+  [[nodiscard]] usize get_layer_count() const noexcept;
 
 private:
-  u32* ptr = nullptr;
-  i32 layer_count = 0;
-  u32 id = 0U;
+  usize* ptr = nullptr;
+  usize layer_count = 0;
+  usize index = 0U;
 };
 
 } // namespace draw

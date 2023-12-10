@@ -16,29 +16,30 @@ namespace draw {
 
 class FrameIter {
 public:
-  FrameIter() noexcept = default;
+  FrameIter() noexcept;
   FrameIter(
       usize* ptr, usize frame_count, usize frame_capacity, usize layer_capacity
   ) noexcept;
 
   FrameIter& operator++() noexcept;
+  FrameIter& operator--() noexcept;
 
-  [[nodiscard]] usize get_id() const noexcept;
+  [[nodiscard]] usize get_index() const noexcept;
   [[nodiscard]] usize get_image_id(usize layer_index) const noexcept;
 
   explicit operator bool() const noexcept;
 
 private:
-  usize* id_ptr = nullptr;
-  usize* frame_ptr = nullptr;
-  usize size = 0U; // Use this as a index counter
-  usize capacity = 0U;
+  usize* ptr;
+  usize index;
+  usize size;
+  usize next_frame;
 };
 
 // SOA Timeline / AOS Images Info
 class TimelineInfo {
 public:
-  TimelineInfo() noexcept = default;
+  TimelineInfo() noexcept;
   TimelineInfo(const TimelineInfo&) noexcept = delete;
   TimelineInfo& operator=(const TimelineInfo&) noexcept = delete;
 
@@ -46,15 +47,17 @@ public:
   [[nodiscard]] error_code
   load_init(usize layer_count, usize frame_count) noexcept;
   void load_layer(usize index, LayerInfo layer_info) noexcept;
-  void load_frame(usize index, usize id, usize* image_ids) noexcept;
+  void load_frame(usize index, usize* image_ids) noexcept;
 
   TimelineInfo(TimelineInfo&& rhs) noexcept;
   TimelineInfo& operator=(TimelineInfo&& rhs) noexcept;
   [[nodiscard]] error_code copy(const TimelineInfo& other) noexcept;
   ~TimelineInfo() noexcept;
 
+  // === Accessors === //
+
   [[nodiscard]] usize
-  get_image_id(usize frame_id, usize layer_index) const noexcept;
+  get_image_id(usize frame_index, usize layer_index) const noexcept;
 
   [[nodiscard]] usize get_layer_count() const noexcept;
   [[nodiscard]] usize get_frame_count() const noexcept;
@@ -64,13 +67,19 @@ public:
   [[nodiscard]] const c8* get_layer_name(usize index) const noexcept;
   [[nodiscard]] bool is_layer_visible(usize index) const noexcept;
 
-  [[nodiscard]] Frame get_frame(usize id) const noexcept;
+  [[nodiscard]] Frame get_frame(usize index) const noexcept;
 
   [[nodiscard]] usize get_timeline_alloc_size() const noexcept;
 
   [[nodiscard]] FrameIter get_frame_iter() const noexcept;
 
-  [[nodiscard]] error_code insert_layer(usize index, usize layer_id) noexcept;
+  // === Modifiers === //
+
+  [[nodiscard]] error_code insert_layer(usize layer_index) noexcept;
+  [[nodiscard]] error_code insert_frame(usize frame_index) noexcept;
+  void
+  set_image_id(usize frame_index, usize layer_index, usize img_id) noexcept;
+
   void remove_layer(usize index) noexcept;
   bool toggle_layer_visibility(usize index) noexcept;
   void set_layer_visibility(usize index, bool visibility) noexcept;
@@ -82,14 +91,14 @@ public:
 #endif
 
 private:
-  usize* timeline = nullptr;
-  LayerInfo* layer_info = nullptr;
-  usize layer_count = 0U;
-  usize frame_count = 0U;
-  usize layer_capacity = 0U;
-  usize frame_capacity = 0U;
-  usize timeline_alloc_size = 0U;
-  usize layer_info_alloc_size = 0U;
+  usize* timeline;
+  LayerInfo* layer_info;
+  usize layer_count;
+  usize frame_count;
+  usize layer_capacity;
+  usize frame_capacity;
+  usize timeline_alloc_size;
+  usize layer_info_alloc_size;
 
   // === Copy Helpers === //
   [[nodiscard]] error_code copy_empty(const TimelineInfo& other) noexcept;
@@ -107,6 +116,8 @@ private:
   ) noexcept;
   [[nodiscard]] error_code reallocate_timeline_on_layer(usize new_layer_capacity
   ) noexcept;
+  [[nodiscard]] error_code reallocate_timeline_on_frame(usize new_frame_capacity
+  ) noexcept;
 
   [[nodiscard]] error_code allocate_layer_info(usize layer_capacity) noexcept;
   [[nodiscard]] error_code reallocate_layer_info(usize new_layer_capacity
@@ -114,10 +125,10 @@ private:
 
   // === Private Accessors === //
 
-  [[nodiscard]] inline usize* get_frame_id_ptr() const noexcept;
-  [[nodiscard]] inline usize get_frame_id(u32 index) const noexcept;
-  [[nodiscard]] inline usize*
-  get_image_id_ptr(usize frame_index = 0U) const noexcept;
+  [[nodiscard]] inline usize get_frame_index(u32 index) const noexcept;
+  [[nodiscard]] inline usize* get_image_id_ptr(
+      usize frame_index = 0U, usize layer_index = 0U
+  ) const noexcept;
 };
 
 } // namespace draw

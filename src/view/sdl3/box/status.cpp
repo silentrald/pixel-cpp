@@ -31,7 +31,7 @@ void StatusBox::update() noexcept {
   //
 }
 
-void StatusBox::render(const Renderer& renderer) const noexcept {
+void StatusBox::render(const Renderer& renderer) noexcept {
   renderer.set_color({0x00, 0x88, 0x00, 0xff});
   renderer.fill_rect(this->rect);
 

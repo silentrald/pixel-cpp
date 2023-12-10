@@ -37,7 +37,7 @@ public:
       ivec size, usize image_count, usize layer_count, usize frame_count
   ) noexcept;
   void load_layer(usize index, LayerInfo layer_info) noexcept;
-  void load_frame(usize index, usize id, usize* image_ids) noexcept;
+  void load_frame(usize index, usize* image_ids) noexcept;
   [[nodiscard]] error_code
   load_image(usize index, usize id, data_ptr pixels) noexcept;
   [[nodiscard]] error_code load_finish() noexcept;
@@ -51,6 +51,8 @@ public:
 
   [[nodiscard]] bool has_point(ivec pos) const noexcept;
 
+  // === Accessors === //
+
   [[nodiscard]] ivec get_size() const noexcept;
   [[nodiscard]] i32 get_width() const noexcept;
   [[nodiscard]] i32 get_height() const noexcept;
@@ -60,42 +62,58 @@ public:
 
   [[nodiscard]] expected<Image> get_image(usize id) noexcept;
   [[nodiscard]] expected<Image>
-  get_image(usize frame_id, usize layer_index) noexcept;
+  get_image(usize frame_index, usize layer_index) noexcept;
   [[nodiscard]] Image get_image_fast(usize id) const noexcept;
   [[nodiscard]] Image
-  get_image_fast(usize frame_id, usize layer_index) const noexcept;
+  get_image_fast(usize frame_index, usize layer_index) const noexcept;
   [[nodiscard]] usize get_image_bytes_size() const noexcept;
 
   [[nodiscard]] expected<data_ptr> get_pixels(usize id) noexcept;
   [[nodiscard]] expected<data_ptr>
-  get_pixels(usize frame_id, usize layer_index) noexcept;
+  get_pixels(usize frame_index, usize layer_index) noexcept;
   [[nodiscard]] data_ptr get_pixels_fast(usize id) const noexcept;
   [[nodiscard]] data_ptr
-  get_pixels_fast(usize frame_id, usize layer_index) const noexcept;
+  get_pixels_fast(usize frame_index, usize layer_index) const noexcept;
   [[nodiscard]] error_code
   get_pixels_slow(usize id, data_ptr pixels) const noexcept;
   [[nodiscard]] error_code get_pixels_slow(
-      usize frame_id, usize layer_index, data_ptr pixels
+      usize frame_index, usize layer_index, data_ptr pixels
   ) const noexcept;
 
   [[nodiscard]] usize
-  get_image_id(usize frame_id, usize layer_index) const noexcept;
+  get_image_id(usize frame_index, usize layer_index) const noexcept;
 
   [[nodiscard]] const LayerInfo& get_layer_info(usize index) const noexcept;
   [[nodiscard]] const c8* get_layer_name(usize index) const noexcept;
   [[nodiscard]] bool is_layer_visible(usize index) const noexcept;
   void get_flatten(
-      usize frame_id, usize start_layer, usize end_layer,
+      usize frame_index, usize start_layer, usize end_layer,
       ds::vector<data_type>& pixels
   ) const noexcept;
 
   const std::string& get_name() noexcept;
 
+  // === Iterators === //
+
+  [[nodiscard]] FrameIter get_frame_iter() const noexcept;
+
+  // === Modifiers === //
+
   /**
    * @param index - where to insert the new layer
-   * @returns id of the newly created image on the layer
    **/
-  [[nodiscard]] expected<usize> insert_layer(usize index) noexcept;
+  [[nodiscard]] error_code insert_layer(usize index) noexcept;
+
+  [[nodiscard]] error_code insert_blank_frame(usize frame_index) noexcept;
+
+  /**
+   * Adds an image to the timeline position. The timeline value at that specific
+   *  position must be 0.
+   * @returns id of the image created
+   **/
+  [[nodiscard]] expected<usize>
+  create_image(usize frame_index, usize layer_index) noexcept;
+
   [[nodiscard]] error_code remove_layer(usize index) noexcept;
   bool toggle_layer_visibility(usize index) noexcept;
   void set_layer_visibility(usize index, bool visibility) noexcept;

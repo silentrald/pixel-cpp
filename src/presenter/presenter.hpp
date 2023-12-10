@@ -43,8 +43,10 @@ void window_resized() noexcept;
  **/
 void key_down_event(input::Keycode keycode, input::KeyMod key_mod) noexcept;
 
-void set_active_image(u32 frame_id, i32 layer_index) noexcept;
-void set_selected_layer(u32 selected_layer) noexcept;
+void set_active_image(u32 frame_index, i32 layer_index) noexcept;
+void set_selected_layer(usize selected_layer) noexcept;
+void set_selected_frame(usize selected_frame) noexcept;
+void set_cursor_position(fvec mouse) noexcept;
 
 void new_file() noexcept;
 
@@ -62,7 +64,8 @@ void close_ctx_menus() noexcept;
 
 void create_anim() noexcept;
 void toggle_visibility(i32 layer_index) noexcept;
-void add_at_selected_layer() noexcept;
+void insert_at_selected_layer() noexcept;
+void insert_at_selected_frame() noexcept;
 void undo_action() noexcept;
 void redo_action() noexcept;
 
@@ -76,6 +79,7 @@ void redo_action() noexcept;
  * @param pos - position relative to the canvas
  **/
 void canvas_mouse_event(const event::Input& evt) noexcept;
+void canvas_mouse_scroll_event(const event::Input& evt) noexcept;
 
 void set_pencil_tool() noexcept;
 void set_eraser_tool() noexcept;
