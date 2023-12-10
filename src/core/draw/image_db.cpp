@@ -19,7 +19,7 @@ inline const usize LAYER_HEADER_SIZE =
     ID_SIZE + NEXT_ELEM_SIZE + PREV_ELEM_SIZE;
 
 inline const usize ID_SENTINEL = 0U;
-inline const usize INDEX_SENTINEL = UINT32_MAX;
+inline const usize INDEX_SENTINEL = USIZE_MAX;
 
 ImageDb::ImageDb() noexcept
     : insert_index(INDEX_SENTINEL),

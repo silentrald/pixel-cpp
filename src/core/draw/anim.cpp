@@ -52,8 +52,8 @@ void Anim::load_layer(usize index, LayerInfo layer_info) noexcept {
   this->timeline.load_layer(index, layer_info);
 }
 
-void Anim::load_frame(usize index, usize id, usize* image_ids) noexcept {
-  this->timeline.load_frame(index, id, image_ids);
+void Anim::load_frame(usize index, usize* image_ids) noexcept {
+  this->timeline.load_frame(index, image_ids);
 }
 
 error_code Anim::load_image(usize index, usize id, data_ptr pixels) noexcept {
@@ -134,8 +134,8 @@ expected<Image> Anim::get_image(usize id) noexcept {
   return Image{pixels, this->size, this->type, id};
 };
 
-expected<Image> Anim::get_image(usize frame_id, usize layer_index) noexcept {
-  auto id = this->get_image_id(frame_id, layer_index);
+expected<Image> Anim::get_image(usize frame_index, usize layer_index) noexcept {
+  auto id = this->get_image_id(frame_index, layer_index);
   auto* pixels = *TRY_RET(this->images.get_pixels(id), {}, to_unexpected);
   return Image{pixels, this->size, this->type, id};
 }
@@ -144,8 +144,9 @@ Image Anim::get_image_fast(usize id) const noexcept {
   return Image{this->images.get_pixels_fast(id), this->size, this->type, id};
 }
 
-Image Anim::get_image_fast(usize frame_id, usize layer_index) const noexcept {
-  auto id = this->get_image_id(frame_id, layer_index);
+Image Anim::get_image_fast(usize frame_index, usize layer_index)
+    const noexcept {
+  auto id = this->get_image_id(frame_index, layer_index);
   return Image{this->images.get_pixels_fast(id), this->size, this->type, id};
 }
 
@@ -158,8 +159,8 @@ expected<data_ptr> Anim::get_pixels(usize id) noexcept {
 }
 
 expected<data_ptr>
-Anim::get_pixels(usize frame_id, usize layer_index) noexcept {
-  return this->images.get_pixels(this->get_image_id(frame_id, layer_index));
+Anim::get_pixels(usize frame_index, usize layer_index) noexcept {
+  return this->images.get_pixels(this->get_image_id(frame_index, layer_index));
 }
 
 data_ptr Anim::get_pixels_fast(usize id) const noexcept {
@@ -167,8 +168,9 @@ data_ptr Anim::get_pixels_fast(usize id) const noexcept {
 }
 
 data_ptr
-Anim::get_pixels_fast(usize frame_id, usize layer_index) const noexcept {
-  return this->images.get_pixels_fast(this->get_image_id(frame_id, layer_index)
+Anim::get_pixels_fast(usize frame_index, usize layer_index) const noexcept {
+  return this->images.get_pixels_fast(
+      this->get_image_id(frame_index, layer_index)
   );
 }
 
@@ -177,15 +179,15 @@ error_code Anim::get_pixels_slow(usize id, data_ptr pixels) const noexcept {
 }
 
 error_code Anim::get_pixels_slow(
-    usize frame_id, usize layer_index, data_ptr pixels
+    usize frame_index, usize layer_index, data_ptr pixels
 ) const noexcept {
   return this->images.get_pixels_slow(
-      this->get_image_id(frame_id, layer_index), pixels
+      this->get_image_id(frame_index, layer_index), pixels
   );
 }
 
-usize Anim::get_image_id(usize frame_id, usize layer_index) const noexcept {
-  return this->timeline.get_image_id(frame_id, layer_index);
+usize Anim::get_image_id(usize frame_index, usize layer_index) const noexcept {
+  return this->timeline.get_image_id(frame_index, layer_index);
 }
 
 const LayerInfo& Anim::get_layer_info(usize index) const noexcept {
@@ -201,10 +203,10 @@ bool Anim::is_layer_visible(usize index) const noexcept {
 }
 
 void Anim::get_flatten(
-    usize frame_id, usize start_layer, usize end_layer,
+    usize frame_index, usize start_layer, usize end_layer,
     ds::vector<data_type>& pixels
 ) const noexcept {
-  assert(frame_id != 0U);
+  assert(frame_index < this->get_frame_count());
   assert(
       pixels.get_size() ==
       this->size.x * this->size.y * get_color_type_size(this->type)
@@ -215,16 +217,22 @@ void Anim::get_flatten(
 
   // NOTE: Only supports rgba8 for now
   usize psize = this->size.x * this->size.y;
-  auto* dst_ptr = (rgba8*)pixels.get_data();
+  auto* dst_ptr = reinterpret_cast<rgba8*>(pixels.get_data());
   rgba8* src_ptr = nullptr;
-  auto frame = this->timeline.get_frame(frame_id);
+  usize id = 0U;
+  auto frame = this->timeline.get_frame(frame_index);
   for (usize i = start_layer; i <= end_layer; ++i) {
     if (!this->timeline.is_layer_visible(i)) {
       continue;
     }
 
+    id = frame.get_image_id(i);
+    if (id == 0U) {
+      continue;
+    }
+
     // NOTE: Might abort, must precall a load of images to cache
-    src_ptr = (rgba8*)this->images.get_pixels_fast(frame.get_image_id(i));
+    src_ptr = reinterpret_cast<rgba8*>(this->images.get_pixels_fast(id));
     // NOTE: Add blending calculations here
     for (i32 i = 0; i < psize; ++i) {
       // NOTE: Check for gpu libraries to offload this to the gpu
@@ -248,20 +256,37 @@ const std::string& Anim::get_name() noexcept {
   return this->name;
 }
 
+FrameIter Anim::get_frame_iter() const noexcept {
+  return this->timeline.get_frame_iter();
+}
+
 Anim::operator bool() const noexcept {
   return this->images.get_ptr() != nullptr;
 }
 
 // === Modifiers === //
 
-expected<usize> Anim::insert_layer(usize index) noexcept {
-  assert(index >= 0 && index <= this->timeline.get_layer_count());
-
-  // Create a new layer in the layers data
-  auto id = *TRY_RET(this->images.create_image());
+error_code Anim::insert_layer(usize index) noexcept {
+  assert(index <= this->timeline.get_layer_count());
 
   // Insert it into the first frame
-  TRY(this->timeline.insert_layer(index, id), {}, to_unexpected);
+  TRY(this->timeline.insert_layer(index));
+
+  return error_code::OK;
+}
+
+error_code Anim::insert_blank_frame(usize frame_index) noexcept {
+  TRY(this->timeline.insert_frame(frame_index));
+  return error_code::OK;
+}
+
+expected<usize>
+Anim::create_image(usize frame_index, usize layer_index) noexcept {
+  assert(this->timeline.get_image_id(frame_index, layer_index) == 0U);
+
+  // Create a new image in the image database
+  auto id = *TRY_RET(this->images.create_image(), {}, to_unexpected);
+  this->timeline.set_image_id(frame_index, layer_index, id);
 
   return id;
 }
@@ -385,7 +410,7 @@ void Anim::print_timeline_info() const noexcept {
 
   logger::print("=== Frames ===\n");
   for (auto it = this->timeline.get_frame_iter(); it; ++it) {
-    logger::print("  Id: " USIZE_FMT " ; Images:\n ", it.get_id());
+    logger::print("  Id: " USIZE_FMT " ; Images:\n ", it.get_index());
     for (usize i = 0U; i < this->timeline.get_layer_count(); ++i) {
       logger::print(" %3u", it.get_image_id(i));
     }

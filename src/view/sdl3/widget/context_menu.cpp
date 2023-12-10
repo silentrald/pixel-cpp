@@ -129,7 +129,7 @@ void ContextMenu::update() noexcept {
   // Do nothing UwU
 }
 
-void ContextMenu::render(const Renderer& renderer) const noexcept {
+void ContextMenu::render(const Renderer& renderer) noexcept {
   for (usize i = 0U; i < this->items.get_size(); ++i) {
     // TODO: Different theme for ctx menu btns
     renderer.set_color(cfg::theme::get_menu_btn_color(

@@ -134,7 +134,7 @@ void Button::update() noexcept {
   // Do nothing UwU
 }
 
-void Button::render(const Renderer& renderer) const noexcept {
+void Button::render(const Renderer& renderer) noexcept {
   // Draw bg
   renderer.set_color(cfg::theme::get_button_color(this->info));
   renderer.fill_rect(this->rect);

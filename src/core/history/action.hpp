@@ -41,9 +41,9 @@ struct SetVisibilityAction {
 };
 
 struct ChangeSelectionAction {
-  usize prev_frame_id = 0U;
+  usize prev_frame_index = 0U;
   usize prev_layer_index = 0U;
-  usize frame_id = 0U;
+  usize frame_index = 0U;
   usize layer_index = 0U;
 };
 

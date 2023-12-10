@@ -41,7 +41,7 @@ public:
   void reset() noexcept override;
   void input(const event::Input& evt, InputData& data) noexcept override;
   void update() noexcept override;
-  void render(const Renderer& renderer) const noexcept override;
+  void render(const Renderer& renderer) noexcept override;
 
 private:
   // === Texts === //

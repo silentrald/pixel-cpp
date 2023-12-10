@@ -41,11 +41,10 @@ void presenter::create_anim() noexcept {
   // Model Update
   TRY_ABORT(model_.anim.init(size, draw::RGBA8), "Could not create anim");
 
-  model_.frame_id = 1U;
+  model_.frame_index = 0U;
   model_.layer_index = 0U;
   model_.img_id = 1U;
-  auto id = model_.anim.get_image_id(model_.frame_id, model_.layer_index);
-  model_.img = *TRY_ABORT_RET(model_.anim.get_image(id), "Could not read anim");
+  model_.img = *TRY_ABORT_RET(model_.anim.get_image(1U), "Could not read anim");
   model_.select_mask.resize(size.x * size.y); // NOLINT
   std::fill(model_.select_mask.begin(), model_.select_mask.end(), true);
 
@@ -69,6 +68,7 @@ void presenter::create_anim() noexcept {
   );
 
   // View Update
+  view_.set_anim(&model_.anim);
   view_.set_canvas_rect(model_.rect);
   view_.set_draw_size(size);
 
@@ -110,7 +110,7 @@ void presenter::toggle_visibility(i32 layer_index) noexcept {
   // Bot
   if (layer_index < model_.layer_index) {
     model_.anim.get_flatten(
-        model_.frame_id, 0, model_.layer_index - 1, model_.pixels
+        model_.frame_index, 0, model_.layer_index - 1, model_.pixels
     );
     view_.get_bot_texture().set_pixels(
         (rgba8*)model_.pixels.get_data(), model_.anim.get_size()
@@ -120,7 +120,7 @@ void presenter::toggle_visibility(i32 layer_index) noexcept {
 
   // Top
   model_.anim.get_flatten(
-      model_.frame_id, model_.layer_index + 1,
+      model_.frame_index, model_.layer_index + 1,
       model_.anim.get_layer_count() - 1, model_.pixels
   );
   view_.get_top_texture().set_pixels(
@@ -128,12 +128,13 @@ void presenter::toggle_visibility(i32 layer_index) noexcept {
   );
 }
 
-void presenter::add_at_selected_layer() noexcept {
+void presenter::insert_at_selected_layer() noexcept {
   if (!model_.anim) {
     return;
   }
 
   assert(model_.selected_layer <= model_.anim.get_layer_count());
+  logger::info("Insert layer");
 
   history::Action action{history::ActionType::INSERT_LAYER};
   action.insert_layer.prev_layer_index = model_.layer_index;
@@ -142,11 +143,10 @@ void presenter::add_at_selected_layer() noexcept {
   caretaker_.push_action(std::move(action));
 
   model_.layer_index = model_.selected_layer;
-  usize id = *TRY_ABORT_RET(
+  TRY_ABORT(
       model_.anim.insert_layer(model_.layer_index), "Could not update anim"
   );
-  model_.img_id = id;
-  model_.img = model_.anim.get_image_fast(id);
+  model_.img_id = 0U;
 
   TRY_IGNORE(pxl_.try_auto_save(model_.anim), "Could not auto save");
 
@@ -157,7 +157,30 @@ void presenter::add_at_selected_layer() noexcept {
       "Could not update view"
   );
   update_canvas_textures();
-  view_.set_active_on_timeline(model_.frame_id, model_.layer_index);
+  view_.set_active_on_timeline(model_.frame_index, model_.layer_index);
+}
+
+void presenter::insert_at_selected_frame() noexcept {
+  if (!model_.anim) {
+    return;
+  }
+
+  logger::info("Insert frame");
+
+  // TODO: Caretaker Handling
+
+  TRY_ABORT(
+      model_.anim.insert_blank_frame(model_.selected_frame),
+      "Could not update anim"
+  );
+
+  model_.frame_index = model_.selected_frame;
+  model_.img_id = 0U;
+
+  view_.set_active_on_timeline(model_.selected_frame, model_.layer_index);
+  update_canvas_textures();
+
+  view_.set_frame_range(0U, model_.anim.get_frame_count() - 1U);
 }
 
 void presenter::undo_action() noexcept {

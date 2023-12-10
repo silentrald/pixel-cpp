@@ -37,11 +37,12 @@ void presenter::open_file() noexcept {
   logger::info("Open");
   model_.anim = *TRY_ABORT_RET(pxl_.load("save.pxl"), "Could not load anim");
 
-  model_.frame_id = 1U;
+  model_.frame_index = 0U;
   model_.layer_index = 0U;
-  model_.img_id = 1U;
-  auto id = model_.anim.get_image_id(1U, 0U);
-  model_.img = *TRY_ABORT_RET(model_.anim.get_image(id), "Could not read anim");
+  model_.img_id = model_.anim.get_image_id(0U, 0U);
+  model_.img = *TRY_ABORT_RET(
+      model_.anim.get_image(model_.img_id), "Could not read anim"
+  );
   model_.select_mask.resize(
       // NOLINTNEXTLINE
       model_.anim.get_width() * model_.anim.get_height()
@@ -69,6 +70,9 @@ void presenter::open_file() noexcept {
       "Could not create cache"
   );
 
+  // Update view
+  view_.set_anim(&model_.anim);
+  view_.set_frame_range(0U, model_.anim.get_frame_count() - 1U);
   update_view();
 
   logger::info("Open successful");
@@ -80,7 +84,7 @@ void presenter::export_to_png() noexcept {
   }
 
   logger::info("Export to \"%s\"", "sample.png");
-  png_.export_frame(model_.anim, model_.frame_id, "sample.png");
+  png_.export_frame(model_.anim, model_.frame_index, "sample.png");
   logger::info("Export successfully");
 }
 

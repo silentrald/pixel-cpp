@@ -27,7 +27,7 @@ public:
   ~PngData() noexcept;
 
   bool init(const c8* path) noexcept;
-  bool save_frame(const draw::Anim& anim, u32 frame_id) noexcept;
+  bool save_frame(const draw::Anim& anim, u32 frame_index) noexcept;
 
 private:
   FILE* fp = nullptr;
@@ -77,7 +77,7 @@ bool PngData::init(const c8* path) noexcept {
   return true;
 }
 
-bool PngData::save_frame(const draw::Anim& anim, u32 frame_id) noexcept {
+bool PngData::save_frame(const draw::Anim& anim, u32 frame_index) noexcept {
   png_set_IHDR(
       this->png_ptr, this->info_ptr, anim.get_width(), anim.get_height(), 8,
       PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
@@ -117,7 +117,7 @@ bool PngData::save_frame(const draw::Anim& anim, u32 frame_id) noexcept {
       pixels.resize(anim.get_image_db().get_bytes_size()),
       "Could not resize temp storage"
   );
-  anim.get_flatten(frame_id, 0, anim.get_layer_count() - 1, pixels);
+  anim.get_flatten(frame_index, 0, anim.get_layer_count() - 1, pixels);
   for (i32 y = 0; y < anim.get_height(); ++y) {
     row_pointer = row_pointers[y];
     // NOLINTNEXTLINE
@@ -136,7 +136,7 @@ bool PngData::save_frame(const draw::Anim& anim, u32 frame_id) noexcept {
 
 // === Main Function === //
 
-void Png::export_frame(const draw::Anim& anim, u32 frame_id, const c8* path)
+void Png::export_frame(const draw::Anim& anim, u32 frame_index, const c8* path)
     const noexcept {
   PngData data{};
   if (!data.init(path)) {
@@ -144,7 +144,7 @@ void Png::export_frame(const draw::Anim& anim, u32 frame_id, const c8* path)
     return;
   }
 
-  if (!data.save_frame(anim, frame_id)) {
+  if (!data.save_frame(anim, frame_index)) {
     logger::error("PNG could not be saved");
     return;
   }

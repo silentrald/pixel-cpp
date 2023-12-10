@@ -111,7 +111,7 @@ void MenuBox::update() noexcept {
   // Do nothing UwU
 }
 
-void MenuBox::render(const Renderer& renderer) const noexcept {
+void MenuBox::render(const Renderer& renderer) noexcept {
   // Draw bg
   renderer.set_color({0x44, 0x44, 0xff, 0xff});
   renderer.fill_rect(this->rect);

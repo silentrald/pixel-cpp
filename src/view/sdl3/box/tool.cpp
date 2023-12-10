@@ -71,7 +71,7 @@ void ToolBox::update() noexcept {
   }
 }
 
-void ToolBox::render(const Renderer& renderer) const noexcept {
+void ToolBox::render(const Renderer& renderer) noexcept {
   renderer.set_color({0x66, 0x33, 0x33, 0xff});
   renderer.fill_rect(this->rect);
 

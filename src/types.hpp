@@ -32,6 +32,7 @@ using f64 = double;
 using c8 = char;
 
 using usize = u32;
+const usize USIZE_MAX = UINT32_MAX;
 
 // === Color Types === //
 

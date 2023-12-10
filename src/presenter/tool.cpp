@@ -62,13 +62,16 @@ void presenter::set_select_tool() noexcept {
 inline void handle_canvas_mouse_middle(const event::Input& evt) noexcept {
   using namespace presenter;
   // NOTE: Check if there any available things other than panning
-  (void)pan_.execute(model_, evt);
+  static_cast<void>(pan_.execute(model_, evt));
   view_.set_canvas_rect(model_.rect);
 }
 
-inline void canvas_mouse_scroll_event(const event::Input& evt) noexcept {
-  using namespace presenter;
-  (void)zoom_.execute(model_, evt);
+void presenter::canvas_mouse_scroll_event(const event::Input& evt) noexcept {
+  if (!model_.anim) {
+    return;
+  }
+
+  static_cast<void>(zoom_.execute(model_, evt));
   view_.set_canvas_rect(model_.rect);
 }
 
@@ -109,11 +112,6 @@ void presenter::canvas_mouse_event(const event::Input& evt) noexcept {
     return;
   }
 
-  if (evt.mouse.wheel.x != 0 || evt.mouse.wheel.y != 0) {
-    canvas_mouse_scroll_event(evt);
-    // Continue with other mouse events
-  }
-
   if (!evt.is_mouse_state(input::MouseState::NONE) &&
       !model_.anim.is_layer_visible(model_.layer_index)) {
     logger::info("Layer is hidden");
@@ -125,11 +123,16 @@ void presenter::canvas_mouse_event(const event::Input& evt) noexcept {
     return;
   }
 
-  model_.curr_pos = {
-      .x = (i32)std::floor((evt.mouse.pos.x - model_.rect.x) / model_.scale),
-      .y = (i32)std::floor((evt.mouse.pos.y - model_.rect.y) / model_.scale),
-  };
-  view_.set_cursor_canvas_pos(model_.curr_pos);
+  if (model_.img_id == 0U) {
+    // Create a image in the db
+    model_.img_id = *TRY_ABORT_RET(
+        model_.anim.create_image(model_.frame_index, model_.layer_index),
+        "Could not create image"
+    );
+    model_.img = model_.anim.get_image_fast(model_.img_id);
+
+    // TODO: add info that this was recently created
+  }
 
   if (evt.mouse.left == input::MouseState::DOWN ||
       evt.mouse.right == input::MouseState::DOWN) {

@@ -16,7 +16,7 @@
 #include "core/draw/anim.hpp"
 
 inline const ivec SIZE{2, 2};
-inline const i32 ISIZE = SIZE.x * SIZE.y;
+inline const usize ISIZE = SIZE.x * SIZE.y;
 
 using namespace draw;
 
@@ -54,23 +54,25 @@ TEST_CASE("Anim: layers modification", "[draw]") {
   TRY_ABORT(anim.init(SIZE, ColorType::RGBA8), "Could not init anim");
   test_init_anim(anim);
 
-  u32 id = 0U;
+  usize id = 0U;
   Image image{};
 
-  const i32 INSERT_COUNT = 6;
+  const usize INSERT_COUNT = 6U;
 
-  for (i32 i = 1; i < INSERT_COUNT; ++i) {
-    id = *TRY_ABORT_RET(anim.insert_layer(0), "Could not update anim");
-    REQUIRE(id != 1U);
-    REQUIRE(anim.get_layer_count() == i + 1);
+  for (usize i = 2U; i <= INSERT_COUNT; ++i) {
+    TRY_ABORT(anim.insert_layer(0U), "Could not update anim");
+    id = *TRY_ABORT_RET(anim.create_image(0U, 0U), "Could not update anim");
+
+    REQUIRE(id == i);
+    REQUIRE(anim.get_layer_count() == i);
 
     image = *TRY_ABORT_RET(anim.get_image(id), "Could not read anim");
     test_empty_layer(image, id);
   }
 
   // Check ordering
-  for (i32 i = 0; i < INSERT_COUNT; ++i) {
-    id = anim.get_image_id(1, i);
+  for (usize i = 0; i < INSERT_COUNT; ++i) {
+    id = anim.get_image_id(0U, i);
     REQUIRE(i + id == 6U);
   }
 
@@ -79,7 +81,7 @@ TEST_CASE("Anim: layers modification", "[draw]") {
       {0x11, 0x11, 0x11, 0x11}, {0x22, 0x22, 0x22, 0x22},
       {0x33, 0x33, 0x33, 0x33}, {0x44, 0x44, 0x44, 0x44},
       {0x55, 0x55, 0x55, 0x55}, {0x66, 0x66, 0x66, 0x66}};
-  for (id = 1U; id <= 6U; ++id) {
+  for (id = 1U; id <= INSERT_COUNT; ++id) {
     image = *TRY_ABORT_RET(anim.get_image(id), "Could not read anim");
     for (i32 i = 0; i < ISIZE; ++i) {
       image.paint(i, expected_colors[id - 1]);
@@ -88,7 +90,7 @@ TEST_CASE("Anim: layers modification", "[draw]") {
 
   for (id = 1U; id <= INSERT_COUNT; ++id) {
     image = *TRY_ABORT_RET(anim.get_image(id), "Could not read anim");
-    for (i32 i = 0; i < ISIZE; ++i) {
+    for (usize i = 0; i < ISIZE; ++i) {
       test_color(*(rgba8*)image.get_pixel(i), expected_colors[id - 1]);
     }
   }

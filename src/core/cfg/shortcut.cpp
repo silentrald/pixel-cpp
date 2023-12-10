@@ -37,15 +37,11 @@ u32 convert_str_to_key(const c8* str) noexcept {
     str += 4;
   }
 
-  if (str[0] >= 'a' && str[0] <= 'z') {
-    return key | str[0];
-  }
-
   if (str[0] >= 'A' && str[0] <= 'Z') {
     return key | (str[0] - 'A' + 'a');
   }
 
-  return 0U;
+  return key | str[0];
 }
 
 bool inline is_white_space(c8 c) noexcept {

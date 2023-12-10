@@ -32,7 +32,7 @@ void Text::update() noexcept {
   // Do nothing UwU
 }
 
-void Text::render(const Renderer& renderer) const noexcept {
+void Text::render(const Renderer& renderer) noexcept {
   renderer.render_texture(this->tex, this->rect);
 }
 

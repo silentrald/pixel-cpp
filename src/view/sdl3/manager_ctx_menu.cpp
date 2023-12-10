@@ -80,9 +80,9 @@ error_code Manager::init_ctx_menus() noexcept {
   {
     auto& layers_ctx_menu = this->ctx_menus[LAYERS_CTX_ID];
     TRY(layers_ctx_menu
-            .push_item(cfg::locale::TextId::ADD_LAYER, this->renderer, []() {
+            .push_item(cfg::locale::TextId::INS_LAYER, this->renderer, []() {
               presenter::close_ctx_menus();
-              presenter::add_at_selected_layer();
+              presenter::insert_at_selected_layer();
             }));
     TRY(layers_ctx_menu
             .push_item(cfg::locale::TextId::REM_LAYER, this->renderer, []() {
@@ -99,11 +99,13 @@ error_code Manager::init_ctx_menus() noexcept {
   // Timeline Content Menu
   {
     auto& timeline_ctx_menu = this->ctx_menus[TIMELINE_CTX_ID];
-    TRY(timeline_ctx_menu
-            .push_item(cfg::locale::TextId::ADD_FRAME, this->renderer, []() {
-              presenter::close_ctx_menus();
-              logger::debug("UwU"); // TODO:
-            }));
+    TRY(timeline_ctx_menu.push_item(
+        cfg::locale::TextId::BLANK_FRAME_INS, this->renderer,
+        []() {
+          presenter::close_ctx_menus();
+          presenter::insert_at_selected_frame();
+        }
+    ));
     TRY(timeline_ctx_menu
             .push_item(cfg::locale::TextId::REM_FRAME, this->renderer, []() {
               presenter::close_ctx_menus();

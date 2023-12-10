@@ -30,7 +30,7 @@ public:
   void locale_updated(const Renderer& renderer) noexcept override;
   void input(const event::Input& evt, InputData& data) noexcept override;
   void update() noexcept override;
-  void render(const Renderer& renderer) const noexcept override;
+  void render(const Renderer& renderer) noexcept override;
 
   ds::vector<Button> btns{};
 };

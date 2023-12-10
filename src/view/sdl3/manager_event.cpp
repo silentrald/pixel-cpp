@@ -132,6 +132,12 @@ void Manager::handle_input_event() noexcept {
     return;
   }
 
+  // Always handle this separately
+  if (this->draw_box.rect.has_point(this->input_evt.mouse.pos)) {
+    presenter::set_cursor_position(this->input_evt.mouse.pos);
+  }
+  presenter::canvas_mouse_scroll_event(this->input_evt);
+
   // Only handle inputs on draw box when it was initially clicked
   if (!this->is_draw_box_clicked &&
       this->input_evt.is_mouse_state(input::MouseState::DOWN) &&

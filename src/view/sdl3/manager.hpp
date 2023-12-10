@@ -53,13 +53,6 @@ public:
   [[nodiscard]] const frect& get_draw_rect() const noexcept;
   [[nodiscard]] const frect& get_canvas_rect() const noexcept;
 
-  void set_draw_size(ivec size) noexcept;
-  void set_canvas_rect(const frect& canvas_rect) noexcept;
-  void set_cursor_canvas_pos(ivec pos) noexcept;
-
-  void set_fg_color(rgba8 color) noexcept;
-  void set_bg_color(rgba8 color) noexcept;
-
   // NOTE: Might add index or id to reference which drawbox
   [[nodiscard]] Texture& get_bg_texture() noexcept;
   [[nodiscard]] Texture& get_bot_texture() noexcept;
@@ -71,6 +64,16 @@ public:
 
   [[nodiscard]] void* get_modal_data(modal::Id id) const noexcept;
 
+  // === Setters ==== //
+
+  void set_draw_size(ivec size) noexcept;
+  void set_canvas_rect(const frect& canvas_rect) noexcept;
+  void set_cursor_canvas_pos(ivec pos) noexcept;
+
+  void set_fg_color(rgba8 color) noexcept;
+  void set_bg_color(rgba8 color) noexcept;
+  void set_anim(const draw::Anim* anim) noexcept;
+
   // === Modifiers === //
 
   void locale_updated() noexcept;
@@ -79,7 +82,9 @@ public:
   insert_layer(usize index, const draw::LayerInfo& layer_info) noexcept;
   void set_layer_visible(usize index, bool visible) noexcept;
   void clear_layers() noexcept;
-  void set_active_on_timeline(usize frame_id, usize layer_index) noexcept;
+
+  void set_active_on_timeline(usize frame_index, usize layer_index) noexcept;
+  void set_frame_range(usize start_frame, usize end_frame) noexcept;
 
   [[nodiscard]] error_code push_modal(modal::Id id) noexcept;
   modal::Id pop_modal() noexcept;

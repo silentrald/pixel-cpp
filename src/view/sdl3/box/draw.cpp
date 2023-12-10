@@ -82,7 +82,7 @@ void DrawBox::update() noexcept {
   this->tick = (this->tick + 1) % 60;
 }
 
-void DrawBox::render(const Renderer& renderer) const noexcept {
+void DrawBox::render(const Renderer& renderer) noexcept {
   renderer.set_color({0xff, 0xc0, 0xcb, 0xff});
   renderer.fill_rect(this->rect);
 

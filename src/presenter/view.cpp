@@ -10,6 +10,7 @@
  **/
 
 #include "./presenter.hpp"
+#include "core/logger/logger.hpp"
 #include "model/model.hpp"
 
 void presenter::set_fg_color(const std::string& hex_str) noexcept {
@@ -28,7 +29,7 @@ void presenter::update_canvas_textures() noexcept {
   // Bot
   if (model_.layer_index > 0) {
     model_.anim.get_flatten(
-        model_.frame_id, 0, model_.layer_index - 1, model_.pixels
+        model_.frame_index, 0, model_.layer_index - 1, model_.pixels
     );
   }
 
@@ -42,7 +43,7 @@ void presenter::update_canvas_textures() noexcept {
   // Top
   if (model_.layer_index < model_.anim.get_layer_count() - 1) {
     model_.anim.get_flatten(
-        model_.frame_id, model_.layer_index + 1,
+        model_.frame_index, model_.layer_index + 1,
         model_.anim.get_layer_count() - 1, model_.pixels
     );
   }
@@ -50,7 +51,7 @@ void presenter::update_canvas_textures() noexcept {
       (rgba8*)model_.pixels.get_data(), model_.anim.get_size()
   );
 
-  if (model_.anim.is_layer_visible(model_.layer_index)) {
+  if (model_.img_id > 0U && model_.anim.is_layer_visible(model_.layer_index)) {
     view_.get_curr_texture().set_pixels(
         (rgba8*)model_.img.get_pixels(), model_.anim.get_size()
     );
@@ -73,7 +74,7 @@ void presenter::update_view() noexcept {
     );
   }
 
-  view_.set_active_on_timeline(model_.frame_id, model_.layer_index);
+  view_.set_active_on_timeline(model_.frame_index, model_.layer_index);
 }
 
 void presenter::close_modals() noexcept {
