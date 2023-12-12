@@ -450,7 +450,7 @@ expected<usize> ImageDb::create_image() noexcept {
 }
 
 error_code ImageDb::remove_image(usize id) noexcept {
-  assert(id > 0U && id <= this->disk_capacity);
+  assert(id <= this->disk_capacity);
 
   if (id == ID_SENTINEL) {
     return error_code::OK;

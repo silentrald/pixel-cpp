@@ -62,21 +62,20 @@ void Caretaker::push_action(Action&& action) noexcept {
   }
 }
 
-Action Caretaker::create_edit_image_action(usize bytes) noexcept {
+Action Caretaker::create_image_action(usize bytes) noexcept {
   void* orig_ptr = this->arena.get_cursor_data();
-  Action action{ActionType::EDIT_IMAGE};
+  Action action{};
 
   if (this->cursor > -1 &&
       this->actions[this->cursor].type == ActionType::EDIT_IMAGE) {
-    action.edit_image.prev_pixels =
-        this->actions[this->cursor].edit_image.pixels;
+    action.image.prev_pixels = this->actions[this->cursor].image.pixels;
   } else {
-    action.edit_image.prev_pixels = (draw::data_ptr)this->arena.allocate(bytes);
+    action.image.prev_pixels = (draw::data_ptr)this->arena.allocate(bytes);
     this->move_start_cursor(orig_ptr);
     orig_ptr = this->arena.get_cursor_data();
   }
 
-  action.edit_image.pixels = (draw::data_ptr)this->arena.allocate(bytes);
+  action.image.pixels = (draw::data_ptr)this->arena.allocate(bytes);
   this->move_start_cursor(orig_ptr);
 
   return action;
@@ -227,7 +226,7 @@ void Caretaker::move_arena_cursor() noexcept {
       next_cursor = curr_cursor + 1;
     }
 
-    ptr = this->actions[next_cursor].get_start_ptr(this->actions[cursor].type);
+    ptr = this->actions[next_cursor].get_start_ptr(this->actions[cursor]);
 
     if (ptr == nullptr) {
       continue;

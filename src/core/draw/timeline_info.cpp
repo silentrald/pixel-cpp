@@ -351,7 +351,7 @@ void TimelineInfo::set_image_id(
 }
 
 void TimelineInfo::remove_layer(usize index) noexcept {
-  assert(index >= 0U && index < this->layer_count);
+  assert(index < this->layer_count);
 
   --this->layer_count;
 
@@ -369,6 +369,28 @@ void TimelineInfo::remove_layer(usize index) noexcept {
       this->layer_info + index, this->layer_info + index + 1U,
       sizeof(LayerInfo) * (this->layer_count - index) // NOLINT
   );
+}
+
+void TimelineInfo::remove_frame(usize index) noexcept {
+  assert(index < this->frame_count);
+
+  --this->frame_count;
+
+  auto* cursor = this->get_image_id_ptr(index);
+
+  // Move the frames
+  std::memcpy(
+      cursor, cursor + this->layer_capacity,
+      // NOLINTNEXTLINE
+      (this->frame_count - index) * this->layer_capacity * sizeof(usize)
+  );
+}
+
+void TimelineInfo::remove_image(usize frame_index, usize layer_index) noexcept {
+  assert(frame_index < this->frame_count);
+  assert(layer_index < this->layer_count);
+
+  *this->get_image_id_ptr(frame_index, layer_index) = 0U;
 }
 
 bool TimelineInfo::toggle_layer_visibility(usize index) noexcept {

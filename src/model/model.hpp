@@ -33,9 +33,9 @@ struct Model {
 
   // Cache
   ds::vector<draw::data_type> pixels{};
-  ds::vector<draw::data_type> orig_pixels{}; // used by edit image action
 
   // State
+  bool is_added_image = false;
   bool is_editing_image = false;
 
   //
