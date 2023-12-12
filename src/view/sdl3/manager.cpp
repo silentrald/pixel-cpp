@@ -135,10 +135,6 @@ Texture& Manager::get_bg_texture() noexcept {
   return this->draw_box.get_bg_texture();
 }
 
-Texture& Manager::get_bot_texture() noexcept {
-  return this->draw_box.get_bot_texture();
-}
-
 Texture& Manager::get_curr_texture() noexcept {
   return this->draw_box.get_curr_texture();
 }
@@ -147,16 +143,29 @@ Texture& Manager::get_empty_texture() noexcept {
   return this->draw_box.get_empty_texture();
 }
 
-Texture& Manager::get_top_texture() noexcept {
-  return this->draw_box.get_top_texture();
-}
-
 Texture& Manager::get_select1_texture() noexcept {
   return this->draw_box.get_select1_texture();
 }
 
 Texture& Manager::get_select2_texture() noexcept {
   return this->draw_box.get_select2_texture();
+}
+
+void Manager::update_curr_texture(usize img_id, bool show) noexcept {
+  this->draw_box.update_curr_texture(img_id, show);
+  this->preview_box.update_texture();
+}
+
+void Manager::update_bot_texture(
+    usize frame_index, usize layer_index
+) noexcept {
+  this->draw_box.update_bot_texture(frame_index, layer_index);
+}
+
+void Manager::update_top_texture(
+    usize frame_index, usize layer_index
+) noexcept {
+  this->draw_box.update_top_texture(frame_index, layer_index);
 }
 
 // === Setters === //
@@ -188,8 +197,11 @@ void Manager::set_bg_color(rgba8 color) noexcept {
 }
 
 error_code Manager::set_anim(const draw::Anim* anim) noexcept {
-  this->timeline_box.set_anim(anim);
+  TRY(this->draw_box.set_anim(anim));
   TRY(this->preview_box.set_anim(anim));
+
+  this->timeline_box.set_anim(anim);
+
   return error_code::OK;
 }
 
@@ -215,6 +227,7 @@ void Manager::clear_layers() noexcept {
 void Manager::set_active_on_timeline(
     usize frame_index, usize layer_index
 ) noexcept {
+  this->draw_box.set_active(frame_index, layer_index);
   this->timeline_box.active_frame = frame_index;
   this->timeline_box.active_layer = layer_index;
   this->preview_box.set_active_frame(frame_index);

@@ -59,6 +59,71 @@ Texture& DrawBox::get_select2_texture() noexcept {
   return this->textures[6];
 }
 
+error_code DrawBox::set_anim(const draw::Anim* anim) noexcept {
+  assert(anim != nullptr);
+
+  this->anim = anim;
+  TRY(this->pixels.resize(anim->get_image_bytes_size()));
+
+  return error_code::OK;
+}
+
+void DrawBox::set_active(usize frame_index, usize layer_index) noexcept {
+  this->update_bot_texture(frame_index, layer_index);
+  this->update_top_texture(frame_index, layer_index);
+  this->update_curr_texture(
+      this->anim->get_image_id(frame_index, layer_index),
+      this->anim->is_layer_visible(layer_index)
+  );
+}
+
+void DrawBox::update_curr_texture(usize img_id, bool show) noexcept {
+  assert(this->anim != nullptr);
+
+  if (img_id > 0U && show) {
+    // NOTE: Check if get_image_fast is good here
+    this->get_curr_texture().set_pixels(
+        reinterpret_cast<rgba8*>(this->anim->get_image_fast(img_id).get_pixels()
+        ),
+        this->anim->get_size()
+    );
+  } else {
+    this->get_curr_texture().clear(anim->get_height());
+  }
+}
+
+void DrawBox::update_bot_texture(
+    usize frame_index, usize layer_index
+) noexcept {
+  assert(this->anim != nullptr);
+
+  if (layer_index > 0) {
+    this->anim->get_flatten(frame_index, 0, layer_index - 1, this->pixels);
+  }
+
+  this->get_bot_texture().set_pixels(
+      reinterpret_cast<rgba8*>(this->pixels.get_data()), this->anim->get_size()
+  );
+
+  std::memset(this->pixels.get_data(), 0, this->pixels.get_size());
+}
+
+void DrawBox::update_top_texture(
+    usize frame_index, usize layer_index
+) noexcept {
+  assert(this->anim != nullptr);
+
+  if (layer_index < this->anim->get_layer_count() - 1) {
+    this->anim->get_flatten(
+        frame_index, layer_index + 1, anim->get_layer_count() - 1, this->pixels
+    );
+  }
+  this->get_top_texture().set_pixels(
+      reinterpret_cast<rgba8*>(this->pixels.get_data()), this->anim->get_size()
+  );
+  std::memset(this->pixels.get_data(), 0, this->pixels.get_size());
+}
+
 void DrawBox::resize(const frect& rect) noexcept {
   this->rect = rect;
 

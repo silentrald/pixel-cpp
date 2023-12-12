@@ -61,6 +61,14 @@ void PreviewBox::set_playing(bool playing) noexcept {
   }
 }
 
+void PreviewBox::update_texture() noexcept {
+  assert(this->anim != nullptr);
+
+  if (!this->playing) {
+    this->set_frame_texture(this->active_frame);
+  }
+}
+
 void PreviewBox::resize(const frect& rect) noexcept {
   //
 }

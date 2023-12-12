@@ -11,6 +11,9 @@
 #include "../input/button.hpp"
 #include "../texture.hpp"
 #include "./box.hpp"
+#include "core/draw/anim.hpp"
+#include "core/draw/types.hpp"
+#include "core/ds/vector.hpp"
 #include <array>
 
 namespace view::sdl3::widget {
@@ -26,13 +29,19 @@ public:
   ~DrawBox() noexcept override = default;
 
   [[nodiscard]] error_code init_textures(ivec size) noexcept;
+
   [[nodiscard]] Texture& get_bg_texture() noexcept;
-  [[nodiscard]] Texture& get_bot_texture() noexcept;
   [[nodiscard]] Texture& get_curr_texture() noexcept;
   [[nodiscard]] Texture& get_empty_texture() noexcept;
-  [[nodiscard]] Texture& get_top_texture() noexcept;
   [[nodiscard]] Texture& get_select1_texture() noexcept;
   [[nodiscard]] Texture& get_select2_texture() noexcept;
+
+  [[nodiscard]] error_code set_anim(const draw::Anim* anim) noexcept;
+  void set_active(usize frame_index, usize layer_index) noexcept;
+
+  void update_curr_texture(usize img_id, bool show) noexcept;
+  void update_bot_texture(usize frame_index, usize layer_index) noexcept;
+  void update_top_texture(usize frame_index, usize layer_index) noexcept;
 
   void resize(const frect& rect) noexcept override;
   void reset() noexcept override;
@@ -41,10 +50,6 @@ public:
   void update(f32 delta) noexcept override;
   void render() noexcept override;
 
-private:
-  i32 tick = 0;
-
-public:
   frect draw_rect{50.0F, 50.0F, 320.0F, 320.0F};
 
 private:
@@ -56,6 +61,12 @@ private:
   // 5 - select1 layer
   // 6 - select2 layer
   std::array<Texture, 7> textures{};
+  const draw::Anim* anim = nullptr;
+  ds::vector<draw::data_type> pixels{};
+  i32 tick = 0;
+
+  [[nodiscard]] Texture& get_bot_texture() noexcept;
+  [[nodiscard]] Texture& get_top_texture() noexcept;
 };
 
 } // namespace view::sdl3::widget

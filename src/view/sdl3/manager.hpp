@@ -55,12 +55,13 @@ public:
 
   // NOTE: Might add index or id to reference which drawbox
   [[nodiscard]] Texture& get_bg_texture() noexcept;
-  [[nodiscard]] Texture& get_bot_texture() noexcept;
   [[nodiscard]] Texture& get_curr_texture() noexcept;
   [[nodiscard]] Texture& get_empty_texture() noexcept;
-  [[nodiscard]] Texture& get_top_texture() noexcept;
   [[nodiscard]] Texture& get_select1_texture() noexcept;
   [[nodiscard]] Texture& get_select2_texture() noexcept;
+  void update_curr_texture(usize img_id, bool show) noexcept;
+  void update_bot_texture(usize frame_index, usize layer_index) noexcept;
+  void update_top_texture(usize frame_index, usize layer_index) noexcept;
 
   [[nodiscard]] void* get_modal_data(modal::Id id) const noexcept;
 

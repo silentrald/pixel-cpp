@@ -91,7 +91,6 @@ void set_select_tool() noexcept;
 
 void set_fg_color(const std::string& hex_str) noexcept;
 void set_bg_color(const std::string& hex_str) noexcept;
-void update_canvas_textures() noexcept;
 void update_view() noexcept;
 void close_modals() noexcept;
 

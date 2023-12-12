@@ -93,41 +93,12 @@ void presenter::toggle_visibility(i32 layer_index) noexcept {
   view_.set_layer_visible(layer_index, show);
 
   if (layer_index == model_.layer_index) {
-    if (show) {
-      auto layer = *TRY_ABORT_RET(
-          model_.anim.get_image(model_.img_id), "Could not read anim"
-      );
-      view_.get_curr_texture().set_pixels(
-          reinterpret_cast<rgba8*>(layer.get_pixels()), model_.anim.get_size()
-      );
-    } else {
-      view_.get_curr_texture().clear(model_.anim.get_height());
-    }
-    return;
+    view_.update_curr_texture(model_.img_id, show);
+  } else if (layer_index < model_.layer_index) {
+    view_.update_bot_texture(model_.frame_index, layer_index);
+  } else {
+    view_.update_top_texture(model_.frame_index, layer_index);
   }
-
-  memset(model_.pixels.get_data(), 0, model_.pixels.get_size());
-
-  // Bot
-  if (layer_index < model_.layer_index) {
-    model_.anim.get_flatten(
-        model_.frame_index, 0, model_.layer_index - 1, model_.pixels
-    );
-    view_.get_bot_texture().set_pixels(
-        reinterpret_cast<rgba8*>(model_.pixels.get_data()),
-        model_.anim.get_size()
-    );
-    return;
-  }
-
-  // Top
-  model_.anim.get_flatten(
-      model_.frame_index, model_.layer_index + 1,
-      model_.anim.get_layer_count() - 1, model_.pixels
-  );
-  view_.get_top_texture().set_pixels(
-      reinterpret_cast<rgba8*>(model_.pixels.get_data()), model_.anim.get_size()
-  );
 }
 
 void presenter::insert_at_selected_layer() noexcept {
@@ -158,7 +129,6 @@ void presenter::insert_at_selected_layer() noexcept {
       ),
       "Could not update view"
   );
-  update_canvas_textures();
   view_.set_active_on_timeline(model_.frame_index, model_.layer_index);
 }
 
@@ -182,8 +152,6 @@ void presenter::insert_at_selected_frame() noexcept {
   model_.anim.print_timeline_info(); // TODO:
 
   view_.set_active_on_timeline(model_.selected_frame, model_.layer_index);
-  update_canvas_textures();
-
   view_.set_frame_range(0U, model_.anim.get_frame_count() - 1U);
 }
 
