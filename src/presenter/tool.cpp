@@ -96,6 +96,9 @@ inline void handle_flags(u32 flags) {
 
     caretaker_.push_action(std::move(action));
 
+    view_.update_curr_texture(
+        model_.img_id, model_.anim.is_layer_visible(model_.layer_index)
+    );
     if (pxl_.will_auto_save()) {
       logger::info("Auto-save");
       TRY_ABORT(

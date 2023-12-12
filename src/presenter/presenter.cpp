@@ -195,8 +195,6 @@ void presenter::set_active_image(u32 frame_index, i32 layer_index) noexcept {
     );
   }
 
-  update_canvas_textures();
-
   view_.set_active_on_timeline(frame_index, layer_index);
 }
 

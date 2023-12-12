@@ -30,6 +30,7 @@ public:
   [[nodiscard]] error_code set_anim(const draw::Anim* anim) noexcept;
   void set_active_frame(usize active_frame) noexcept;
   void set_playing(bool playing) noexcept;
+  void update_texture() noexcept;
 
   void resize(const frect& rect) noexcept override;
   void reset() noexcept override;
