@@ -104,7 +104,7 @@ public:
    **/
   [[nodiscard]] error_code insert_layer(usize index) noexcept;
 
-  [[nodiscard]] error_code insert_blank_frame(usize frame_index) noexcept;
+  [[nodiscard]] error_code insert_frame(usize frame_index) noexcept;
 
   /**
    * Adds an image to the timeline position. The timeline value at that specific
@@ -115,6 +115,10 @@ public:
   create_image(usize frame_index, usize layer_index) noexcept;
 
   [[nodiscard]] error_code remove_layer(usize index) noexcept;
+  [[nodiscard]] error_code remove_frame(usize index) noexcept;
+  [[nodiscard]] error_code
+  remove_image(usize frame_index, usize layer_index) noexcept;
+
   bool toggle_layer_visibility(usize index) noexcept;
   void set_layer_visibility(usize index, bool visibility) noexcept;
 

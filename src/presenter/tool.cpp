@@ -84,13 +84,20 @@ inline void handle_flags(u32 flags) {
     caretaker_.prepare_push_action();
 
     history::Action action =
-        caretaker_.create_edit_image_action(model_.anim.get_image_bytes_size());
+        caretaker_.create_image_action(model_.anim.get_image_bytes_size());
+    action.type = model_.is_added_image ? history::ActionType::ADD_IMAGE
+                                        : history::ActionType::EDIT_IMAGE;
+    action.image.frame_index = model_.frame_index;
+    action.image.layer_index = model_.layer_index;
+
+    model_.is_added_image = false;
+
     std::memcpy(
-        action.edit_image.prev_pixels, model_.orig_pixels.get_data(),
+        action.image.prev_pixels, model_.pixels.get_data(),
         model_.anim.get_image_bytes_size()
     );
     std::memcpy(
-        action.edit_image.pixels, model_.img.get_pixels(),
+        action.image.pixels, model_.img.get_pixels(),
         model_.anim.get_image_bytes_size()
     );
 
@@ -133,15 +140,14 @@ void presenter::canvas_mouse_event(const event::Input& evt) noexcept {
         "Could not create image"
     );
     model_.img = model_.anim.get_image_fast(model_.img_id);
-
-    // TODO: add info that this was recently created
+    model_.is_added_image = true;
   }
 
   if (evt.mouse.left == input::MouseState::DOWN ||
       evt.mouse.right == input::MouseState::DOWN) {
     model_.is_editing_image = true;
     std::memcpy(
-        model_.orig_pixels.get_data(), model_.img.get_pixels(),
+        model_.pixels.get_data(), model_.img.get_pixels(),
         model_.anim.get_image_bytes_size()
     );
   }

@@ -275,7 +275,7 @@ error_code Anim::insert_layer(usize index) noexcept {
   return error_code::OK;
 }
 
-error_code Anim::insert_blank_frame(usize frame_index) noexcept {
+error_code Anim::insert_frame(usize frame_index) noexcept {
   TRY(this->timeline.insert_frame(frame_index));
   return error_code::OK;
 }
@@ -292,15 +292,38 @@ Anim::create_image(usize frame_index, usize layer_index) noexcept {
 }
 
 error_code Anim::remove_layer(usize index) noexcept {
-  assert(index >= 0 && index < this->timeline.get_layer_count());
+  assert(index < this->timeline.get_layer_count());
 
-  // Delete layers from each frame
-  usize id = 0U;
+  // Delete all image in the layer
   for (auto iter = this->timeline.get_frame_iter(); iter; ++iter) {
-    id = iter.get_image_id(index);
-    TRY(this->images.remove_image(id));
+    TRY(this->images.remove_image(iter.get_image_id(index)));
   }
   this->timeline.remove_layer(index);
+
+  return error_code::OK;
+}
+
+error_code Anim::remove_frame(usize index) noexcept {
+  assert(index < this->timeline.get_frame_count());
+
+  // Delete all image in the frame
+  auto frame = this->timeline.get_frame(index);
+  for (usize i = 0; i < this->timeline.get_layer_count(); ++i) {
+    TRY(this->images.remove_image(frame.get_image_id(i)));
+  }
+  this->timeline.remove_frame(index);
+
+  return error_code::OK;
+}
+
+error_code Anim::remove_image(usize frame_index, usize layer_index) noexcept {
+  assert(frame_index < this->timeline.get_frame_count());
+  assert(layer_index < this->timeline.get_layer_count());
+
+  TRY(this->images.remove_image(
+      this->timeline.get_image_id(frame_index, layer_index)
+  ));
+  this->timeline.remove_image(frame_index, layer_index);
 
   return error_code::OK;
 }

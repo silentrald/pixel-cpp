@@ -12,9 +12,7 @@
 namespace history {
 
 Action::Action(const Action& rhs) noexcept : type(rhs.type) {
-  std::memcpy(
-      &this->edit_image, &rhs.edit_image, sizeof(Action) - sizeof(ActionType)
-  );
+  std::memcpy(&this->image, &rhs.image, sizeof(Action) - sizeof(ActionType));
 }
 
 Action& Action::operator=(const Action& rhs) noexcept {
@@ -23,17 +21,13 @@ Action& Action::operator=(const Action& rhs) noexcept {
   }
 
   this->type = rhs.type;
-  std::memcpy(
-      &this->edit_image, &rhs.edit_image, sizeof(Action) - sizeof(ActionType)
-  );
+  std::memcpy(&this->image, &rhs.image, sizeof(Action) - sizeof(ActionType));
 
   return *this;
 }
 
 Action::Action(Action&& rhs) noexcept : type(rhs.type) {
-  std::memcpy(
-      &this->edit_image, &rhs.edit_image, sizeof(Action) - sizeof(ActionType)
-  );
+  std::memcpy(&this->image, &rhs.image, sizeof(Action) - sizeof(ActionType));
 }
 
 Action& Action::operator=(Action&& rhs) noexcept {
@@ -42,20 +36,44 @@ Action& Action::operator=(Action&& rhs) noexcept {
   }
 
   this->type = rhs.type;
-  std::memcpy(
-      &this->edit_image, &rhs.edit_image, sizeof(Action) - sizeof(ActionType)
-  );
+  std::memcpy(&this->image, &rhs.image, sizeof(Action) - sizeof(ActionType));
 
   return *this;
 }
 
 void Action::undo(Model& model) const noexcept {
   switch (this->type) {
+  case ActionType::ADD_IMAGE: {
+    TRY_ABORT(
+        model.anim.remove_image(
+            this->image.frame_index, this->image.layer_index
+        ),
+        "Anim remove image"
+    );
+    model.frame_index = this->image.frame_index;
+    model.layer_index = this->image.layer_index;
+    model.img_id = 0U;
+  } break;
+
   case ActionType::EDIT_IMAGE:
+    // Try to get the img_id if it matches, else update the model.img
+    {
+      auto id = model.anim.get_image_id(
+          this->image.frame_index, this->image.layer_index
+      );
+      if (model.img_id != id) {
+        model.img_id = id;
+        model.img = *TRY_ABORT_RET(model.anim.get_image(id), "Anim read");
+      }
+    }
+
     model.img.set_pixels(
-        this->edit_image.prev_pixels, model.anim.get_image_bytes_size()
+        this->image.prev_pixels, model.anim.get_image_bytes_size()
     );
     TRY_ABORT(model.anim.write_image_to_disk(model.img), "Anim disk write");
+
+    model.layer_index = this->image.layer_index;
+    model.frame_index = this->image.frame_index;
     break;
 
   case ActionType::INSERT_LAYER:
@@ -64,21 +82,32 @@ void Action::undo(Model& model) const noexcept {
         "Anim remove layer"
     );
     model.layer_index = this->insert_layer.prev_layer_index;
-    model.img_id = model.anim.get_image_id(model.frame_index, model.layer_index);
-    model.img = *TRY_ABORT_RET(model.anim.get_image(model.img_id), "Anim Read");
+    model.img_id =
+        model.anim.get_image_id(model.frame_index, model.layer_index);
+    if (model.img_id > 0U) {
+      model.img =
+          *TRY_ABORT_RET(model.anim.get_image(model.img_id), "Anim Read");
+    }
+    break;
+
+  case ActionType::INSERT_FRAME:
+    TRY_ABORT(
+        model.anim.remove_frame(this->insert_frame.frame_index),
+        "Anim remove frame"
+    );
+    model.frame_index = this->insert_frame.prev_frame_index;
+    model.img_id =
+        model.anim.get_image_id(model.frame_index, model.layer_index);
+    if (model.img_id > 0U) {
+      model.img =
+          *TRY_ABORT_RET(model.anim.get_image(model.img_id), "Anim Read");
+    }
     break;
 
   case ActionType::SET_VISIBILITY:
     model.anim.set_layer_visibility(
         this->set_visibility.layer_index, !this->set_visibility.visibility
     );
-    break;
-
-  case ActionType::CHANGE_SELECTION:
-    model.frame_index = this->change_selection.prev_frame_index;
-    model.layer_index = this->change_selection.prev_layer_index;
-    model.img_id = model.anim.get_image_id(model.frame_index, model.layer_index);
-    model.img = *TRY_ABORT_RET(model.anim.get_image(model.img_id), "Anim Read");
     break;
 
   case ActionType::NONE:
@@ -89,11 +118,40 @@ void Action::undo(Model& model) const noexcept {
 
 void Action::redo(Model& model) const noexcept {
   switch (this->type) {
-  case ActionType::EDIT_IMAGE:
-    model.img.set_pixels(
-        this->edit_image.pixels, model.anim.get_image_bytes_size()
+  case ActionType::ADD_IMAGE: {
+    auto id = *TRY_ABORT_RET(
+        model.anim.create_image(
+            this->image.frame_index, this->image.layer_index
+        ),
+        "Anim write"
     );
+    model.img_id = id;
+    model.img = *TRY_ABORT_RET(model.anim.get_image(id), "Anim read");
+
+    model.img.set_pixels(this->image.pixels, model.anim.get_image_bytes_size());
     TRY_ABORT(model.anim.write_image_to_disk(model.img), "Anim disk write");
+
+    model.layer_index = this->image.layer_index;
+    model.frame_index = this->image.frame_index;
+  } break;
+
+  case ActionType::EDIT_IMAGE:
+    // Try to get the img_id if its correct
+    {
+      auto id = model.anim.get_image_id(
+          this->image.frame_index, this->image.layer_index
+      );
+      if (model.img_id != id) {
+        model.img_id = id;
+        model.img = *TRY_ABORT_RET(model.anim.get_image(id), "Anim read");
+      }
+    }
+
+    model.img.set_pixels(this->image.pixels, model.anim.get_image_bytes_size());
+    TRY_ABORT(model.anim.write_image_to_disk(model.img), "Anim disk write");
+
+    model.layer_index = this->image.layer_index;
+    model.frame_index = this->image.frame_index;
     break;
 
   case ActionType::INSERT_LAYER:
@@ -102,21 +160,22 @@ void Action::redo(Model& model) const noexcept {
         model.anim.insert_layer(this->insert_layer.layer_index),
         "Anim insert layer"
     );
-    model.img_id = model.anim.get_image_id(model.frame_index, model.layer_index);
-    model.img = *TRY_ABORT_RET(model.anim.get_image(model.img_id), "Anim Read");
+    model.img_id = 0U;
+    break;
+
+  case ActionType::INSERT_FRAME:
+    model.frame_index = this->insert_frame.frame_index;
+    TRY_ABORT(
+        model.anim.insert_frame(this->insert_frame.frame_index),
+        "Anim insert frame"
+    )
+    model.img_id = 0U;
     break;
 
   case ActionType::SET_VISIBILITY:
     model.anim.set_layer_visibility(
         this->set_visibility.layer_index, this->set_visibility.visibility
     );
-    break;
-
-  case ActionType::CHANGE_SELECTION:
-    model.frame_index = this->change_selection.frame_index;
-    model.layer_index = this->change_selection.layer_index;
-    model.img_id = model.anim.get_image_id(model.frame_index, model.layer_index);
-    model.img = *TRY_ABORT_RET(model.anim.get_image(model.img_id), "Anim Read");
     break;
 
   case ActionType::NONE:
@@ -127,12 +186,13 @@ void Action::redo(Model& model) const noexcept {
 
 void* Action::get_start_ptr() const noexcept {
   switch (this->type) {
+  case ActionType::ADD_IMAGE:
   case ActionType::EDIT_IMAGE:
-    return this->edit_image.prev_pixels;
+    return this->image.prev_pixels;
 
   case ActionType::INSERT_LAYER:
+  case ActionType::INSERT_FRAME:
   case ActionType::SET_VISIBILITY:
-  case ActionType::CHANGE_SELECTION:
     return nullptr;
 
   case ActionType::NONE:
@@ -144,15 +204,21 @@ void* Action::get_start_ptr() const noexcept {
   return nullptr;
 }
 
-void* Action::get_start_ptr(ActionType last_type) const noexcept {
+void* Action::get_start_ptr(const Action& last_action) const noexcept {
   switch (this->type) {
+  case ActionType::ADD_IMAGE:
   case ActionType::EDIT_IMAGE:
-    return type == ActionType::EDIT_IMAGE ? this->edit_image.pixels
-                                          : this->edit_image.prev_pixels;
+    // Check if image action and the same frame and layer
+    return ((last_action.type == ActionType::ADD_IMAGE ||
+             last_action.type == ActionType::EDIT_IMAGE) &&
+            last_action.image.layer_index == this->image.layer_index &&
+            last_action.image.frame_index == this->image.frame_index)
+               ? this->image.pixels
+               : this->image.prev_pixels;
 
   case ActionType::INSERT_LAYER:
+  case ActionType::INSERT_FRAME:
   case ActionType::SET_VISIBILITY:
-  case ActionType::CHANGE_SELECTION:
     return nullptr;
 
   case ActionType::NONE:

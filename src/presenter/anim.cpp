@@ -62,10 +62,6 @@ void presenter::create_anim() noexcept {
       model_.pixels.resize(model_.anim.get_image_bytes_size()),
       "Could not create cache"
   );
-  TRY_ABORT(
-      model_.orig_pixels.resize(model_.anim.get_image_bytes_size()),
-      "Could not create cache"
-  );
 
   // View Update
   TRY_ABORT(view_.set_anim(&model_.anim), "Could not set anim");
@@ -139,17 +135,18 @@ void presenter::insert_at_selected_frame() noexcept {
 
   logger::info("Insert frame");
 
-  // TODO: Caretaker Handling
+  history::Action action{history::ActionType::INSERT_FRAME};
+  action.insert_frame.prev_frame_index = model_.frame_index;
+  action.insert_frame.frame_index = model_.selected_frame;
+  caretaker_.prepare_push_action();
+  caretaker_.push_action(std::move(action));
 
   TRY_ABORT(
-      model_.anim.insert_blank_frame(model_.selected_frame),
-      "Could not update anim"
+      model_.anim.insert_frame(model_.selected_frame), "Could not update anim"
   );
 
   model_.frame_index = model_.selected_frame;
   model_.img_id = 0U;
-
-  model_.anim.print_timeline_info(); // TODO:
 
   view_.set_active_on_timeline(model_.selected_frame, model_.layer_index);
   view_.set_frame_range(0U, model_.anim.get_frame_count() - 1U);

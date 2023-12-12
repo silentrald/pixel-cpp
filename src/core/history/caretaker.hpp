@@ -42,7 +42,7 @@ public:
    **/
   void push_action(Action&& action) noexcept;
 
-  [[nodiscard]] Action create_edit_image_action(usize byte) noexcept;
+  [[nodiscard]] Action create_image_action(usize byte) noexcept;
 
   [[nodiscard]] bool can_undo() const noexcept;
   [[nodiscard]] bool undo(Model& model) noexcept;

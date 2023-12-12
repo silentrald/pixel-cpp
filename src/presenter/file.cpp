@@ -69,10 +69,6 @@ void presenter::open_file() noexcept {
       model_.pixels.resize(model_.anim.get_image_bytes_size()),
       "Could not create cache"
   );
-  TRY_ABORT(
-      model_.orig_pixels.resize(model_.anim.get_image_bytes_size()),
-      "Could not create cache"
-  );
 
   // Update view
   TRY_ABORT(view_.set_anim(&model_.anim), "Could not set anim");

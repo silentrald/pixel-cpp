@@ -18,16 +18,20 @@ namespace history {
 enum ActionType {
   NONE,
   //
+  ADD_IMAGE,
   EDIT_IMAGE,
   INSERT_LAYER,
+  INSERT_FRAME,
   SET_VISIBILITY,
-  CHANGE_SELECTION,
 };
 
-struct EditImageAction {
+// ADD_IMAGE, EDIT_IMAGE
+struct ImageAction {
   // Pointers can be disjointed
   draw::data_ptr prev_pixels = nullptr;
   draw::data_ptr pixels = nullptr;
+  usize frame_index = 0U;
+  usize layer_index = 0U;
 };
 
 struct InsertLayerAction {
@@ -35,25 +39,23 @@ struct InsertLayerAction {
   usize layer_index = 0U;      // created layer_index
 };
 
+struct InsertFrameAction {
+  usize prev_frame_index = 0U;
+  usize frame_index = 0U;
+};
+
 struct SetVisibilityAction {
   usize layer_index = 0U;
   bool visibility = false;
 };
 
-struct ChangeSelectionAction {
-  usize prev_frame_index = 0U;
-  usize prev_layer_index = 0U;
-  usize frame_index = 0U;
-  usize layer_index = 0U;
-};
-
 struct Action {
   ActionType type = ActionType::NONE;
   union {
-    EditImageAction edit_image;
+    ImageAction image;
     InsertLayerAction insert_layer;
+    InsertFrameAction insert_frame;
     SetVisibilityAction set_visibility;
-    ChangeSelectionAction change_selection;
   };
 
   Action() noexcept {};
@@ -68,7 +70,7 @@ struct Action {
   void redo(Model& model) const noexcept;
 
   [[nodiscard]] void* get_start_ptr() const noexcept;
-  [[nodiscard]] void* get_start_ptr(ActionType last_type) const noexcept;
+  [[nodiscard]] void* get_start_ptr(const Action& last_action) const noexcept;
 };
 
 } // namespace history
