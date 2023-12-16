@@ -10,6 +10,7 @@
 
 #include "./action.hpp"
 #include "./arena.hpp"
+#include "core/draw/types.hpp"
 #include "core/ds/vector.hpp"
 #include "model/model.hpp"
 
@@ -42,7 +43,11 @@ public:
    **/
   void push_action(Action&& action) noexcept;
 
-  [[nodiscard]] Action create_image_action(usize byte) noexcept;
+  [[nodiscard]] Action create_edit_image_action(
+      draw::data_ptr prev_pixels, draw::data_ptr pixels, usize frame_index,
+      usize layer_index, usize bytes
+  ) noexcept;
+  [[nodiscard]] void* allocate(usize bytes) noexcept;
 
   [[nodiscard]] bool can_undo() const noexcept;
   [[nodiscard]] bool undo(Model& model) noexcept;

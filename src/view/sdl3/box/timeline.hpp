@@ -29,7 +29,8 @@ public:
   [[nodiscard]] error_code init() noexcept;
 
   [[nodiscard]] error_code
-  insert_layer_info(usize index, const draw::LayerInfo& layer_info) noexcept;
+  insert_layer(usize index, const draw::LayerInfo& layer_info) noexcept;
+  void remove_layer(usize index) noexcept;
   void set_layer_visible(usize index, bool visible) noexcept;
   void set_anim(const draw::Anim* anim) noexcept;
   void clear_layers() noexcept;

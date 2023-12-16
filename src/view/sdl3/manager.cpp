@@ -213,7 +213,11 @@ void Manager::set_preview_playing(bool playing) noexcept {
 
 error_code
 Manager::insert_layer(usize index, const draw::LayerInfo& layer_info) noexcept {
-  return this->timeline_box.insert_layer_info(index, layer_info);
+  return this->timeline_box.insert_layer(index, layer_info);
+}
+
+void Manager::remove_layer(usize index) noexcept {
+  return this->timeline_box.remove_layer(index);
 }
 
 void Manager::set_layer_visible(usize index, bool visible) noexcept {

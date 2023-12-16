@@ -8,6 +8,7 @@
 #include "./disk_backup.hpp"
 #include "core/logger/logger.hpp"
 #include <cassert>
+#include <cstdio>
 
 namespace draw {
 
@@ -68,11 +69,30 @@ expected<u32> DiskBackup::read_u32() const noexcept {
   assert(this->fp != nullptr);
   u32 out = 0U;
 
-  if (fread(&out, 4U, 1U, this->fp) != 4) {
+  if (fread(&out, 4U, 1U, this->fp) != 1) {
     return unexpected{error_code::FILE_READ};
   }
 
   return out;
+}
+
+expected<u64> DiskBackup::read_u64() const noexcept {
+  assert(this->fp != nullptr);
+  u64 out = 0U;
+
+  if (fread(&out, sizeof(u64), 1U, this->fp) != 1) {
+    return unexpected{error_code::FILE_READ};
+  }
+
+  return out;
+}
+
+expected<usize> DiskBackup::read_usize() const noexcept {
+#ifdef BIT_32
+  return this->read_u32();
+#else
+  return this->read_u64();
+#endif
 }
 
 error_code DiskBackup::write(void* data, u32 size) const noexcept {
@@ -81,10 +101,24 @@ error_code DiskBackup::write(void* data, u32 size) const noexcept {
                                                   : error_code::FILE_WRITE;
 }
 
-error_code DiskBackup::write_u32(u32 val) const noexcept {
+error_code DiskBackup::write_u32(u32 uint) const noexcept {
   assert(this->fp != nullptr);
-  return fwrite(&val, 1U, 4U, this->fp) == 4U ? error_code::OK
+  return fwrite(&uint, 4U, 1U, this->fp) == 1 ? error_code::OK
                                               : error_code::FILE_WRITE;
+}
+
+error_code DiskBackup::write_u64(u64 uint) const noexcept {
+  assert(this->fp != nullptr);
+  return fwrite(&uint, sizeof(u64), 1U, this->fp) == 1 ? error_code::OK
+                                                       : error_code::FILE_WRITE;
+}
+
+error_code DiskBackup::write_usize(usize uint) const noexcept {
+#ifdef BIT_32
+  return this->write_u32(uint);
+#else
+  return this->write_u64(uint);
+#endif
 }
 
 error_code DiskBackup::flush() const noexcept {

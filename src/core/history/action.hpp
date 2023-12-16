@@ -5,9 +5,14 @@
  * Created: 2023-11-18
  *===============================*/
 
-#ifndef MODULES_HISTORY_ACTION_HPP
-#define MODULES_HISTORY_ACTION_HPP
+#ifndef HISTORY_ACTION_HPP
+#define HISTORY_ACTION_HPP
 
+#include "./action/edit_image.hpp"
+#include "./action/insert_frame.hpp"
+#include "./action/insert_layer.hpp"
+#include "./action/remove_layer.hpp"
+#include "./action/set_visibility.hpp"
 #include "./arena.hpp"
 #include "core/draw/types.hpp"
 #include "model/model.hpp"
@@ -15,47 +20,24 @@
 
 namespace history {
 
-enum ActionType {
+enum class ActionType {
   NONE,
   //
-  ADD_IMAGE,
   EDIT_IMAGE,
   INSERT_LAYER,
+  REMOVE_LAYER,
   INSERT_FRAME,
   SET_VISIBILITY,
-};
-
-// ADD_IMAGE, EDIT_IMAGE
-struct ImageAction {
-  // Pointers can be disjointed
-  draw::data_ptr prev_pixels = nullptr;
-  draw::data_ptr pixels = nullptr;
-  usize frame_index = 0U;
-  usize layer_index = 0U;
-};
-
-struct InsertLayerAction {
-  usize prev_layer_index = 0U; // prev layer_index
-  usize layer_index = 0U;      // created layer_index
-};
-
-struct InsertFrameAction {
-  usize prev_frame_index = 0U;
-  usize frame_index = 0U;
-};
-
-struct SetVisibilityAction {
-  usize layer_index = 0U;
-  bool visibility = false;
 };
 
 struct Action {
   ActionType type = ActionType::NONE;
   union {
-    ImageAction image;
-    InsertLayerAction insert_layer;
-    InsertFrameAction insert_frame;
-    SetVisibilityAction set_visibility;
+    EditImage edit_image;
+    InsertLayer insert_layer;
+    RemoveLayer remove_layer;
+    InsertFrame insert_frame;
+    SetVisibility set_visibility;
   };
 
   Action() noexcept {};

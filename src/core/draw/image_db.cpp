@@ -108,7 +108,7 @@ error_code
 ImageDb::load_image(usize index, usize id, data_ptr pixels) noexcept {
   // Disk Write
   TRY(this->seek_disk_id(id));
-  TRY(this->disk.write_u32(INDEX_SENTINEL));
+  TRY(this->disk.write_usize(INDEX_SENTINEL));
   TRY(this->disk.write(pixels, this->bytes));
 
   if (index <= this->capacity) {
@@ -397,7 +397,6 @@ ImageDbIter ImageDb::get_iter() const noexcept {
 
 expected<usize> ImageDb::create_image() noexcept {
   assert(this->ptr != nullptr);
-  assert(this->size <= this->capacity);
 
   if (this->size == this->capacity) {
     // Replace the item at the head
@@ -414,8 +413,8 @@ expected<usize> ImageDb::create_image() noexcept {
     ++this->next_id;
     ++this->disk_capacity;
   } else {
-    this->next_id = *TRY_RET(this->disk.read_u32());
-    TRY(this->disk.move(-4), {}, to_unexpected);
+    this->next_id = *TRY_RET(this->disk.read_usize());
+    TRY(this->disk.move(-static_cast<i32>(sizeof(usize))), {}, to_unexpected);
   }
 
   // Memory write
@@ -432,7 +431,7 @@ expected<usize> ImageDb::create_image() noexcept {
   this->insert_index = new_index;
 
   // Disk Write, already moved the disk pointer
-  TRY(this->disk.write_u32(INDEX_SENTINEL), {}, to_unexpected);
+  TRY(this->disk.write_usize(INDEX_SENTINEL), {}, to_unexpected);
 
   TRY(this->disk.write(pixels, this->bytes), {}, to_unexpected);
   TRY(this->disk.flush(), {}, to_unexpected);
@@ -457,12 +456,8 @@ error_code ImageDb::remove_image(usize id) noexcept {
   }
 
   // Disk Delete
-  if (this->disk_capacity == id) {
-    --this->disk_capacity;
-  } else {
-    TRY(this->seek_disk_id(id));
-    TRY(this->disk.write_u32(this->next_id));
-  }
+  TRY(this->seek_disk_id(id));
+  TRY(this->disk.write_usize(this->next_id));
   this->next_id = id;
   --this->disk_size;
 
@@ -498,7 +493,7 @@ error_code ImageDb::write_pixels_to_disk(usize id) const noexcept {
 
   auto* pixels = this->get_pixels_fast(id);
   TRY(this->seek_disk_id(id));
-  TRY(this->disk.write_u32(ID_SENTINEL));
+  TRY(this->disk.write_usize(ID_SENTINEL));
   TRY(this->disk.write(pixels, this->bytes));
   TRY(this->disk.flush());
 
@@ -507,7 +502,7 @@ error_code ImageDb::write_pixels_to_disk(usize id) const noexcept {
 
 error_code ImageDb::write_image_to_disk(const Image& image) const noexcept {
   TRY(this->seek_disk_id(image.get_id()));
-  TRY(this->disk.write_u32(ID_SENTINEL));
+  TRY(this->disk.write_usize(ID_SENTINEL));
   TRY(this->disk.write(image.get_pixels(), this->bytes));
   TRY(this->disk.flush());
   return error_code::OK;

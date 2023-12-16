@@ -81,6 +81,11 @@ set(tool_srcs
 )
 
 set(history_srcs
+  src/core/history/action/edit_image.cpp
+  src/core/history/action/insert_frame.cpp
+  src/core/history/action/insert_layer.cpp
+  src/core/history/action/remove_layer.cpp
+  src/core/history/action/set_visibility.cpp
   src/core/history/action.cpp
   src/core/history/caretaker.cpp
   src/core/history/arena.cpp

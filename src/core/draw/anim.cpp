@@ -28,6 +28,7 @@ error_code Anim::init(ivec size, ColorType type) noexcept {
   this->type = type;
 
   // TODO: Compute whether layers_max_bytes or layers_capacity is set
+  // NOLINTNEXTLINE
   TRY(this->images.init(size.x * size.y * get_color_type_size(this->type), 64U)
   );
   TRY(this->timeline.init());
@@ -42,7 +43,8 @@ error_code Anim::load_init(
 
   TRY(this->images.load_init(
       // NOLINTNEXTLINE
-      image_count, (usize)size.x * (usize)size.y * sizeof(usize)
+      image_count,
+      (usize)size.x * (usize)size.y * get_color_type_size(this->type)
   ));
   TRY(this->timeline.load_init(layer_count, frame_count));
   return error_code::OK;
@@ -326,6 +328,10 @@ error_code Anim::remove_image(usize frame_index, usize layer_index) noexcept {
   this->timeline.remove_image(frame_index, layer_index);
 
   return error_code::OK;
+}
+
+void Anim::set_layer_info(usize index, const LayerInfo& layer_info) noexcept {
+  this->timeline.set_layer_info(index, layer_info);
 }
 
 bool Anim::toggle_layer_visibility(usize index) noexcept {

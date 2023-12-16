@@ -79,7 +79,7 @@ error_code Manager::init_ctx_menus() noexcept {
     }));
     TRY(layers_ctx_menu.push_item(cfg::locale::TextId::REM_LAYER, []() {
       presenter::close_ctx_menus();
-      logger::debug("UwU"); // TODO:
+      presenter::remove_at_selected_layer();
     }));
     TRY(layers_ctx_menu.push_item(cfg::locale::TextId::PROPERTIES, []() {
       presenter::close_ctx_menus();
@@ -193,6 +193,8 @@ void Manager::open_layers_ctx_menu() noexcept {
   this->ctx_menu_stack.clear();
 
   this->ctx_menus[LAYERS_CTX_ID].reposition(this->input_evt.mouse.pos);
+  // Remove Button
+  /* this->ctx_menus[LAYERS_CTX_ID].set_disabled(1U, this->) */
   this->ctx_menu_idx = LAYERS_CTX_ID;
 }
 

@@ -15,6 +15,7 @@
 #include "core/history/caretaker.hpp"
 #include "core/logger/logger.hpp"
 #include "model/model.hpp"
+#include <algorithm>
 
 void presenter::create_anim() noexcept {
   // TODO: Prototype
@@ -91,9 +92,9 @@ void presenter::toggle_visibility(i32 layer_index) noexcept {
   if (layer_index == model_.layer_index) {
     view_.update_curr_texture(model_.img_id, show);
   } else if (layer_index < model_.layer_index) {
-    view_.update_bot_texture(model_.frame_index, layer_index);
+    view_.update_bot_texture(model_.frame_index, model_.layer_index);
   } else {
-    view_.update_top_texture(model_.frame_index, layer_index);
+    view_.update_top_texture(model_.frame_index, model_.layer_index);
   }
 }
 
@@ -102,8 +103,10 @@ void presenter::insert_at_selected_layer() noexcept {
     return;
   }
 
+  ++model_.selected_layer; // Adjust
   assert(model_.selected_layer <= model_.anim.get_layer_count());
-  logger::info("Insert layer");
+
+  logger::info("Insert layer " USIZE_FMT, model_.selected_layer);
 
   history::Action action{history::ActionType::INSERT_LAYER};
   action.insert_layer.prev_layer_index = model_.layer_index;
@@ -133,7 +136,7 @@ void presenter::insert_at_selected_frame() noexcept {
     return;
   }
 
-  logger::info("Insert frame");
+  logger::info("Insert frame " USIZE_FMT, model_.selected_frame);
 
   history::Action action{history::ActionType::INSERT_FRAME};
   action.insert_frame.prev_frame_index = model_.frame_index;
@@ -150,6 +153,45 @@ void presenter::insert_at_selected_frame() noexcept {
 
   view_.set_active_on_timeline(model_.selected_frame, model_.layer_index);
   view_.set_frame_range(0U, model_.anim.get_frame_count() - 1U);
+}
+
+void presenter::remove_at_selected_layer() noexcept {
+  if (!model_.anim || model_.anim.get_layer_count() == 1U) {
+    return;
+  }
+
+  if (model_.selected_layer == USIZE_MAX) {
+    model_.selected_layer = 0U;
+  }
+
+  logger::info("Remove layer " USIZE_FMT, model_.selected_layer);
+
+  caretaker_.prepare_push_action();
+  history::Action action{history::ActionType::REMOVE_LAYER};
+  action.remove_layer.init(model_.anim, model_.selected_layer, caretaker_);
+  caretaker_.push_action(std::move(action));
+
+  TRY_ABORT(
+      model_.anim.remove_layer(model_.selected_layer), "Could not update anim"
+  );
+
+  if (model_.selected_layer < model_.layer_index) {
+    --model_.layer_index;
+  }
+
+  model_.img_id =
+      model_.anim.get_image_id(model_.frame_index, model_.layer_index);
+  if (model_.img_id > 0U) {
+    model_.img = *TRY_ABORT_RET(
+        model_.anim.get_image(model_.img_id), "Could not read anim"
+    );
+  }
+  view_.remove_layer(model_.selected_layer);
+  view_.set_active_on_timeline(model_.frame_index, model_.layer_index);
+}
+
+void presenter::remove_at_selected_frame() noexcept {
+  // TODO:
 }
 
 void presenter::undo_action() noexcept {
