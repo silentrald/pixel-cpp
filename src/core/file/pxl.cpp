@@ -82,7 +82,8 @@ error_code Pxl::save(const draw::Anim& anim, const c8* path) noexcept {
   {
     const draw::TimelineInfo& timeline_info = anim.get_timeline_info();
     for (auto it = timeline_info.get_frame_iter(); it; ++it) {
-      for (usize i = 0; i < timeline_info.get_layer_count(); ++i) {
+      FILE_PRINT(fp, USIZE_FMT, it.get_image_id(0U));
+      for (usize i = 1U; i < timeline_info.get_layer_count(); ++i) {
         FILE_PRINT(fp, " " USIZE_FMT, it.get_image_id(i));
       }
       FILE_PRINT(fp, "\n");
@@ -162,6 +163,7 @@ expected<draw::Anim> Pxl::load(const c8* path) noexcept {
     FILE_SCAN(fp, "%*s");
 
     ds::vector<usize> image_ids{};
+    // NOLINTNEXTLINE
     TRY(image_ids.resize(anim.get_width() * anim.get_height()), {},
         to_unexpected);
 
@@ -183,7 +185,7 @@ expected<draw::Anim> Pxl::load(const c8* path) noexcept {
     }
     u32 id = 0U;
 
-    for (i32 i = 0; i < image_count; ++i) {
+    for (usize i = 0; i < image_count; ++i) {
       FILE_SCAN(fp, USIZE_FMT " ", &id);
       if (fread(pixels.get_data(), 1U, pixels.get_size(), fp) !=
           pixels.get_size()) {

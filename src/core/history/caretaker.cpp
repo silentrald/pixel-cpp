@@ -62,23 +62,44 @@ void Caretaker::push_action(Action&& action) noexcept {
   }
 }
 
-Action Caretaker::create_image_action(usize bytes) noexcept {
+Action Caretaker::create_edit_image_action(
+    draw::data_ptr prev_pixels, draw::data_ptr pixels, usize frame_index,
+    usize layer_index, usize bytes
+) noexcept {
   void* orig_ptr = this->arena.get_cursor_data();
-  Action action{};
+  Action action{ActionType::EDIT_IMAGE};
+  action.edit_image.frame_index = frame_index;
+  action.edit_image.layer_index = layer_index;
 
   if (this->cursor > -1 &&
-      this->actions[this->cursor].type == ActionType::EDIT_IMAGE) {
-    action.image.prev_pixels = this->actions[this->cursor].image.pixels;
+      this->actions[this->cursor].type == ActionType::EDIT_IMAGE &&
+      this->actions[this->cursor].edit_image.frame_index == frame_index &&
+      this->actions[this->cursor].edit_image.layer_index == layer_index) {
+    action.edit_image.prev_pixels =
+        this->actions[this->cursor].edit_image.pixels;
   } else {
-    action.image.prev_pixels = (draw::data_ptr)this->arena.allocate(bytes);
+    action.edit_image.prev_pixels =
+        static_cast<draw::data_ptr>(this->arena.allocate(bytes));
+    std::memcpy(action.edit_image.prev_pixels, prev_pixels, bytes);
+
     this->move_start_cursor(orig_ptr);
     orig_ptr = this->arena.get_cursor_data();
   }
 
-  action.image.pixels = (draw::data_ptr)this->arena.allocate(bytes);
+  action.edit_image.pixels =
+      static_cast<draw::data_ptr>(this->arena.allocate(bytes));
+  std::memcpy(action.edit_image.pixels, pixels, bytes);
+
   this->move_start_cursor(orig_ptr);
 
   return action;
+}
+
+void* Caretaker::allocate(usize bytes) noexcept {
+  auto* orig_ptr = this->arena.get_cursor_data();
+  auto* ptr = this->arena.allocate(bytes);
+  this->move_start_cursor(orig_ptr);
+  return ptr;
 }
 
 void Caretaker::move_start_cursor(void* orig_ptr) noexcept {

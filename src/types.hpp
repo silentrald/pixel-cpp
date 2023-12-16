@@ -12,8 +12,6 @@
 #include <cstdint>
 #include <string>
 
-#define USIZE_FMT "%u"
-
 // === Main Types === //
 
 using i8 = int8_t;
@@ -31,8 +29,21 @@ using f64 = double;
 
 using c8 = char;
 
+#ifdef BIT_32
+
+#define USIZE_FMT "%u" // NOLINT
 using usize = u32;
 const usize USIZE_MAX = UINT32_MAX;
+const usize USIZE_ZERO = 0U;
+
+#else
+
+#define USIZE_FMT "%llu" // NOLINT
+using usize = u64;
+const usize USIZE_MAX = UINT64_MAX;
+const usize USIZE_ZERO = 0ULL;
+
+#endif
 
 // === Color Types === //
 

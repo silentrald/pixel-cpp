@@ -82,6 +82,7 @@ public:
 
   [[nodiscard]] error_code
   insert_layer(usize index, const draw::LayerInfo& layer_info) noexcept;
+  void remove_layer(usize index) noexcept;
   void set_layer_visible(usize index, bool visible) noexcept;
   void clear_layers() noexcept;
 

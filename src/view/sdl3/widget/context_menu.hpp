@@ -26,6 +26,7 @@ public:
 
   [[nodiscard]] error_code
   push_item(cfg::locale::TextId text_id, void (*listener)()) noexcept;
+  void set_disabled(usize index, bool disabled) noexcept;
 
   [[nodiscard]] fvec get_sel_item_pos() const noexcept;
 

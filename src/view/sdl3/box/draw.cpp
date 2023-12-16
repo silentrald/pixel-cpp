@@ -97,6 +97,8 @@ void DrawBox::update_bot_texture(
 ) noexcept {
   assert(this->anim != nullptr);
 
+  std::memset(this->pixels.get_data(), 0, this->pixels.get_size());
+
   if (layer_index > 0) {
     this->anim->get_flatten(frame_index, 0, layer_index - 1, this->pixels);
   }
@@ -104,8 +106,6 @@ void DrawBox::update_bot_texture(
   this->get_bot_texture().set_pixels(
       reinterpret_cast<rgba8*>(this->pixels.get_data()), this->anim->get_size()
   );
-
-  std::memset(this->pixels.get_data(), 0, this->pixels.get_size());
 }
 
 void DrawBox::update_top_texture(
@@ -113,15 +113,17 @@ void DrawBox::update_top_texture(
 ) noexcept {
   assert(this->anim != nullptr);
 
+  std::memset(this->pixels.get_data(), 0, this->pixels.get_size());
+
   if (layer_index < this->anim->get_layer_count() - 1) {
     this->anim->get_flatten(
         frame_index, layer_index + 1, anim->get_layer_count() - 1, this->pixels
     );
   }
+
   this->get_top_texture().set_pixels(
       reinterpret_cast<rgba8*>(this->pixels.get_data()), this->anim->get_size()
   );
-  std::memset(this->pixels.get_data(), 0, this->pixels.get_size());
 }
 
 void DrawBox::resize(const frect& rect) noexcept {

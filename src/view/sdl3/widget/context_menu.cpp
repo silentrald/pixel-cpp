@@ -9,6 +9,7 @@
 #include "core/cfg/theme.hpp"
 #include "core/logger/logger.hpp"
 #include <algorithm>
+#include <cassert>
 
 namespace view::sdl3::widget {
 
@@ -45,6 +46,13 @@ error_code ContextMenu::push_item(
   );
 }
 
+void ContextMenu::set_disabled(usize index, bool disabled) noexcept {
+  assert(index < this->items.get_size());
+
+  this->items[index].state =
+      disabled ? input::BtnState::DISABLED : input::BtnState::NORMAL;
+}
+
 fvec ContextMenu::get_sel_item_pos() const noexcept {
   assert(this->selected != -1);
   return {
@@ -64,7 +72,7 @@ void ContextMenu::reposition(fvec pos) noexcept {
 }
 
 void ContextMenu::reset() noexcept {
-  this->selected = -1;
+  this->selected = USIZE_MAX;
   for (usize i = 0; i < this->items.get_size(); ++i) {
     this->items[i].state = input::BtnState::NORMAL;
   }

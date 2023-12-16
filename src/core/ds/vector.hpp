@@ -135,7 +135,7 @@ public:
   }
 
   [[nodiscard]] error_code insert(usize index, rref elem) noexcept {
-    assert(index >= 0 && index <= this->top);
+    assert(index <= this->top);
     TRY(this->check_allocation());
 
     // Shift
@@ -165,12 +165,12 @@ public:
   // === Accessing === //
 
   [[nodiscard]] ref operator[](usize index) noexcept {
-    assert(index >= 0 && index < this->top);
+    assert(index < this->top);
     return this->data[index];
   }
 
   [[nodiscard]] cref operator[](usize index) const noexcept {
-    assert(index >= 0 && index < this->top);
+    assert(index < this->top);
     return this->data[index];
   }
 

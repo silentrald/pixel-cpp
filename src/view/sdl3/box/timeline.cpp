@@ -33,7 +33,7 @@ error_code TimelineBox::init() noexcept {
   return error_code::OK;
 }
 
-error_code TimelineBox::insert_layer_info(
+error_code TimelineBox::insert_layer(
     usize index, const draw::LayerInfo& layer_info
 ) noexcept {
   assert(index >= 0 && index <= this->layers.get_size());
@@ -75,12 +75,24 @@ error_code TimelineBox::insert_layer_info(
   // NOTE: Underflows
   for (index = index - 1U; index < USIZE_MAX; --index) {
     text_rect.y += renderer::get_text_height() + LINE_WIDTH;
-    this->layers[index].textbox.rect.pos = text_rect.pos;
+    this->layers[index].textbox.pos = text_rect.pos;
     this->layers[index].textbox.tex_rect.pos = {
         text_rect.pos.x + LAYERS_NAME_PADDING_X, text_rect.pos.y};
   }
 
   return error_code::OK;
+}
+
+void TimelineBox::remove_layer(usize index) noexcept {
+  fvec off = this->layers[index].textbox.pos;
+  this->layers.remove(index);
+
+  for (index = index - 1U; index < USIZE_MAX; --index) {
+    this->layers[index].textbox.pos = off;
+    this->layers[index].textbox.tex_rect.pos = {
+        off.x + LAYERS_NAME_PADDING_X, off.y};
+    off.y += renderer::get_text_height() + LINE_WIDTH;
+  }
 }
 
 void TimelineBox::set_layer_visible(usize index, bool visible) noexcept {
@@ -221,9 +233,10 @@ void TimelineBox::handle_mouse_right(
     this->selected_layer =
         this->layers.get_size() -
         std::clamp(
-            static_cast<usize>((evt.mouse.pos.y - click_rect.y) / size), 0U,
-            this->layers.get_size()
-        );
+            static_cast<usize>((evt.mouse.pos.y - click_rect.y) / size),
+            USIZE_ZERO, this->layers.get_size()
+        ) -
+        1U;
     presenter::set_selected_layer(this->selected_layer);
     presenter::open_layers_ctx_menu();
     return;
@@ -237,7 +250,7 @@ void TimelineBox::handle_mouse_right(
   }
   size = this->layers.front().textbox.h;
   this->selected_frame = std::clamp(
-      static_cast<usize>((evt.mouse.pos.x - click_rect.x) / size), 0U,
+      static_cast<usize>((evt.mouse.pos.x - click_rect.x) / size), USIZE_ZERO,
       this->anim->get_frame_count()
   );
   presenter::set_selected_frame(this->selected_frame);

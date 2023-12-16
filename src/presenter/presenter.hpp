@@ -43,7 +43,7 @@ void window_resized() noexcept;
  **/
 void key_down_event(input::Keycode keycode, input::KeyMod key_mod) noexcept;
 
-void set_active_image(u32 frame_index, i32 layer_index) noexcept;
+void set_active_image(usize frame_index, usize layer_index) noexcept;
 void set_selected_layer(usize selected_layer) noexcept;
 void set_selected_frame(usize selected_frame) noexcept;
 void set_cursor_position(fvec mouse) noexcept;
@@ -66,6 +66,8 @@ void create_anim() noexcept;
 void toggle_visibility(i32 layer_index) noexcept;
 void insert_at_selected_layer() noexcept;
 void insert_at_selected_frame() noexcept;
+void remove_at_selected_layer() noexcept;
+void remove_at_selected_frame() noexcept;
 void undo_action() noexcept;
 void redo_action() noexcept;
 

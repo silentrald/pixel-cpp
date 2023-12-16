@@ -83,23 +83,13 @@ inline void handle_flags(u32 flags) {
 
     caretaker_.prepare_push_action();
 
-    history::Action action =
-        caretaker_.create_image_action(model_.anim.get_image_bytes_size());
-    action.type = model_.is_added_image ? history::ActionType::ADD_IMAGE
-                                        : history::ActionType::EDIT_IMAGE;
-    action.image.frame_index = model_.frame_index;
-    action.image.layer_index = model_.layer_index;
+    history::Action action = caretaker_.create_edit_image_action(
+        model_.pixels.get_data(), model_.img.get_pixels(), model_.frame_index,
+        model_.layer_index, model_.anim.get_image_bytes_size()
+    );
 
+    action.edit_image.new_image = model_.is_added_image;
     model_.is_added_image = false;
-
-    std::memcpy(
-        action.image.prev_pixels, model_.pixels.get_data(),
-        model_.anim.get_image_bytes_size()
-    );
-    std::memcpy(
-        action.image.pixels, model_.img.get_pixels(),
-        model_.anim.get_image_bytes_size()
-    );
 
     caretaker_.push_action(std::move(action));
 

@@ -393,6 +393,10 @@ void TimelineInfo::remove_image(usize frame_index, usize layer_index) noexcept {
   *this->get_image_id_ptr(frame_index, layer_index) = 0U;
 }
 
+void TimelineInfo::set_layer_info(usize index, const LayerInfo& info) noexcept {
+  this->layer_info[index] = info;
+}
+
 bool TimelineInfo::toggle_layer_visibility(usize index) noexcept {
   assert(index >= 0 && index < this->layer_count);
 

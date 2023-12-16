@@ -169,7 +169,9 @@ void presenter::new_file() noexcept {
   );
 }
 
-void presenter::set_active_image(u32 frame_index, i32 layer_index) noexcept {
+void presenter::set_active_image(
+    usize frame_index, usize layer_index
+) noexcept {
   if (model_.frame_index == frame_index && model_.layer_index == layer_index) {
     return;
   }
@@ -198,7 +200,7 @@ void presenter::set_active_image(u32 frame_index, i32 layer_index) noexcept {
   view_.set_active_on_timeline(frame_index, layer_index);
 }
 
-void presenter::set_selected_layer(u32 selected_layer) noexcept {
+void presenter::set_selected_layer(usize selected_layer) noexcept {
   model_.selected_layer = selected_layer;
 }
 

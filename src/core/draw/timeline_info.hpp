@@ -84,6 +84,7 @@ public:
   void remove_frame(usize index) noexcept;
   void remove_image(usize frame_index, usize layer_index) noexcept;
 
+  void set_layer_info(usize index, const LayerInfo& info) noexcept;
   bool toggle_layer_visibility(usize index) noexcept;
   void set_layer_visibility(usize index, bool visibility) noexcept;
 
