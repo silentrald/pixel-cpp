@@ -54,8 +54,9 @@ void Action::undo(Model& model) const noexcept {
   switch (this->type) {
     ACTION_UNDO(EDIT_IMAGE, edit_image)
     ACTION_UNDO(INSERT_LAYER, insert_layer)
-    ACTION_UNDO(INSERT_FRAME, insert_frame)
     ACTION_UNDO(REMOVE_LAYER, remove_layer)
+    ACTION_UNDO(INSERT_FRAME, insert_frame)
+    ACTION_UNDO(REMOVE_FRAME, remove_frame)
     ACTION_UNDO(SET_VISIBILITY, set_visibility)
 
   case ActionType::NONE:
@@ -76,8 +77,9 @@ void Action::redo(Model& model) const noexcept {
   switch (this->type) {
     ACTION_REDO(EDIT_IMAGE, edit_image)
     ACTION_REDO(INSERT_LAYER, insert_layer)
-    ACTION_REDO(INSERT_FRAME, insert_frame)
     ACTION_REDO(REMOVE_LAYER, remove_layer)
+    ACTION_REDO(INSERT_FRAME, insert_frame)
+    ACTION_REDO(REMOVE_FRAME, remove_frame)
     ACTION_REDO(SET_VISIBILITY, set_visibility)
 
   case ActionType::NONE:
@@ -95,6 +97,9 @@ void* Action::get_start_ptr() const noexcept {
 
   case ActionType::REMOVE_LAYER:
     return this->remove_layer.data;
+
+  case ActionType::REMOVE_FRAME:
+    return this->remove_frame.data;
 
   case ActionType::INSERT_LAYER:
   case ActionType::INSERT_FRAME:
@@ -123,6 +128,9 @@ void* Action::get_start_ptr(const Action& last_action) const noexcept {
 
   case ActionType::REMOVE_LAYER:
     return this->remove_layer.data;
+
+  case ActionType::REMOVE_FRAME:
+    return this->remove_frame.data;
 
   case ActionType::INSERT_LAYER:
   case ActionType::INSERT_FRAME:

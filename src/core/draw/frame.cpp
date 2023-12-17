@@ -19,7 +19,7 @@ usize Frame::get_index() const noexcept {
 
 usize Frame::get_image_id(usize index) const noexcept {
   assert(this->ptr != nullptr);
-  assert(index >= 0U && index < this->layer_count);
+  assert(index < this->layer_count);
 
   return this->ptr[index];
 }

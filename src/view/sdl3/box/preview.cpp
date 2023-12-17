@@ -53,7 +53,7 @@ void PreviewBox::set_playing(bool playing) noexcept {
   this->playing = playing;
 
   if (playing) {
-    this->cursor = 0U;
+    this->cursor = this->anim->get_frame_count() - 1U;
     this->play_btn.set_texture(renderer::load_img(PAUSE_IMG_PATH));
   } else {
     this->set_frame_texture(this->active_frame);
@@ -112,6 +112,9 @@ void PreviewBox::update(f32 delta) noexcept {
 void PreviewBox::render() noexcept {
   renderer::set_color({0x33, 0x33, 0x33, 0xff});
   renderer::fill_rect(this->rect);
+
+  renderer::set_color({0xff, 0xff, 0xff, 0xff});
+  renderer::fill_rect(this->texture_rect);
 
   this->play_btn.render();
   renderer::render_texture(this->tex, this->texture_rect);

@@ -11,6 +11,7 @@
 #include "./action/edit_image.hpp"
 #include "./action/insert_frame.hpp"
 #include "./action/insert_layer.hpp"
+#include "./action/remove_frame.hpp"
 #include "./action/remove_layer.hpp"
 #include "./action/set_visibility.hpp"
 #include "./arena.hpp"
@@ -27,6 +28,7 @@ enum class ActionType {
   INSERT_LAYER,
   REMOVE_LAYER,
   INSERT_FRAME,
+  REMOVE_FRAME,
   SET_VISIBILITY,
 };
 
@@ -37,6 +39,7 @@ struct Action {
     InsertLayer insert_layer;
     RemoveLayer remove_layer;
     InsertFrame insert_frame;
+    RemoveFrame remove_frame;
     SetVisibility set_visibility;
   };
 

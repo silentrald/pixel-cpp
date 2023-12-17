@@ -60,6 +60,8 @@ public:
   [[nodiscard]] usize get_layer_count() const noexcept;
   [[nodiscard]] usize get_frame_count() const noexcept;
 
+  [[nodiscard]] Frame get_frame(usize index) const noexcept;
+
   [[nodiscard]] expected<Image> get_image(usize id) noexcept;
   [[nodiscard]] expected<Image>
   get_image(usize frame_index, usize layer_index) noexcept;

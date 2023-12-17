@@ -131,6 +131,10 @@ usize Anim::get_frame_count() const noexcept {
   return this->timeline.get_frame_count();
 }
 
+Frame Anim::get_frame(usize index) const noexcept {
+  return this->timeline.get_frame(index);
+}
+
 expected<Image> Anim::get_image(usize id) noexcept {
   auto* pixels = *TRY_RET(this->images.get_pixels(id), {}, to_unexpected);
   return Image{pixels, this->size, this->type, id};
