@@ -65,7 +65,9 @@ usize RemoveLayer::calculate_size() const noexcept {
 
 void RemoveLayer::undo(Model& model) const noexcept {
   // Re-add the layer
-  TRY_ABORT(model.anim.insert_layer(this->layer_index), "Could not insert");
+  TRY_ABORT(
+      model.anim.insert_layer(this->layer_index), "Could not insert layer"
+  );
   model.anim.set_layer_info(
       this->layer_index, *reinterpret_cast<draw::LayerInfo*>(this->data)
   );
@@ -85,11 +87,15 @@ void RemoveLayer::undo(Model& model) const noexcept {
     cursor += this->bytes + sizeof(usize);
   }
 
-  model.img_id = model.anim.get_image_id(model.frame_index, model.layer_index);
-  if (model.img_id > 0U) {
-    model.img = *TRY_ABORT_RET(
-        model.anim.get_image(model.img_id), "Could not read anim"
-    );
+  // Update model
+  id = model.anim.get_image_id(model.frame_index, model.layer_index);
+  if (model.img_id == id) {
+    return;
+  }
+
+  model.img_id = id;
+  if (id > 0U) {
+    model.img = *TRY_ABORT_RET(model.anim.get_image(id), "Could not read anim");
   }
 }
 
@@ -102,11 +108,14 @@ void RemoveLayer::redo(Model& model) const noexcept {
     --model.layer_index;
   }
 
-  model.img_id = model.anim.get_image_id(model.frame_index, model.layer_index);
-  if (model.img_id > 0U) {
-    model.img = *TRY_ABORT_RET(
-        model.anim.get_image(model.img_id), "Could not read anim"
-    );
+  auto id = model.anim.get_image_id(model.frame_index, model.layer_index);
+  if (model.img_id == id) {
+    return;
+  }
+
+  model.img_id = id;
+  if (id > 0U) {
+    model.img = *TRY_ABORT_RET(model.anim.get_image(id), "Could not read anim");
   }
 }
 

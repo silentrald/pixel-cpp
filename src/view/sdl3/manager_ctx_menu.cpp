@@ -96,7 +96,7 @@ error_code Manager::init_ctx_menus() noexcept {
     }));
     TRY(timeline_ctx_menu.push_item(cfg::locale::TextId::REM_FRAME, []() {
       presenter::close_ctx_menus();
-      logger::debug("UwU"); // TODO:
+      presenter::remove_at_selected_frame();
     }));
   }
 

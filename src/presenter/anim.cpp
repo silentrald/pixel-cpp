@@ -179,19 +179,53 @@ void presenter::remove_at_selected_layer() noexcept {
     --model_.layer_index;
   }
 
-  model_.img_id =
-      model_.anim.get_image_id(model_.frame_index, model_.layer_index);
-  if (model_.img_id > 0U) {
-    model_.img = *TRY_ABORT_RET(
-        model_.anim.get_image(model_.img_id), "Could not read anim"
-    );
+  auto id = model_.anim.get_image_id(model_.frame_index, model_.layer_index);
+  if (model_.img_id != id) {
+    model_.img_id = id;
+    if (id > 0U) {
+      model_.img =
+          *TRY_ABORT_RET(model_.anim.get_image(id), "Could not read anim");
+    }
   }
+
+  // Update view
   view_.remove_layer(model_.selected_layer);
   view_.set_active_on_timeline(model_.frame_index, model_.layer_index);
 }
 
 void presenter::remove_at_selected_frame() noexcept {
-  // TODO:
+  if (!model_.anim || model_.anim.get_frame_count() == 1U) {
+    return;
+  }
+
+  model_.selected_frame =
+      std::min(model_.selected_frame, model_.anim.get_frame_count() - 1U);
+
+  caretaker_.prepare_push_action();
+  history::Action action{history::ActionType::REMOVE_FRAME};
+  action.remove_frame.init(model_.anim, model_.selected_frame, caretaker_);
+  caretaker_.push_action(std::move(action));
+
+  TRY_ABORT(
+      model_.anim.remove_frame(model_.selected_frame), "Could not update anim"
+  );
+
+  if (model_.selected_frame <= model_.frame_index) {
+    --model_.frame_index;
+  }
+
+  auto id = model_.anim.get_image_id(model_.frame_index, model_.layer_index);
+  if (model_.img_id != id) {
+    model_.img_id = id;
+    if (id > 0U) {
+      model_.img =
+          *TRY_ABORT_RET(model_.anim.get_image(id), "Could not read anim");
+    }
+  }
+
+  // Update view
+  view_.set_frame_range(0U, model_.anim.get_frame_count() - 1U);
+  view_.set_active_on_timeline(model_.frame_index, model_.layer_index);
 }
 
 void presenter::undo_action() noexcept {
