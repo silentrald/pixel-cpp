@@ -30,7 +30,7 @@ public:
   void set_text(cfg::locale::TextId id) noexcept;
 
   void reset() noexcept override;
-  void locale_updated() noexcept override;
+  void update_locale() noexcept override;
   void input(const event::Input& evt, InputData& data) noexcept override;
   void update(f32 delta) noexcept override;
   void render() noexcept override;

@@ -26,6 +26,7 @@ struct InputData {
   widget::Input* selected_input = nullptr;
   widget::Input* new_selected_input = nullptr;
   widget::Input* first_input = nullptr;
+  void* left_clicked_widget = nullptr;
 
   fvec orig_pos{};
   fvec orig_mouse{};

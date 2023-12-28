@@ -13,10 +13,10 @@ namespace view::sdl3 {
 
 // TODO: Depends on locale, check utf-8 logic
 void CachedTextures::init() noexcept {
-  this->locale_updated();
+  this->update_locale();
 }
 
-void CachedTextures::locale_updated() noexcept {
+void CachedTextures::update_locale() noexcept {
   c8 str[2] = {' ', '\0'}; // NOLINT
   this->height = renderer::get_text_size(str).y;
 

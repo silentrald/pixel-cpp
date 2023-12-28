@@ -35,7 +35,6 @@ void presenter::update_view() noexcept {
   }
 
   view_.set_active_on_timeline(model_.frame_index, model_.layer_index);
-  view_.set_frame_range(0U, model_.anim.get_frame_count() - 1U);
 }
 
 void presenter::close_modals() noexcept {

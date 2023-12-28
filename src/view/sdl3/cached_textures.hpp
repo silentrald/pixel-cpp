@@ -27,7 +27,7 @@ public:
   ~CachedTextures() noexcept = default;
 
   void init() noexcept;
-  void locale_updated() noexcept;
+  void update_locale() noexcept;
 
   [[nodiscard]] const Texture& get_char_texture(c8 chr) const noexcept;
   [[nodiscard]] const Texture& get_number_texture(i32 num) const noexcept;

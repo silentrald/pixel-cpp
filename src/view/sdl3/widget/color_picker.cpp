@@ -30,12 +30,12 @@ void ColorPicker::reset() noexcept {
   //
 }
 
-void ColorPicker::locale_updated() noexcept {
+void ColorPicker::update_locale() noexcept {
   this->size = {renderer::get_text_height(), renderer::get_text_height()};
 
   this->hex_str.x = this->pos.x + renderer::get_text_height() + 4.0F;
   this->hex_str.h = renderer::get_text_height();
-  this->hex_str.locale_updated();
+  this->hex_str.update_locale();
 }
 
 void ColorPicker::input(const event::Input& evt, InputData& data) noexcept {

@@ -97,7 +97,7 @@ public:
 
   // === Iterators === //
 
-  [[nodiscard]] FrameIter get_frame_iter() const noexcept;
+  [[nodiscard]] FrameIter get_frame_iter(usize frame_index = 0U) const noexcept;
 
   // === Modifiers === //
 

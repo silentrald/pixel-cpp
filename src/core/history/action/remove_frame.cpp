@@ -85,6 +85,7 @@ void RemoveFrame::undo(Model& model) const noexcept {
   }
 
   // Update model
+  model.frame_index = this->frame_index;
   id = model.anim.get_image_id(model.frame_index, model.layer_index);
   if (model.img_id == id) {
     return;

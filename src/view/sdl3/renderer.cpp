@@ -52,9 +52,9 @@ void renderer::destroy() noexcept {
   }
 }
 
-void renderer::locale_updated() noexcept {
+void renderer::update_locale() noexcept {
   font_.set(cfg::locale::get_font(), cfg::locale::get_size());
-  textures_.locale_updated();
+  textures_.update_locale();
 }
 
 void renderer::clear() noexcept {

@@ -136,7 +136,7 @@ void DrawBox::reset() noexcept {
   //
 }
 
-void DrawBox::locale_updated() noexcept {
+void DrawBox::update_locale() noexcept {
   // Do nothing UwU
 }
 

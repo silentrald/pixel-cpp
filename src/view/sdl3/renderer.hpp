@@ -18,7 +18,7 @@ namespace view::sdl3::renderer {
 void init(SDL_Window* window) noexcept;
 void destroy() noexcept;
 
-void locale_updated() noexcept;
+void update_locale() noexcept;
 
 // Clears the screen
 void clear() noexcept;

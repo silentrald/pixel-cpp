@@ -118,10 +118,10 @@ void FileModal::reset() noexcept {
   //
 }
 
-void FileModal::locale_updated() noexcept {
-  this->title_text.locale_updated();
-  this->width_text.locale_updated();
-  this->height_text.locale_updated();
+void FileModal::update_locale() noexcept {
+  this->title_text.update_locale();
+  this->width_text.update_locale();
+  this->height_text.update_locale();
 
   const c8* text = nullptr;
   fvec size{};
@@ -138,8 +138,8 @@ void FileModal::locale_updated() noexcept {
   this->px_rect2 = {off.x, this->height_text.y, size.x, size.y};
 
   // Textboxes
-  this->width_textbox.locale_updated();
-  this->height_textbox.locale_updated();
+  this->width_textbox.update_locale();
+  this->height_textbox.update_locale();
 
   // Buttons
   text = cfg::locale::get_text(cfg::locale::TextId::NEW);

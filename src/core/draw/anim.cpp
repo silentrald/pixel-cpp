@@ -262,8 +262,8 @@ const std::string& Anim::get_name() noexcept {
   return this->name;
 }
 
-FrameIter Anim::get_frame_iter() const noexcept {
-  return this->timeline.get_frame_iter();
+FrameIter Anim::get_frame_iter(usize frame_index) const noexcept {
+  return this->timeline.get_frame_iter(frame_index);
 }
 
 Anim::operator bool() const noexcept {

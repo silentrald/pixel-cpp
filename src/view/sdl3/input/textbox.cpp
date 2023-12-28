@@ -56,7 +56,7 @@ void Textbox::unfocused() noexcept {
   this->reposition_text_rect();
 }
 
-void Textbox::locale_updated() noexcept {
+void Textbox::update_locale() noexcept {
   this->tex = renderer::create_text(this->text.c_str());
   this->reposition_text_rect();
 }

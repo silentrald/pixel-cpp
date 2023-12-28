@@ -37,6 +37,24 @@ u32 convert_str_to_key(const c8* str) noexcept {
     str += 4;
   }
 
+  // Arrow buttons
+  if (std::strncmp("up", str, 2) == 0) {
+    return key | input::Keycode::UP;
+  }
+
+  if (std::strncmp("down", str, 4) == 0) {
+    return key | input::Keycode::DOWN;
+  }
+
+  if (std::strncmp("right", str, 5) == 0) {
+    return key | input::Keycode::RIGHT;
+  }
+
+  if (std::strncmp("left", str, 4) == 0) {
+    return key | input::Keycode::LEFT;
+  }
+
+  // Normal key press
   if (str[0] >= 'A' && str[0] <= 'Z') {
     return key | (str[0] - 'A' + 'a');
   }

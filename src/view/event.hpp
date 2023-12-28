@@ -12,6 +12,10 @@
 #include "types.hpp"
 #include "view/input.hpp"
 
+#ifndef NDEBUG
+#include "core/logger/logger.hpp"
+#endif
+
 namespace event {
 
 enum Flag : u32 {
@@ -47,6 +51,35 @@ struct Input {
     return this->mouse.left == state || this->mouse.right == state ||
            this->mouse.middle == state;
   }
+
+#ifndef NDEBUG
+
+  void print(bool lock = true) const noexcept {
+    if (lock) {
+      if (!logger::lock(logger::DEBUG_LVL, "Input")) {
+        return;
+      }
+    } else {
+      logger::print("Input");
+    }
+
+    logger::print(
+        "  Mouse Pos (%.0f, %.0f)\n"
+        "  Mouse Left/Middle/Right: %2u/%2u/%2u\n"
+        "  Mouse Wheel (%.0f, %.0f)\n"
+        "  KeyMods (CTRL/SHIFT/ALT): %d %d %d\n",
+        this->mouse.pos.x, this->mouse.pos.y, this->mouse.left,
+        this->mouse.middle, this->mouse.right, this->mouse.wheel.x,
+        this->mouse.wheel.y, this->key.mods.ctrl, this->key.mods.shift,
+        this->key.mods.alt
+    );
+
+    if (lock) {
+      logger::unlock();
+    }
+  }
+
+#endif
 };
 
 class KeyPress {

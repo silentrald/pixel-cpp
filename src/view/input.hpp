@@ -50,6 +50,11 @@ enum Keycode : u32 {
   ENTER = SDLK_RETURN,
   BACKSPACE = SDLK_BACKSPACE,
 
+  RIGHT = SDLK_RIGHT,
+  LEFT = SDLK_LEFT,
+  UP = SDLK_UP,
+  DOWN = SDLK_DOWN,
+
   // MODIFIERS
   CTRL = 1 << 29,
   SHIFT = 1 << 28,
@@ -70,7 +75,7 @@ enum BtnState : u32 {
   DISABLED = 0b00,
   NORMAL = 0b01, // button state
   HOVER = 0b10,
-  DOWN = 0b11,
+  PRESS = 0b11,
 };
 
 enum BtnTheme : u32 {

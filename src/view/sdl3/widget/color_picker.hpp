@@ -32,7 +32,7 @@ public:
   void set_color(rgba8 color) noexcept;
 
   void reset() noexcept override;
-  void locale_updated() noexcept override;
+  void update_locale() noexcept override;
   void input(const event::Input& evt, InputData& data) noexcept override;
   void update(f32 delta) noexcept override;
   void render() noexcept override;

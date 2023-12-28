@@ -61,7 +61,7 @@ void presenter::set_locale() noexcept {
     logger::fatal("Could not load locale");
     std::abort();
   }
-  view_.locale_updated();
+  view_.update_locale();
 }
 
 void presenter::window_resized() noexcept {
@@ -144,13 +144,25 @@ void presenter::key_down_event(
     handle_unselect();
     break;
 
-  case cfg::ShortcutKey::TIMELINE_NEXT_FRAME:
+  case cfg::ShortcutKey::TIMELINE_NX_LAYER:
+    if (model_.layer_index < model_.anim.get_layer_count() - 1U) {
+      presenter::set_active_image(model_.frame_index, model_.layer_index + 1U);
+    }
+    break;
+
+  case cfg::ShortcutKey::TIMELINE_PV_LAYER:
+    if (model_.layer_index > 0U) {
+      presenter::set_active_image(model_.frame_index, model_.layer_index - 1U);
+    }
+    break;
+
+  case cfg::ShortcutKey::TIMELINE_NX_FRAME:
     if (model_.frame_index < model_.anim.get_frame_count() - 1U) {
       presenter::set_active_image(model_.frame_index + 1U, model_.layer_index);
     }
     break;
 
-  case cfg::ShortcutKey::TIMELINE_PREV_FRAME:
+  case cfg::ShortcutKey::TIMELINE_PV_FRAME:
     if (model_.frame_index > 0U) {
       presenter::set_active_image(model_.frame_index - 1U, model_.layer_index);
     }

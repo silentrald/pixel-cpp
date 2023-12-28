@@ -54,7 +54,7 @@ void ToolBox::reset() noexcept {
   }
 }
 
-void ToolBox::locale_updated() noexcept {
+void ToolBox::update_locale() noexcept {
   // NOTE: Do nothing for now UwU, just add logic here once tool tips/hints are
   // created
 }

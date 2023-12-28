@@ -53,7 +53,7 @@ void Button::unfocused() noexcept {
   this->focused = false;
 }
 
-void Button::locale_updated() noexcept {
+void Button::update_locale() noexcept {
   // Do nothing UwU
 }
 
@@ -72,11 +72,11 @@ void Button::input(const event::Input& evt, InputData& data) noexcept {
   switch (evt.mouse.left) {
   case input::MouseState::DOWN:
   case input::MouseState::HOLD:
-    this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::DOWN;
+    this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::PRESS;
     return;
 
   case input::MouseState::UP:
-    this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::DOWN;
+    this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::PRESS;
     data.left_click = true;
     // TODO: Just remove listener and use the InputData object instead
     if (this->left_click_listener) {
@@ -91,11 +91,11 @@ void Button::input(const event::Input& evt, InputData& data) noexcept {
   switch (evt.mouse.right) {
   case input::MouseState::DOWN:
   case input::MouseState::HOLD:
-    this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::DOWN;
+    this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::PRESS;
     break;
 
   case input::MouseState::UP:
-    this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::DOWN;
+    this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::PRESS;
     data.right_click = true;
     // TODO: Just remove listener and use the InputData object instead
     if (this->right_click_listener) {

@@ -19,7 +19,7 @@ void StatusBox::reset() noexcept {
   // TODO:
 }
 
-void StatusBox::locale_updated() noexcept {
+void StatusBox::update_locale() noexcept {
   // NOTE: Do nothing for now UwU
 }
 
