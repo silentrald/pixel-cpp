@@ -122,13 +122,7 @@ void RemoveLayer::redo(Model& model) const noexcept {
 #ifndef NDEBUG
 
 void RemoveLayer::print(bool lock) const noexcept {
-  if (lock) {
-    if (!logger::lock(logger::DEBUG_LVL, "Edit Image")) {
-      return;
-    }
-  } else {
-    logger::print("Edit Image\n");
-  }
+  LOCK_PRINT(logger::Level::DEBUG_LVL, "Edit Image", lock);
 
   // Info
   logger::print(
@@ -149,9 +143,7 @@ void RemoveLayer::print(bool lock) const noexcept {
     logger::print("\n");
   }
 
-  if (lock) {
-    logger::unlock();
-  }
+  UNLOCK_PRINT(lock);
 }
 
 #endif

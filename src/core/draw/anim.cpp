@@ -358,9 +358,10 @@ error_code Anim::write_image_to_disk(const Image& image) const noexcept {
 
 #ifndef NDEBUG
 
-void Anim::print_metadata() const noexcept {
-  logger::debug(
-      "Animation Metadata\n"
+void Anim::print_metadata(bool lock) const noexcept {
+  LOCK_PRINT(logger::Level::DEBUG_LVL, "Animation Metadata", lock);
+
+  logger::print(
       "  Size: (%d, %d)\n"
       "  Image Count: " USIZE_FMT "\n"
       "  Layer Count: " USIZE_FMT "\n"
@@ -368,16 +369,16 @@ void Anim::print_metadata() const noexcept {
       size.x, size.y, this->images.get_disk_size(),
       this->timeline.get_layer_count(), this->timeline.get_frame_count()
   );
+
+  UNLOCK_PRINT(lock);
 }
 
-void Anim::print_timeline_info_metadata() const noexcept {
-  this->timeline.print_metadata();
+void Anim::print_timeline_info_metadata(bool lock) const noexcept {
+  this->timeline.print_metadata(lock);
 }
 
-void Anim::print_images_memory() const noexcept {
-  if (!logger::lock(logger::Level::DEBUG_LVL, "Animation Images Memory")) {
-    return;
-  }
+void Anim::print_images_memory(bool lock) const noexcept {
+  LOCK_PRINT(logger::Level::DEBUG_LVL, "Animation Images Memory", lock);
 
   usize mod = this->size.x * get_color_type_size(this->type);
   usize psize = mod * this->size.y;
@@ -394,19 +395,19 @@ void Anim::print_images_memory() const noexcept {
     logger::print("\n");
   }
 
-  logger::unlock();
+  UNLOCK_PRINT(lock);
 }
 
-void Anim::print_images_disk() const noexcept {
+void Anim::print_images_disk(bool lock) const noexcept {
+  // Prep
   ds::vector<u8> pixels{};
   TRY(pixels.resize(
           this->size.x * this->size.y * get_color_type_size(this->type)
       ),
       logger::warn("Could not resize pixels vector, skip printing"), to_void);
 
-  if (!logger::lock(logger::Level::DEBUG_LVL, "Animation Images Disk")) {
-    return;
-  }
+  // Printing
+  LOCK_PRINT(logger::Level::DEBUG_LVL, "Animation Images Disk", lock);
 
   usize mod = this->size.x * get_color_type_size(this->type);
   for (usize id = 1U; id <= this->images.get_disk_capacity(); ++id) {
@@ -425,13 +426,11 @@ void Anim::print_images_disk() const noexcept {
     logger::print("\n");
   }
 
-  logger::unlock();
+  UNLOCK_PRINT(lock);
 }
 
-void Anim::print_timeline_info() const noexcept {
-  if (!logger::lock(logger::Level::DEBUG_LVL, "Animation Timeline Info")) {
-    return;
-  }
+void Anim::print_timeline_info(bool lock) const noexcept {
+  LOCK_PRINT(logger::Level::DEBUG_LVL, "Animation Timeline Info", lock);
 
   logger::print("=== Layers ===\n");
   for (usize i = 0U; i < this->timeline.get_layer_count(); ++i) {
@@ -450,7 +449,7 @@ void Anim::print_timeline_info() const noexcept {
     logger::print("\n");
   }
 
-  logger::unlock();
+  UNLOCK_PRINT(lock);
 }
 
 #endif

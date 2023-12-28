@@ -91,7 +91,7 @@ public:
 
 #ifndef NDEBUG
 
-  void print_metadata() const noexcept;
+  void print_metadata(bool lock = true) const noexcept;
 
 #endif
 

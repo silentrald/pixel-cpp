@@ -587,9 +587,10 @@ FrameIter::operator bool() const noexcept {
 
 #ifndef NDEBUG
 
-void TimelineInfo::print_metadata() const noexcept {
-  logger::debug(
-      "Timeline Info Metadata\n"
+void TimelineInfo::print_metadata(bool lock) const noexcept {
+  LOCK_PRINT(logger::Level::DEBUG_LVL, "Timeline Info Metadata", lock);
+
+  logger::print(
       "  Layer Count/Cap: " USIZE_FMT "/" USIZE_FMT "\n"
       "  Frame Count/Cap: " USIZE_FMT "/" USIZE_FMT "\n"
       "  Timeline Alloc Size: " USIZE_FMT "\n"
@@ -598,6 +599,8 @@ void TimelineInfo::print_metadata() const noexcept {
       this->frame_capacity, this->timeline_alloc_size,
       this->layer_info_alloc_size
   );
+
+  UNLOCK_PRINT(lock);
 }
 
 #endif

@@ -10,6 +10,20 @@
 
 #include "types.hpp"
 
+#define LOCK_PRINT(level, msg, lock)                                           \
+  if (lock) {                                                                  \
+    if (!logger::lock(level, msg)) {                                           \
+      return;                                                                  \
+    }                                                                          \
+  } else {                                                                     \
+    logger::print(msg);                                                        \
+  }
+
+#define UNLOCK_PRINT(lock)                                                     \
+  if (lock) {                                                                  \
+    logger::unlock();                                                          \
+  }
+
 namespace logger {
 
 enum Level {
