@@ -134,11 +134,13 @@ public:
   // === Debugging === //
 
 #ifndef NDEBUG
-  void print_metadata() const noexcept;
-  void print_timeline_info_metadata() const noexcept;
-  void print_images_memory() const noexcept;
-  void print_images_disk() const noexcept;
-  void print_timeline_info() const noexcept;
+
+  void print_metadata(bool lock = true) const noexcept;
+  void print_timeline_info_metadata(bool lock = true) const noexcept;
+  void print_images_memory(bool lock = true) const noexcept;
+  void print_images_disk(bool lock = true) const noexcept;
+  void print_timeline_info(bool lock = true) const noexcept;
+
 #endif
 
 private:

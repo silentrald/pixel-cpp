@@ -80,10 +80,8 @@ Image::operator bool() const noexcept {
 
 #ifndef NDEBUG
 
-void Image::print() const noexcept {
-  if (!logger::lock(logger::Level::DEBUG_LVL, "Image Info")) {
-    return;
-  }
+void Image::print(bool lock) const noexcept {
+  LOCK_PRINT(logger::Level::DEBUG_LVL, "Image Info", lock);
 
   logger::print(
       "  Image Id: " USIZE_FMT " ; Size (%d, %d) ; Ptr: %p", this->id,
@@ -100,7 +98,7 @@ void Image::print() const noexcept {
   }
   logger::print("\n");
 
-  logger::unlock();
+  UNLOCK_PRINT(lock);
 }
 
 #endif

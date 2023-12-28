@@ -36,7 +36,7 @@ public:
 
 #ifndef NDEBUG
 
-  void print() const noexcept;
+  void print(bool lock = true) const noexcept;
 
 #endif
 
