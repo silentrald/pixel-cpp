@@ -34,7 +34,7 @@ public:
   void reset() noexcept override;
   void unfocused() noexcept override;
 
-  void locale_updated() noexcept override;
+  void update_locale() noexcept override;
   void input(const event::Input& evt, InputData& data) noexcept override;
   void key_input(event::KeyPress& keypress) noexcept override;
   void update(f32 delta) noexcept override;

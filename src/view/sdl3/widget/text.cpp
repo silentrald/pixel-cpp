@@ -11,14 +11,14 @@ namespace view::sdl3::widget {
 
 void Text::set_text(cfg::locale::TextId id) noexcept {
   this->id = id;
-  this->locale_updated();
+  this->update_locale();
 }
 
 void Text::reset() noexcept {
   // Do nothing UwU
 }
 
-void Text::locale_updated() noexcept {
+void Text::update_locale() noexcept {
   const auto* str = cfg::locale::get_text(this->id);
   this->tex = renderer::create_text(str);
   this->rect.size = renderer::get_text_size(str);

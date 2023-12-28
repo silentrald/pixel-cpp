@@ -78,7 +78,7 @@ public:
 
   // === Modifiers === //
 
-  void locale_updated() noexcept;
+  void update_locale() noexcept;
 
   [[nodiscard]] error_code
   insert_layer(usize index, const draw::LayerInfo& layer_info) noexcept;
@@ -87,7 +87,7 @@ public:
   void clear_layers() noexcept;
 
   void set_active_on_timeline(usize frame_index, usize layer_index) noexcept;
-  void set_frame_range(usize start_frame, usize end_frame) noexcept;
+  void set_frame_offset(usize frame_offset) noexcept;
 
   [[nodiscard]] error_code push_modal(modal::Id id) noexcept;
   modal::Id pop_modal() noexcept;
@@ -160,7 +160,7 @@ private:
 
   [[nodiscard]] error_code init_ctx_menus() noexcept;
   void handle_ctx_menu_event() noexcept;
-  void handle_ctx_menu_locale_updated() noexcept;
+  void handle_ctx_menu_update_locale() noexcept;
 
   void reset_data() noexcept;
 

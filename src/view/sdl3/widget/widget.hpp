@@ -29,7 +29,7 @@ public:
    * Tries to reset to original state, without any highlight
    **/
   virtual void reset() noexcept = 0;
-  virtual void locale_updated() noexcept = 0;
+  virtual void update_locale() noexcept = 0;
 
   virtual void input(const event::Input& evt, InputData& data) noexcept = 0;
   virtual void update(f32 delta) noexcept = 0;

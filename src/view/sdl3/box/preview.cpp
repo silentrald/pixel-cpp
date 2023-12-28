@@ -77,7 +77,7 @@ void PreviewBox::reset() noexcept {
   //
 }
 
-void PreviewBox::locale_updated() noexcept {
+void PreviewBox::update_locale() noexcept {
   //
 }
 

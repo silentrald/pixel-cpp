@@ -64,10 +64,10 @@ void MenuBox::reset() noexcept {
   }
 }
 
-void MenuBox::locale_updated() noexcept {
+void MenuBox::update_locale() noexcept {
   fvec off = this->rect.pos;
   for (i32 i = 0; i < this->btns.get_size(); ++i) {
-    this->btns[i].text.locale_updated();
+    this->btns[i].text.update_locale();
     this->btns[i].rect.pos = off;
     this->btns[i].rect.size = this->btns[i].text.rect.size + PADDING * 2.0F;
   }
@@ -94,7 +94,7 @@ void MenuBox::input(const event::Input& evt, InputData& data) noexcept {
 
     case input::MouseState::DOWN:
     case input::MouseState::HOLD:
-      this->btns[i].state = input::BtnState::DOWN;
+      this->btns[i].state = input::BtnState::PRESS;
       break;
 
     case input::MouseState::UP:

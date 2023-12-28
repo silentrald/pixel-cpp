@@ -18,7 +18,8 @@ class FrameIter {
 public:
   FrameIter() noexcept;
   FrameIter(
-      usize* ptr, usize frame_count, usize frame_capacity, usize layer_capacity
+      usize* ptr, usize frame_index, usize frame_count, usize frame_capacity,
+      usize layer_capacity
   ) noexcept;
 
   FrameIter& operator++() noexcept;
@@ -71,7 +72,7 @@ public:
 
   [[nodiscard]] usize get_timeline_alloc_size() const noexcept;
 
-  [[nodiscard]] FrameIter get_frame_iter() const noexcept;
+  [[nodiscard]] FrameIter get_frame_iter(usize frame_index = 0U) const noexcept;
 
   // === Modifiers === //
 

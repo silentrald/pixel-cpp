@@ -78,10 +78,10 @@ void ContextMenu::reset() noexcept {
   }
 }
 
-void ContextMenu::locale_updated() noexcept {
+void ContextMenu::update_locale() noexcept {
   this->rect.size = {0.0F, 0.0F};
   for (u32 i = 0; i < this->items.get_size(); ++i) {
-    this->items[i].text.locale_updated();
+    this->items[i].text.update_locale();
     // Repositioning
     this->items[i].rect.x = this->rect.x;
     this->items[i].rect.y = this->rect.y + this->rect.h;
@@ -120,7 +120,7 @@ void ContextMenu::input(const event::Input& evt, InputData& data) noexcept {
 
     case input::MouseState::DOWN:
     case input::MouseState::HOLD:
-      this->items[i].state = input::BtnState::DOWN;
+      this->items[i].state = input::BtnState::PRESS;
       break;
 
     case input::MouseState::UP:

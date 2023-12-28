@@ -42,7 +42,7 @@ void presenter::open_file() noexcept {
   model_.anim = *TRY_ABORT_RET(pxl_.load("save.pxl"), "Could not load anim");
 
   model_.frame_index = 0U;
-  model_.layer_index = 0U;
+  model_.layer_index = model_.anim.get_layer_count() - 1U;
   model_.img_id = model_.anim.get_image_id(0U, 0U);
   model_.img = *TRY_ABORT_RET(
       model_.anim.get_image(model_.img_id), "Could not read anim"
@@ -72,8 +72,6 @@ void presenter::open_file() noexcept {
 
   // Update view
   TRY_ABORT(view_.set_anim(&model_.anim), "Could not set anim");
-  view_.set_frame_range(0U, model_.anim.get_frame_count() - 1U);
-  view_.set_active_on_timeline(0U, 0U);
 
   update_view();
 

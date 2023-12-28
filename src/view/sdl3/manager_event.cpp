@@ -97,6 +97,10 @@ void Manager::input() noexcept {
   this->handle_input_event();
   this->handle_key_event();
 
+  if (this->input_evt.mouse.left == input::MouseState::UP) {
+    this->data.left_clicked_widget = nullptr;
+  }
+
   update_mouse_state(this->input_evt.mouse.left, this->is_input_evt);
   update_mouse_state(this->input_evt.mouse.right, this->is_input_evt);
   update_mouse_state(this->input_evt.mouse.middle, this->is_input_evt);
@@ -134,8 +138,8 @@ void Manager::handle_input_event() noexcept {
   // Always handle this separately
   if (this->draw_box.rect.has_point(this->input_evt.mouse.pos)) {
     presenter::set_cursor_position(this->input_evt.mouse.pos);
+    presenter::canvas_mouse_scroll_event(this->input_evt);
   }
-  presenter::canvas_mouse_scroll_event(this->input_evt);
 
   for (i32 i = 1; i < this->boxes.get_size(); ++i) {
     if (this->boxes[i]->rect.has_point(this->input_evt.mouse.pos)) {
@@ -410,25 +414,25 @@ void Manager::handle_resize(ivec new_size) noexcept {
 
 // Other events
 
-void Manager::locale_updated() noexcept {
-  renderer::locale_updated();
+void Manager::update_locale() noexcept {
+  renderer::update_locale();
 
   for (usize i = 0; i < this->boxes.get_size(); ++i) {
-    this->boxes[i]->locale_updated();
+    this->boxes[i]->update_locale();
   }
 
   for (usize i = 0; i < this->modals.get_size(); ++i) {
-    this->modals[i]->locale_updated();
+    this->modals[i]->update_locale();
   }
 
   // TODO: Temp
-  this->fg_color.locale_updated();
-  this->bg_color.locale_updated();
+  this->fg_color.update_locale();
+  this->bg_color.update_locale();
 
   // NOTE: boxes may have changed dimensions
   this->handle_resize(this->window.size);
 
-  this->handle_ctx_menu_locale_updated();
+  this->handle_ctx_menu_update_locale();
 }
 
 } // namespace view::sdl3

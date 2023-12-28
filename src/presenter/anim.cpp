@@ -152,7 +152,6 @@ void presenter::insert_at_selected_frame() noexcept {
   model_.img_id = 0U;
 
   view_.set_active_on_timeline(model_.selected_frame, model_.layer_index);
-  view_.set_frame_range(0U, model_.anim.get_frame_count() - 1U);
 }
 
 void presenter::remove_at_selected_layer() noexcept {
@@ -224,7 +223,6 @@ void presenter::remove_at_selected_frame() noexcept {
   }
 
   // Update view
-  view_.set_frame_range(0U, model_.anim.get_frame_count() - 1U);
   view_.set_active_on_timeline(model_.frame_index, model_.layer_index);
 }
 

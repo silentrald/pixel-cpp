@@ -150,20 +150,20 @@ void Manager::handle_ctx_menu_event() noexcept {
   }
 }
 
-void Manager::handle_ctx_menu_locale_updated() noexcept {
+void Manager::handle_ctx_menu_update_locale() noexcept {
   for (usize i = 0; i < this->ctx_menus.get_size(); ++i) {
     if (i < MENU_BTN_COUNT) {
       this->ctx_menus[i].x = this->menu_box.get_btn_rect(i).x,
       this->ctx_menus[i].y = this->menu_box.y + this->menu_box.h;
     }
-    this->ctx_menus[i].locale_updated();
+    this->ctx_menus[i].update_locale();
   }
 
   for (usize i = 0; i < this->ctx_menu_stack.get_size(); ++i) {
     this->ctx_menu_stack[i].pos =
         i == 0 ? this->ctx_menus[this->ctx_menu_idx].get_sel_item_pos()
                : this->ctx_menu_stack[i - 1].get_sel_item_pos();
-    this->ctx_menu_stack[i].locale_updated();
+    this->ctx_menu_stack[i].update_locale();
   }
 }
 

@@ -81,7 +81,7 @@ error_code Manager::init() noexcept {
       cfg::locale::TextId::EDIT, presenter::toggle_edit_ctx_menu
   ));
 
-  TRY(this->timeline_box.init());
+  this->timeline_box.init();
 
   // NOTE: Locale
   const auto* text = "Change Language";
@@ -199,8 +199,7 @@ void Manager::set_bg_color(rgba8 color) noexcept {
 error_code Manager::set_anim(const draw::Anim* anim) noexcept {
   TRY(this->draw_box.set_anim(anim));
   TRY(this->preview_box.set_anim(anim));
-
-  this->timeline_box.set_anim(anim);
+  TRY(this->timeline_box.set_anim(anim));
 
   return error_code::OK;
 }
@@ -232,15 +231,12 @@ void Manager::set_active_on_timeline(
     usize frame_index, usize layer_index
 ) noexcept {
   this->draw_box.set_active(frame_index, layer_index);
-  this->timeline_box.active_frame = frame_index;
-  this->timeline_box.active_layer = layer_index;
+  this->timeline_box.set_active_image(frame_index, layer_index);
   this->preview_box.set_active_frame(frame_index);
 }
 
-void Manager::set_frame_range(usize start_frame, usize end_frame) noexcept {
-  assert(start_frame <= end_frame);
-  this->timeline_box.start_frame = start_frame;
-  this->timeline_box.end_frame = end_frame;
+void Manager::set_frame_offset(usize frame_offset) noexcept {
+  this->timeline_box.set_frame_offset(frame_offset);
 }
 
 void Manager::run() noexcept {

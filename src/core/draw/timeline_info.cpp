@@ -276,9 +276,11 @@ Frame TimelineInfo::get_frame(usize index) const noexcept {
       this->get_frame_index(index)};
 }
 
-FrameIter TimelineInfo::get_frame_iter() const noexcept {
+FrameIter TimelineInfo::get_frame_iter(usize frame_index) const noexcept {
+  assert(frame_index < this->frame_capacity);
+
   return {
-      this->timeline, this->frame_count, this->frame_capacity,
+      this->timeline, frame_index, this->frame_count, this->frame_capacity,
       this->layer_capacity};
 }
 
@@ -543,9 +545,13 @@ FrameIter::FrameIter() noexcept
     : ptr(nullptr), index(0U), size(0U), next_frame(0U) {}
 
 FrameIter::FrameIter(
-    usize* ptr, usize frame_count, usize frame_capacity, usize layer_capacity
+    usize* ptr, usize frame_index, usize frame_count, usize frame_capacity,
+    usize layer_capacity
 ) noexcept
-    : ptr(ptr), index(0U), size(frame_count), next_frame(layer_capacity) {}
+    : ptr(ptr + frame_index * layer_capacity),
+      index(frame_index),
+      size(frame_count),
+      next_frame(layer_capacity) {}
 
 FrameIter& FrameIter::operator++() noexcept {
   assert(this->ptr != nullptr);
