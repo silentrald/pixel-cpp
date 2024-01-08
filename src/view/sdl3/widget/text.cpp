@@ -24,7 +24,7 @@ void Text::update_locale() noexcept {
   this->rect.size = renderer::get_text_size(str);
 }
 
-void Text::input(const event::Input& evt, InputData& data) noexcept {
+void Text::input(const event::Input& evt) noexcept {
   // Do nothing UwU
 }
 

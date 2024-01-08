@@ -7,22 +7,11 @@
 
 #include "./manager.hpp"
 #include "./renderer.hpp"
-#include "SDL3_image/SDL_image.h"
-#include "SDL3_ttf/SDL_ttf.h"
-#include "SDL_blendmode.h"
-#include "SDL_init.h"
-#include "SDL_mouse.h"
-#include "SDL_oldnames.h"
-#include "SDL_rect.h"
 #include "SDL_timer.h"
 #include "core/cfg/locale.hpp"
 #include "core/logger/logger.hpp"
-#include "model/model.hpp"
 #include "presenter/presenter.hpp"
-#include <cmath>
-#include <cstdio>
 #include <cstdlib>
-#include <new>
 
 namespace view::sdl3 {
 
@@ -45,30 +34,19 @@ error_code Manager::init() noexcept {
   // Tool box
   widget::Button btn{};
 
-  btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(renderer::load_img("assets/tools/pencil.png"));
-  btn.set_left_click_listener(presenter::set_pencil_tool);
-  TRY(this->tool_box.push_btn(std::move(btn)));
-
-  btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(renderer::load_img("assets/tools/eraser.png"));
-  btn.set_left_click_listener(presenter::set_eraser_tool);
-  TRY(this->tool_box.push_btn(std::move(btn)));
-
-  btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(renderer::load_img("assets/tools/line.png"));
-  btn.set_left_click_listener(presenter::set_line_tool);
-  TRY(this->tool_box.push_btn(std::move(btn)));
-
-  btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(renderer::load_img("assets/tools/fill.png"));
-  btn.set_left_click_listener(presenter::set_fill_tool);
-  TRY(this->tool_box.push_btn(std::move(btn)));
-
-  btn.set_theme(input::BtnTheme::TOOL_BTN);
-  btn.set_texture(renderer::load_img("assets/tools/fill.png"));
-  btn.set_left_click_listener(presenter::set_select_tool);
-  TRY(this->tool_box.push_btn(std::move(btn)));
+  TRY(this->tool_box.push_btn(
+      "assets/tools/pencil.png", presenter::set_pencil_tool
+  ));
+  TRY(this->tool_box.push_btn(
+      "assets/tools/eraser.png", presenter::set_eraser_tool
+  ));
+  TRY(this->tool_box.push_btn("assets/tools/line.png", presenter::set_line_tool)
+  );
+  TRY(this->tool_box.push_btn("assets/tools/fill.png", presenter::set_fill_tool)
+  );
+  TRY(this->tool_box.push_btn(
+      "assets/tools/fill.png", presenter::set_select_tool
+  ));
 
   // Menu box
   fvec size{};
@@ -92,7 +70,6 @@ error_code Manager::init() noexcept {
   this->locale_btn.tex_rect.pos = {this->window.size.x - size.x, 0.0F};
   this->locale_btn.size = size;
   this->locale_btn.tex_rect.size = size;
-  this->locale_btn.set_left_click_listener(presenter::set_locale);
 
   TRY(this->init_ctx_menus());
 
@@ -267,10 +244,10 @@ void Manager::run() noexcept {
 }
 
 void Manager::reset_data() noexcept {
-  this->data.selected_input = nullptr;
-  this->data.new_selected_input = nullptr;
-  this->data.first_input = nullptr;
-  this->data.clear_selected = false;
+  data::set_selected_input(nullptr);
+  data::set_new_selected_input(nullptr);
+  data::set_first_input(nullptr);
+  data::set_clear_selected(false);
 
   SDL_StopTextInput();
 }
@@ -316,4 +293,3 @@ void Manager::render() noexcept {
 }
 
 } // namespace view::sdl3
-

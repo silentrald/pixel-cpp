@@ -73,13 +73,6 @@ void Manager::input() noexcept {
       // TODO:
       break;
 
-    case SDL_EVENT_WINDOW_MOUSE_LEAVE:
-      if (this->mouse_box_id > -1) {
-        this->boxes[this->mouse_box_id]->reset();
-        this->mouse_box_id = -1;
-      }
-      break;
-
     case SDL_EVENT_KEY_DOWN:
       this->handle_key_down_input(event.key.keysym.sym);
       break;
@@ -98,7 +91,7 @@ void Manager::input() noexcept {
   this->handle_key_event();
 
   if (this->input_evt.mouse.left == input::MouseState::UP) {
-    this->data.left_clicked_widget = nullptr;
+    data::set_left_click_widget(nullptr);
   }
 
   update_mouse_state(this->input_evt.mouse.left, this->is_input_evt);
@@ -115,11 +108,15 @@ void Manager::handle_input_event() noexcept {
   }
   this->is_input_evt = false;
 
-  this->fg_color.input(this->input_evt, this->data);
-  this->bg_color.input(this->input_evt, this->data);
+  // NOTE: Remove this once their modals are created
+  this->fg_color.input(this->input_evt);
+  this->bg_color.input(this->input_evt);
 
   if (this->locale_btn.rect.has_point(this->input_evt.mouse.pos)) {
-    this->locale_btn.input(this->input_evt, this->data);
+    this->locale_btn.input(this->input_evt);
+    if (data::is_left_click()) {
+      presenter::set_locale();
+    }
     return;
   }
   this->locale_btn.reset();
@@ -131,50 +128,13 @@ void Manager::handle_input_event() noexcept {
 
   if (this->modals.get_size() > 0) {
     // NOTE: Check if only handle inputs on the top
-    this->modals.back()->input(this->input_evt, this->data);
+    this->modals.back()->input(this->input_evt);
     return;
   }
 
-  // Always handle this separately
-  if (this->draw_box.rect.has_point(this->input_evt.mouse.pos)) {
-    presenter::set_cursor_position(this->input_evt.mouse.pos);
-    presenter::canvas_mouse_scroll_event(this->input_evt);
+  for (i32 i = 0; i < this->boxes.get_size(); ++i) {
+    this->boxes[i]->input(this->input_evt);
   }
-
-  for (i32 i = 1; i < this->boxes.get_size(); ++i) {
-    if (this->boxes[i]->rect.has_point(this->input_evt.mouse.pos)) {
-      if (this->mouse_box_id == -1) {
-        this->mouse_box_id = i;
-      } else if (this->mouse_box_id != i) {
-        this->boxes[this->mouse_box_id]->reset();
-        this->mouse_box_id = i;
-      }
-
-      this->boxes[i]->input(this->input_evt, this->data);
-      return;
-    }
-  }
-
-  if (this->mouse_box_id > -1) {
-    this->boxes[this->mouse_box_id]->reset();
-    this->mouse_box_id = -1;
-  }
-
-  // Only handle inputs on draw box when it was initially clicked
-  if (!this->is_draw_box_clicked &&
-      this->input_evt.is_mouse_state(input::MouseState::DOWN) &&
-      this->draw_box.rect.has_point(this->input_evt.mouse.pos)) {
-    this->is_draw_box_clicked = true;
-  }
-
-  if (this->is_draw_box_clicked) {
-    this->draw_box.input(this->input_evt, this->data);
-    if (this->input_evt.is_mouse_state(input::MouseState::UP)) {
-      this->is_draw_box_clicked = false;
-    }
-    return;
-  }
-  //
 }
 
 // === Mouse Input === //
@@ -242,12 +202,12 @@ inline void next_mouse_state(input::MouseState& state) noexcept {
 void Manager::handle_key_event() noexcept {
   if (this->keypress_evt.has_keys()) {
     while (this->keypress_evt.has_next()) {
-      if (this->data.selected_input) {
-        this->data.selected_input->key_input(this->keypress_evt);
+      if (data::get_selected_input()) {
+        data::get_selected_input()->key_input(this->keypress_evt);
         if (this->keypress_evt.get_prev_char() == input::Keycode::TAB) {
-          this->data.selected_input = this->data.selected_input->next_input;
-          if (this->data.selected_input) {
-            this->data.selected_input->focused = true;
+          data::set_selected_input(data::get_selected_input()->next_input);
+          if (data::get_selected_input()) {
+            data::get_selected_input()->focused = true;
           } else {
             SDL_StopTextInput();
           }
@@ -256,39 +216,39 @@ void Manager::handle_key_event() noexcept {
       }
 
       // Check for tab inputs then switch to first input
-      if (this->data.first_input == nullptr) {
+      if (data::get_first_input() == nullptr) {
         break;
       }
 
       while (this->keypress_evt.has_next()) {
         if (this->keypress_evt.get_next_char() == input::Keycode::TAB) {
-          this->data.selected_input = this->data.first_input;
-          this->data.selected_input->focused = true;
+          data::set_selected_input(data::get_first_input());
+          data::get_selected_input()->focused = true;
           SDL_StartTextInput();
           break;
         }
       }
 
-      if (this->data.selected_input == nullptr) {
+      if (data::get_selected_input() == nullptr) {
         SDL_StopTextInput();
         break;
       }
     }
   }
 
-  if (this->data.new_selected_input) {
-    if (this->data.selected_input) {
-      this->data.selected_input->unfocused();
+  if (data::get_new_selected_input()) {
+    if (data::get_selected_input()) {
+      data::get_selected_input()->unfocused();
     }
-    this->data.selected_input = this->data.new_selected_input;
-    this->data.selected_input->focused = true;
+    data::set_selected_input(data::get_new_selected_input());
+    data::get_selected_input()->focused = true;
 
-    this->data.new_selected_input = nullptr;
+    data::set_new_selected_input(nullptr);
     SDL_StartTextInput();
-  } else if ((this->data.clear_selected || this->input_evt.mouse.left == input::MouseState::UP) && this->data.selected_input) {
-    this->data.clear_selected = false;
-    this->data.selected_input->unfocused();
-    this->data.selected_input = nullptr;
+  } else if ((data::is_clear_selected() || this->input_evt.mouse.left == input::MouseState::UP) && data::get_selected_input()) {
+    data::set_clear_selected(false);
+    data::get_selected_input()->unfocused();
+    data::set_selected_input(nullptr);
     SDL_StopTextInput();
   }
 }
@@ -331,7 +291,7 @@ void Manager::handle_key_down_key(i32 keycode) noexcept {
 }
 
 void Manager::handle_key_down_text_input(i32 keycode) noexcept {
-  if (!this->data.selected_input) {
+  if (!data::get_selected_input()) {
     return;
   }
 
@@ -350,7 +310,7 @@ void Manager::handle_key_down_text_input(i32 keycode) noexcept {
     break;
 
   case SDLK_ESCAPE:
-    this->data.clear_selected = true;
+    data::set_clear_selected(true);
     break;
 
   default:
@@ -436,4 +396,3 @@ void Manager::update_locale() noexcept {
 }
 
 } // namespace view::sdl3
-

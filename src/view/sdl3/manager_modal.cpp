@@ -6,8 +6,8 @@
  *==========================*/
 
 #include "./manager.hpp"
+#include "./modal/file.hpp"
 #include <cassert>
-#include <new>
 
 namespace view::sdl3 {
 
@@ -25,24 +25,17 @@ void* Manager::get_modal_data(modal::Id id) const noexcept {
 error_code Manager::push_modal(modal::Id id) noexcept {
   assert(id != modal::Id::NONE);
 
-  if (this->mouse_box_id > -1) {
-    this->boxes[this->mouse_box_id]->reset();
-    this->mouse_box_id = -1;
-  }
-
   widget::Modal* modal = nullptr;
   switch (id) {
   case modal::Id::NEW_FILE_MODAL:
-    modal = new (std::nothrow) widget::FileModal{};
+    modal = new (std::nothrow) widget::FileModal{}; // NOLINT
     if (modal == nullptr) {
       logger::fatal("Could not create modal");
       std::abort();
     }
 
     ((widget::FileModal*)modal)
-        ->init(
-            {(f32)this->window.size.x, (f32)this->window.size.y}, this->data
-        );
+        ->init({(f32)this->window.size.x, (f32)this->window.size.y});
     break;
 
   case modal::Id::NONE:
@@ -74,4 +67,3 @@ void Manager::clear_modals() noexcept {
 }
 
 } // namespace view::sdl3
-

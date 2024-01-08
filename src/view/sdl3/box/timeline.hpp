@@ -49,7 +49,7 @@ public:
   void resize(const frect& rect) noexcept override;
   void reset() noexcept override;
   void update_locale() noexcept override;
-  void input(const event::Input& evt, InputData& data) noexcept override;
+  void input(const event::Input& evt) noexcept override;
   void update(f32 delta) noexcept override;
   void render() noexcept override;
 
@@ -86,8 +86,8 @@ private:
 
   void adjust_layer_textboxes() noexcept;
 
-  void handle_mouse_left(const event::Input& evt, InputData& data) noexcept;
-  void handle_mouse_right(const event::Input& evt, InputData& data) noexcept;
+  void handle_mouse_left(const event::Input& evt) noexcept;
+  void handle_mouse_right(const event::Input& evt) noexcept;
 
   void render_grid() const noexcept;
   void render_frame_numbers() const noexcept;

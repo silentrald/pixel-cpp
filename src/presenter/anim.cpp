@@ -57,7 +57,8 @@ void presenter::create_anim() noexcept {
       .x = model_.bounds.x + 10.0F,
       .y = model_.bounds.y + 10.0F,
       .w = size.x * model_.scale,
-      .h = size.y * model_.scale};
+      .h = size.y * model_.scale
+  };
 
   TRY_ABORT(
       model_.pixels.resize(model_.anim.get_image_bytes_size()),

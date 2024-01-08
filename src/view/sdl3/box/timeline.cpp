@@ -188,7 +188,8 @@ error_code TimelineBox::insert_layer(
     text_rect.y += renderer::get_text_height() + LINE_WIDTH;
     this->layers[index].textbox.pos = text_rect.pos;
     this->layers[index].textbox.tex_rect.pos = {
-        text_rect.pos.x + LAYERS_NAME_PADDING_X, text_rect.pos.y};
+        text_rect.pos.x + LAYERS_NAME_PADDING_X, text_rect.pos.y
+    };
   }
 
   this->vertical_scrollbar.set_real_height(
@@ -205,7 +206,8 @@ void TimelineBox::remove_layer(usize index) noexcept {
   for (index = index - 1U; index < USIZE_MAX; --index) {
     this->layers[index].textbox.pos = off;
     this->layers[index].textbox.tex_rect.pos = {
-        off.x + LAYERS_NAME_PADDING_X, off.y};
+        off.x + LAYERS_NAME_PADDING_X, off.y
+    };
     off.y += renderer::get_text_height() + LINE_WIDTH;
   }
 
@@ -234,7 +236,8 @@ void TimelineBox::resize(const frect& rect) noexcept {
     off.y += height;
     this->layers[i].textbox.rect.pos = off;
     this->layers[i].textbox.tex_rect.pos = {
-        off.x + LAYERS_NAME_PADDING_X, off.y};
+        off.x + LAYERS_NAME_PADDING_X, off.y
+    };
   }
 
   this->max_layers = std::floor(
@@ -273,9 +276,38 @@ void TimelineBox::update_locale() noexcept {
   }
 }
 
-void TimelineBox::input(const event::Input& evt, InputData& data) noexcept {
+void TimelineBox::input(const event::Input& evt) noexcept {
   // NOTE: Only handles changing of frame/layer for now
   if (this->anim == nullptr || this->layers.is_empty()) {
+    return;
+  }
+
+  if (evt.mouse.left != input::MouseState::NONE) {
+    this->vertical_scrollbar.input(evt);
+    usize new_offset = (this->anim->get_layer_count() - this->max_layers) *
+                       (1.0F - this->vertical_scrollbar.get_percentage());
+    if (new_offset != this->layer_offset) {
+      this->layer_offset = new_offset;
+      this->adjust_layer_textboxes();
+    }
+    if (&this->vertical_scrollbar == data::get_left_click_widget()) {
+      return;
+    }
+
+    this->horizontal_scrollbar.input(evt);
+    new_offset = (this->anim->get_frame_count() - this->max_frames + 1U) *
+                 this->horizontal_scrollbar.get_percentage();
+    if (new_offset != this->frame_offset) {
+      this->frame_offset = new_offset;
+      this->adjust_layer_textboxes();
+    }
+    if (&this->horizontal_scrollbar == data::get_left_click_widget()) {
+      return;
+    }
+  }
+
+  // Within timeline box handling
+  if (!this->rect.has_point(evt.mouse.pos)) {
     return;
   }
 
@@ -301,37 +333,13 @@ void TimelineBox::input(const event::Input& evt, InputData& data) noexcept {
   }
 
   if (evt.mouse.left != input::MouseState::NONE) {
-    this->vertical_scrollbar.input(evt, data);
-    usize new_offset = (this->anim->get_layer_count() - this->max_layers) *
-                       (1.0F - this->vertical_scrollbar.get_percentage());
-    if (new_offset != this->layer_offset) {
-      this->layer_offset = new_offset;
-      this->adjust_layer_textboxes();
-    }
-    if (&this->vertical_scrollbar == data.left_clicked_widget) {
-      return;
-    }
-
-    this->horizontal_scrollbar.input(evt, data);
-    new_offset = (this->anim->get_frame_count() - this->max_frames + 1U) *
-                 this->horizontal_scrollbar.get_percentage();
-    if (new_offset != this->frame_offset) {
-      this->frame_offset = new_offset;
-      this->adjust_layer_textboxes();
-    }
-    if (&this->horizontal_scrollbar == data.left_clicked_widget) {
-      return;
-    }
-
-    this->handle_mouse_left(evt, data);
+    this->handle_mouse_left(evt);
   } else if (evt.mouse.right != input::MouseState::NONE) {
-    this->handle_mouse_right(evt, data);
+    this->handle_mouse_right(evt);
   }
 }
 
-void TimelineBox::handle_mouse_left(
-    const event::Input& evt, InputData& data
-) noexcept {
+void TimelineBox::handle_mouse_left(const event::Input& evt) noexcept {
   f32 height = renderer::get_text_height() + LINE_WIDTH;
   frect bounds{};
 
@@ -344,8 +352,8 @@ void TimelineBox::handle_mouse_left(
 
     if (bounds.has_point(evt.mouse.pos)) {
       auto layer = this->max_layers -
-                              (usize)((evt.mouse.pos.y - bounds.y) / height) +
-                              this->layer_offset - 1U;
+                   (usize)((evt.mouse.pos.y - bounds.y) / height) +
+                   this->layer_offset - 1U;
       presenter::toggle_visibility(layer);
       return;
     }
@@ -376,9 +384,7 @@ void TimelineBox::handle_mouse_left(
   }
 }
 
-void TimelineBox::handle_mouse_right(
-    const event::Input& evt, InputData& data
-) noexcept {
+void TimelineBox::handle_mouse_right(const event::Input& evt) noexcept {
   if (evt.mouse.right != input::MouseState::UP) {
     return;
   }
@@ -493,7 +499,8 @@ void TimelineBox::render_frame_numbers() const noexcept {
   fvec off{
       .x = this->rect.x + LAYERS_WIDTH + LINE_WIDTH +
            renderer::get_text_height(),
-      .y = this->rect.y};
+      .y = this->rect.y
+  };
   auto end = std::min(
       this->frame_offset + this->max_frames, this->anim->get_frame_count()
   );

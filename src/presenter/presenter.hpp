@@ -12,7 +12,6 @@
 #include "view/core.hpp"
 #include "view/event.hpp"
 #include "view/input.hpp"
-#include "view/modal.hpp"
 #include <string>
 
 class Model;
@@ -156,4 +155,3 @@ extern file::Pxl pxl_;
 extern file::Png png_;
 
 #endif
-

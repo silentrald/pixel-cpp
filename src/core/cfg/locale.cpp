@@ -168,4 +168,3 @@ const c8* locale::get_text(TextId id) noexcept {
 }
 
 } // namespace cfg
-

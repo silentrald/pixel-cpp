@@ -22,14 +22,6 @@ void Button::set_texture(Texture&& tex) noexcept {
   this->tex = std::move(tex);
 }
 
-void Button::set_left_click_listener(void (*left_click_listener)()) noexcept {
-  this->left_click_listener = left_click_listener;
-}
-
-void Button::set_right_click_listener(void (*right_click_listener)()) noexcept {
-  this->right_click_listener = right_click_listener;
-}
-
 void Button::enable() noexcept {
   this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::NORMAL;
 }
@@ -57,7 +49,7 @@ void Button::update_locale() noexcept {
   // Do nothing UwU
 }
 
-void Button::input(const event::Input& evt, InputData& data) noexcept {
+void Button::input(const event::Input& evt) noexcept {
   if ((this->info & input::BtnMask::STATES) == input::BtnState::DISABLED) {
     return;
   }
@@ -72,16 +64,14 @@ void Button::input(const event::Input& evt, InputData& data) noexcept {
   switch (evt.mouse.left) {
   case input::MouseState::DOWN:
   case input::MouseState::HOLD:
-    this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::PRESS;
+    this->info =
+        (this->info & ~input::BtnMask::STATES) | input::BtnState::PRESS;
     return;
 
   case input::MouseState::UP:
-    this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::PRESS;
-    data.left_click = true;
-    // TODO: Just remove listener and use the InputData object instead
-    if (this->left_click_listener) {
-      this->left_click_listener();
-    }
+    this->info =
+        (this->info & ~input::BtnMask::STATES) | input::BtnState::PRESS;
+    data::set_left_click(true);
     return;
 
   case input::MouseState::NONE:
@@ -91,16 +81,14 @@ void Button::input(const event::Input& evt, InputData& data) noexcept {
   switch (evt.mouse.right) {
   case input::MouseState::DOWN:
   case input::MouseState::HOLD:
-    this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::PRESS;
+    this->info =
+        (this->info & ~input::BtnMask::STATES) | input::BtnState::PRESS;
     break;
 
   case input::MouseState::UP:
-    this->info = (this->info & ~input::BtnMask::STATES) | input::BtnState::PRESS;
-    data.right_click = true;
-    // TODO: Just remove listener and use the InputData object instead
-    if (this->right_click_listener) {
-      this->right_click_listener();
-    }
+    this->info =
+        (this->info & ~input::BtnMask::STATES) | input::BtnState::PRESS;
+    data::set_right_click(true);
     break;
 
   case input::MouseState::NONE:
@@ -112,7 +100,7 @@ void Button::input(const event::Input& evt, InputData& data) noexcept {
 
 void Button::key_input(event::KeyPress& keypress) noexcept {
   if (((this->info & input::BtnMask::STATES) == input::BtnState::DISABLED) ||
-      this->left_click_listener == nullptr || !this->focused) {
+      !this->focused) {
     keypress.to_next_section();
     return;
   }
@@ -120,7 +108,8 @@ void Button::key_input(event::KeyPress& keypress) noexcept {
   while (keypress.has_next()) {
     auto c = keypress.get_next_char();
     if (c == input::Keycode::ENTER) {
-      this->left_click_listener();
+      // Induce a left click with this
+      data::set_left_click(true);
       this->focused = false;
       break;
     }

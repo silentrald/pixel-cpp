@@ -61,7 +61,8 @@ void presenter::open_file() noexcept {
       .x = model_.bounds.x + 10.0F,
       .y = model_.bounds.y + 10.0F,
       .w = model_.anim.get_width() * model_.scale,
-      .h = model_.anim.get_height() * model_.scale};
+      .h = model_.anim.get_height() * model_.scale
+  };
   view_.set_canvas_rect(model_.rect);
   view_.set_draw_size(model_.anim.get_size());
 

@@ -32,7 +32,8 @@ error_code Manager::init_ctx_menus() noexcept {
   {
     auto& file_ctx_menu = this->ctx_menus[FILE_CTX_ID];
     file_ctx_menu.pos = {
-        this->menu_box.get_btn_rect(FILE_CTX_ID).x, this->menu_box.h};
+        this->menu_box.get_btn_rect(FILE_CTX_ID).x, this->menu_box.h
+    };
 
     TRY(file_ctx_menu.push_item(cfg::locale::TextId::NEW, []() {
       presenter::close_ctx_menus();
@@ -59,7 +60,8 @@ error_code Manager::init_ctx_menus() noexcept {
   {
     auto& edit_ctx_menu = this->ctx_menus[EDIT_CTX_ID];
     edit_ctx_menu.pos = {
-        this->menu_box.get_btn_rect(EDIT_CTX_ID).x, this->menu_box.h};
+        this->menu_box.get_btn_rect(EDIT_CTX_ID).x, this->menu_box.h
+    };
     TRY(edit_ctx_menu.push_item(cfg::locale::TextId::UNDO, []() {
       presenter::close_ctx_menus();
       presenter::undo_action();
@@ -144,9 +146,9 @@ void Manager::handle_ctx_menu_event() noexcept {
     }
   }
 
-  this->ctx_menus[this->ctx_menu_idx].input(this->input_evt, this->data);
+  this->ctx_menus[this->ctx_menu_idx].input(this->input_evt);
   for (usize i = 0; i < this->ctx_menu_stack.get_size(); ++i) {
-    this->ctx_menu_stack[i].input(this->input_evt, this->data);
+    this->ctx_menu_stack[i].input(this->input_evt);
   }
 }
 

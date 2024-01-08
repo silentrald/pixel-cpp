@@ -10,9 +10,6 @@
 
 #include "types.hpp"
 #include <cassert>
-#include <cstring>
-#include <new>
-#include <type_traits>
 #include <utility>
 
 namespace ds {
@@ -180,4 +177,3 @@ private:
 } // namespace ds
 
 #endif
-

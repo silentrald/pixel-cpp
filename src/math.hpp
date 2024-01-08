@@ -9,7 +9,6 @@
 #define PXL_MATH_HPP
 
 #include "types.hpp"
-#include <complex>
 
 namespace math {
 

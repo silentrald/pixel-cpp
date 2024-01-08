@@ -6,7 +6,6 @@
  *==========================*/
 
 #include "./disk_backup.hpp"
-#include "core/logger/logger.hpp"
 #include <cassert>
 #include <cstdio>
 
@@ -127,4 +126,3 @@ error_code DiskBackup::flush() const noexcept {
 }
 
 } // namespace draw
-

@@ -23,19 +23,24 @@ public:
   ToolBox& operator=(ToolBox&&) noexcept = default;
   ~ToolBox() noexcept override = default;
 
-  [[nodiscard]] error_code push_btn(Button&& btn) noexcept;
+  [[nodiscard]] error_code
+  push_btn(const c8* texture_path, void (*on_left_click)()) noexcept;
 
   void resize(const frect& rect) noexcept override;
   void reset() noexcept override;
   void update_locale() noexcept override;
-  void input(const event::Input& evt, InputData& data) noexcept override;
+  void input(const event::Input& evt) noexcept override;
   void update(f32 delta) noexcept override;
   void render() noexcept override;
 
-  ds::vector<Button> btns{};
+private:
+  struct Item {
+    Button btn{};
+    void (*on_left_click)() = nullptr;
+  };
+  ds::vector<Item> items{};
 };
 
 } // namespace view::sdl3::widget
 
 #endif
-

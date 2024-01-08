@@ -8,7 +8,6 @@
 #ifndef PXL_VIEW_SDL3_FILE_MODAL_HPP
 #define PXL_VIEW_SDL3_FILE_MODAL_HPP
 
-#include "../font.hpp"
 #include "../input/button.hpp"
 #include "../input/textbox.hpp"
 #include "../texture.hpp"
@@ -29,8 +28,7 @@ public:
   FileModal& operator=(FileModal&&) noexcept = default;
   ~FileModal() noexcept override = default;
 
-  // TODO: Check if this can be generalized
-  void init(fvec window_size, InputData& data) noexcept;
+  void init(fvec window_size) noexcept;
 
   [[nodiscard]] void* get_data() const noexcept override;
 
@@ -38,7 +36,7 @@ public:
   void reposition(fvec pos) noexcept override;
   void update_locale() noexcept override;
   void reset() noexcept override;
-  void input(const event::Input& evt, InputData& data) noexcept override;
+  void input(const event::Input& evt) noexcept override;
   void update(f32 delta) noexcept override;
   void render() noexcept override;
 

@@ -9,14 +9,12 @@
 #include "SDL3_image/SDL_image.h"
 #include "SDL3_ttf/SDL_ttf.h"
 #include "SDL_blendmode.h"
-#include "SDL_oldnames.h"
 #include "SDL_pixels.h"
 #include "SDL_rect.h"
 #include "SDL_surface.h"
 #include "SDL_video.h"
 #include "core/cfg/locale.hpp"
 #include "core/logger/logger.hpp"
-#include <cstdio>
 #include <cstdlib>
 
 namespace view::sdl3 {

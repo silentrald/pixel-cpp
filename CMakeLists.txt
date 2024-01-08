@@ -44,6 +44,7 @@ set(view_srcs src/view/sdl3/manager.cpp
   src/view/sdl3/manager_ctx_menu.cpp
   src/view/sdl3/manager_event.cpp
   src/view/sdl3/manager_modal.cpp
+  src/view/sdl3/data.cpp
   src/view/sdl3/renderer.cpp
   src/view/sdl3/cached_textures.cpp
   src/view/sdl3/texture.cpp

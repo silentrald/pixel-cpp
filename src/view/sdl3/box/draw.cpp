@@ -140,8 +140,19 @@ void DrawBox::update_locale() noexcept {
   // Do nothing UwU
 }
 
-void DrawBox::input(const event::Input& evt, InputData& data) noexcept {
-  presenter::canvas_mouse_event(evt);
+void DrawBox::input(const event::Input& evt) noexcept {
+  if (!this->rect.has_point(evt.mouse.pos)) {
+    return;
+  }
+
+  presenter::set_cursor_position(evt.mouse.pos);
+  presenter::canvas_mouse_scroll_event(evt);
+
+  if (evt.mouse.left != input::MouseState::NONE ||
+      evt.mouse.right != input::MouseState::NONE ||
+      evt.mouse.middle != input::MouseState::NONE) {
+    presenter::canvas_mouse_event(evt);
+  }
 }
 
 void DrawBox::update(f32 _delta) noexcept {
