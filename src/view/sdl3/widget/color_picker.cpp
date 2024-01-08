@@ -38,8 +38,8 @@ void ColorPicker::update_locale() noexcept {
   this->hex_str.update_locale();
 }
 
-void ColorPicker::input(const event::Input& evt, InputData& data) noexcept {
-  this->hex_str.input(evt, data);
+void ColorPicker::input(const event::Input& evt) noexcept {
+  this->hex_str.input(evt);
 }
 
 void ColorPicker::update(f32 _delta) noexcept {

@@ -73,7 +73,7 @@ void MenuBox::update_locale() noexcept {
   }
 }
 
-void MenuBox::input(const event::Input& evt, InputData& data) noexcept {
+void MenuBox::input(const event::Input& evt) noexcept {
   if (!this->rect.has_point(evt.mouse.pos)) {
     for (usize i = 0; i < this->btns.get_size(); ++i) {
       this->btns[i].state = input::BtnState::NORMAL;

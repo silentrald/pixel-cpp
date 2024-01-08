@@ -65,24 +65,22 @@ void HorizontalScrollbar::update_locale() noexcept {
   // Do nothing UwU
 }
 
-void HorizontalScrollbar::input(
-    const event::Input& evt, InputData& data
-) noexcept {
+void HorizontalScrollbar::input(const event::Input& evt) noexcept {
   if (evt.mouse.left == input::MouseState::DOWN &&
       this->scroll_rect.has_point(evt.mouse.pos)) {
-    data.orig_mouse.x = evt.mouse.pos.x;
-    data.orig_pos.x = this->scroll_rect.x;
-    data.left_clicked_widget = this;
+    data::set_f1(this->scroll_rect.x);
+    data::set_f2(evt.mouse.pos.x);
+    data::set_left_click_widget(this);
     return;
   }
 
-  if (data.left_clicked_widget != this ||
+  if (data::get_left_click_widget() != this ||
       evt.mouse.left != input::MouseState::HOLD) {
     return;
   }
 
   this->scroll_rect.x = std::clamp(
-      data.orig_pos.x - data.orig_mouse.x + evt.mouse.pos.x, this->x,
+      data::get_f1() - data::get_f2() + evt.mouse.pos.x, this->x,
       this->max_offset
   );
 }
@@ -100,4 +98,3 @@ void HorizontalScrollbar::render() noexcept {
 }
 
 } // namespace view::sdl3::widget
-

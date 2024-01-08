@@ -8,7 +8,6 @@
 #ifndef PXL_VIEW_SDL3_DRAW_BOX_HPP
 #define PXL_VIEW_SDL3_DRAW_BOX_HPP
 
-#include "../input/button.hpp"
 #include "../texture.hpp"
 #include "./box.hpp"
 #include "core/draw/anim.hpp"
@@ -46,7 +45,7 @@ public:
   void resize(const frect& rect) noexcept override;
   void reset() noexcept override;
   void update_locale() noexcept override;
-  void input(const event::Input& evt, InputData& data) noexcept override;
+  void input(const event::Input& evt) noexcept override;
   void update(f32 delta) noexcept override;
   void render() noexcept override;
 
@@ -64,6 +63,7 @@ private:
   const draw::Anim* anim = nullptr;
   ds::vector<draw::data_type> pixels{};
   i32 tick = 0;
+  bool click_start = false;
 
   [[nodiscard]] Texture& get_bot_texture() noexcept;
   [[nodiscard]] Texture& get_top_texture() noexcept;
@@ -72,4 +72,3 @@ private:
 } // namespace view::sdl3::widget
 
 #endif
-

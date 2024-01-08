@@ -81,12 +81,10 @@ void PreviewBox::update_locale() noexcept {
   //
 }
 
-void PreviewBox::input(const event::Input& evt, InputData& data) noexcept {
-  this->play_btn.input(evt, data);
-  if (data.left_click) {
-    data.left_click = false;
+void PreviewBox::input(const event::Input& evt) noexcept {
+  this->play_btn.input(evt);
+  if (data::is_left_click()) {
     this->set_playing(!this->playing);
-    return;
   }
 }
 

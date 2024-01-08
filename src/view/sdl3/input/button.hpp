@@ -26,8 +26,7 @@ public:
 
   void set_theme(input::BtnTheme theme) noexcept;
   void set_texture(Texture&& tex) noexcept;
-  void set_left_click_listener(void (*left_click_listener)()) noexcept;
-  void set_right_click_listener(void (*right_click_listener)()) noexcept;
+
   void enable() noexcept;
   void disable() noexcept;
 
@@ -35,7 +34,7 @@ public:
   void unfocused() noexcept override;
 
   void update_locale() noexcept override;
-  void input(const event::Input& evt, InputData& data) noexcept override;
+  void input(const event::Input& evt) noexcept override;
   void key_input(event::KeyPress& keypress) noexcept override;
   void update(f32 delta) noexcept override;
   void render() noexcept override;
@@ -49,9 +48,6 @@ public:
 
 private:
   u32 info = input::BtnState::NORMAL;
-
-  void (*left_click_listener)() = nullptr;
-  void (*right_click_listener)() = nullptr;
 };
 
 } // namespace view::sdl3::widget

@@ -7,8 +7,8 @@
 
 #include "./file.hpp"
 #include "core/cfg/locale.hpp"
-#include "core/logger/logger.hpp"
 #include "presenter/presenter.hpp"
+#include "view/sdl3/data.hpp"
 #include <algorithm>
 #include <cstdlib>
 #include <new>
@@ -18,13 +18,14 @@ namespace view::sdl3::widget {
 const f32 FILE_MODAL_WIDTH = 320.0F;
 const f32 FILE_MODAL_HEIGHT = 144.0F;
 
-void FileModal::init(fvec window_size, InputData& data) noexcept {
+void FileModal::init(fvec window_size) noexcept {
   this->x = (window_size.x - FILE_MODAL_WIDTH) * 0.5F;
   this->y = (window_size.y - FILE_MODAL_HEIGHT) * 0.5F;
   this->size = {FILE_MODAL_WIDTH, FILE_MODAL_HEIGHT};
   this->title_rect.pos = this->pos;
   this->title_rect.size = {
-      FILE_MODAL_WIDTH, renderer::get_text_height() + 8.0F};
+      FILE_MODAL_WIDTH, renderer::get_text_height() + 8.0F
+  };
   fvec off = this->pos + fvec{4.0F, 4.0F};
 
   this->title_text.pos = off;
@@ -65,7 +66,6 @@ void FileModal::init(fvec window_size, InputData& data) noexcept {
   this->new_btn.pos = off - fvec{4.0F, 4.0F};
   this->new_btn.size = size + fvec{8.0F, 8.0F};
   this->new_btn.tex_rect = {.pos = off, .size = size};
-  this->new_btn.set_left_click_listener(presenter::create_anim);
 
   text = cfg::locale::get_text(cfg::locale::TextId::CANCEL);
   this->cancel_btn.set_theme(input::BtnTheme::TOOL_BTN); // TODO: Cancel btn
@@ -75,17 +75,21 @@ void FileModal::init(fvec window_size, InputData& data) noexcept {
   this->cancel_btn.pos = off - fvec{4.0F, 4.0F};
   this->cancel_btn.size = size + fvec{8.0F, 8.0F};
   this->cancel_btn.tex_rect = {.pos = off, .size = size};
-  this->cancel_btn.set_left_click_listener(presenter::close_modals);
   this->cancel_btn.next_input = &this->new_btn;
 
-  data.first_input = &this->width_textbox;
+  data::set_first_input(&this->width_textbox);
 }
 
 void* FileModal::get_data() const noexcept {
+  // NOLINTNEXTLINE
   return new (std::nothrow) modal::NewFileData{
-      .size = {
-          atoi(this->width_textbox.get_text().c_str()),    // NOLINT
-          atoi(this->height_textbox.get_text().c_str())}}; // NOLINT
+      .size =
+          {// NOLINTNEXTLINE
+           atoi(this->width_textbox.get_text().c_str()),
+           // NOLINTNEXTLINE
+           atoi(this->height_textbox.get_text().c_str())
+          }
+  };
 }
 
 void FileModal::resize(const frect& rect) noexcept {
@@ -148,7 +152,8 @@ void FileModal::update_locale() noexcept {
   off.x = this->x + this->w - size.x - 8.0F;
   off.y = this->y + this->h - size.y - 8.0F;
   this->new_btn.rect = {
-      off.x - 4.0F, off.y - 4.0F, size.x + 8.0F, size.y + 8.0F};
+      off.x - 4.0F, off.y - 4.0F, size.x + 8.0F, size.y + 8.0F
+  };
   this->new_btn.tex_rect = {.pos = off, .size = size};
 
   text = cfg::locale::get_text(cfg::locale::TextId::CANCEL);
@@ -156,32 +161,42 @@ void FileModal::update_locale() noexcept {
   size = renderer::get_text_size(text);
   off.x -= size.x + 12.0F;
   this->cancel_btn.rect = {
-      off.x - 4.0F, off.y - 4.0F, size.x + 8.0F, size.y + 8.0F};
+      off.x - 4.0F, off.y - 4.0F, size.x + 8.0F, size.y + 8.0F
+  };
   this->cancel_btn.tex_rect = {.pos = off, .size = size};
 }
 
-void FileModal::input(const event::Input& evt, InputData& data) noexcept {
-  if (data.dragging) {
-    this->reposition(data.orig_pos + evt.mouse.pos - data.orig_mouse);
+void FileModal::input(const event::Input& evt) noexcept {
+  if (data::is_dragging()) {
+    this->reposition(data::get_fvec1() + evt.mouse.pos - data::get_fvec2());
     if (evt.mouse.left != input::MouseState::HOLD) {
-      data.dragging = false;
+      data::set_dragging(false);
     }
     return;
   }
 
   if (evt.mouse.left == input::MouseState::DOWN &&
       this->title_rect.has_point(evt.mouse.pos)) {
-    data.orig_mouse = evt.mouse.pos;
-    data.orig_pos = this->pos;
-    data.dragging = true;
+    data::set_fvec1(this->pos);
+    data::set_fvec2(evt.mouse.pos);
+    data::set_dragging(true);
     return;
   }
 
-  this->width_textbox.input(evt, data);
-  this->height_textbox.input(evt, data);
+  this->width_textbox.input(evt);
+  this->height_textbox.input(evt);
 
-  this->new_btn.input(evt, data);
-  this->cancel_btn.input(evt, data);
+  this->new_btn.input(evt);
+  if (data::is_left_click()) {
+    presenter::create_anim();
+    return;
+  }
+
+  this->cancel_btn.input(evt);
+  if (data::is_left_click()) {
+    presenter::close_modals();
+    return;
+  }
 }
 
 void FileModal::update(f32 _delta) noexcept {
@@ -218,4 +233,3 @@ void FileModal::render() noexcept {
 }
 
 } // namespace view::sdl3::widget
-

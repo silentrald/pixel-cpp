@@ -16,4 +16,3 @@ using Texture = view::sdl3::Texture;
 using View = view::sdl3::Manager;
 
 #endif
-

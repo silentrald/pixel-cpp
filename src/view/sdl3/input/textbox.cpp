@@ -40,7 +40,8 @@ void Textbox::update_texture() noexcept {
 void Textbox::reposition_text_rect() noexcept {
   auto size = renderer::get_text_size(this->text.c_str());
   this->tex_rect.pos = {
-      .x = this->rect.x + this->rect.w - size.x, .y = this->rect.y};
+      .x = this->rect.x + this->rect.w - size.x, .y = this->rect.y
+  };
   this->tex_rect.size = size;
 }
 
@@ -61,10 +62,10 @@ void Textbox::update_locale() noexcept {
   this->reposition_text_rect();
 }
 
-void Textbox::input(const event::Input& evt, InputData& data) noexcept {
+void Textbox::input(const event::Input& evt) noexcept {
   if (evt.mouse.left == input::MouseState::UP &&
       this->rect.has_point(evt.mouse.pos)) {
-    data.new_selected_input = this;
+    data::set_new_selected_input(this);
   }
 }
 
@@ -116,4 +117,3 @@ void Textbox::render() noexcept {
 }
 
 } // namespace view::sdl3::widget
-

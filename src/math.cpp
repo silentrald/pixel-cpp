@@ -6,7 +6,7 @@
  *==========================*/
 
 #include "./math.hpp"
-#include <cassert>
+#include <cmath>
 
 u32 math::get_next_pow2(u32 num) noexcept {
   num |= num >> 0b00001;
@@ -38,4 +38,3 @@ bool math::is_nearly_equal(f32 f1, f32 f2) noexcept {
 f32 math::normalize(u8 num) noexcept {
   return num * (1.0F / 255.0F);
 }
-

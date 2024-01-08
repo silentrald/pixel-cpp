@@ -65,24 +65,22 @@ void VerticalScrollbar::update_locale() noexcept {
   // Do nothing UwU
 }
 
-void VerticalScrollbar::input(
-    const event::Input& evt, InputData& data
-) noexcept {
+void VerticalScrollbar::input(const event::Input& evt) noexcept {
   if (evt.mouse.left == input::MouseState::DOWN &&
       this->scroll_rect.has_point(evt.mouse.pos)) {
-    data.orig_mouse.y = evt.mouse.pos.y;
-    data.orig_pos.y = this->scroll_rect.y;
-    data.left_clicked_widget = this;
+    data::set_f1(this->scroll_rect.y);
+    data::set_f2(evt.mouse.pos.y);
+    data::set_left_click_widget(this);
     return;
   }
 
-  if (data.left_clicked_widget != this ||
+  if (data::get_left_click_widget() != this ||
       evt.mouse.left != input::MouseState::HOLD) {
     return;
   }
 
   this->scroll_rect.y = std::clamp(
-      data.orig_pos.y - data.orig_mouse.y + evt.mouse.pos.y, this->y,
+      data::get_f1() - data::get_f2() + evt.mouse.pos.y, this->y,
       this->max_offset
   );
 }
@@ -100,4 +98,3 @@ void VerticalScrollbar::render() noexcept {
 }
 
 } // namespace view::sdl3::widget
-

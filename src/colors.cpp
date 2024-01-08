@@ -6,7 +6,6 @@
  *==========================*/
 
 #include "types.hpp"
-#include <cassert>
 
 const c8* const HEX_VALUES = "0123456789abcdef";
 

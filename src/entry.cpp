@@ -9,7 +9,6 @@
 #include "SDL_init.h"
 #include "core/logger/logger.hpp"
 #include "presenter/presenter.hpp"
-#include "view/sdl3/manager.hpp"
 
 int main() {
   if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {

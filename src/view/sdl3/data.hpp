@@ -12,32 +12,74 @@
 
 namespace view::sdl3 {
 
+class Widget;
+
 namespace widget {
 
 class Input;
 
 } // namespace widget
 
-/**
- * Mutable data being passed on the input functions of widgets.
- * Mostly references of selected widgets.
- **/
-struct InputData {
-  widget::Input* selected_input = nullptr;
-  widget::Input* new_selected_input = nullptr;
-  widget::Input* first_input = nullptr;
-  void* left_clicked_widget = nullptr;
+namespace data {
 
-  fvec orig_pos{};
-  fvec orig_mouse{};
+// === Pointers === //
 
-  bool dragging = false;
-  bool clear_selected = false;
+[[nodiscard]] widget::Input* get_selected_input() noexcept;
+void set_selected_input(widget::Input* input) noexcept;
 
-  // For events
-  bool left_click = false;
-  bool right_click = false;
-};
+[[nodiscard]] widget::Input* get_new_selected_input() noexcept;
+void set_new_selected_input(widget::Input* input) noexcept;
+
+[[nodiscard]] widget::Input* get_first_input() noexcept;
+void set_first_input(widget::Input* input) noexcept;
+
+[[nodiscard]] Widget* get_left_click_widget() noexcept;
+void set_left_click_widget(Widget* widget) noexcept;
+
+[[nodiscard]] Widget* get_right_click_widget() noexcept;
+void set_right_click_widget(Widget* widget) noexcept;
+
+[[nodiscard]] Widget* get_middle_click_widget() noexcept;
+void set_middle_click_widget(Widget* widget) noexcept;
+
+// === Temp Values === //
+
+[[nodiscard]] f32 get_f1() noexcept;
+[[nodiscard]] f32 get_f2() noexcept;
+[[nodiscard]] f32 get_f3() noexcept;
+[[nodiscard]] f32 get_f4() noexcept;
+[[nodiscard]] fvec get_fvec1() noexcept;
+[[nodiscard]] fvec get_fvec2() noexcept;
+
+void set_f1(f32 f) noexcept;
+void set_f2(f32 f) noexcept;
+void set_f3(f32 f) noexcept;
+void set_f4(f32 f) noexcept;
+void set_fvec1(fvec vec) noexcept;
+void set_fvec2(fvec vec) noexcept;
+
+// === Events === //
+
+[[nodiscard]] bool is_dragging() noexcept;
+void set_dragging(bool val) noexcept;
+
+// TODO: Check if this needs to be reset
+[[nodiscard]] bool is_clear_selected() noexcept;
+void set_clear_selected(bool val) noexcept;
+
+// Resets to false when called
+[[nodiscard]] bool is_left_click() noexcept;
+void set_left_click(bool click) noexcept;
+
+// Resets to false when called
+[[nodiscard]] bool is_right_click() noexcept;
+void set_right_click(bool click) noexcept;
+
+// Resets to false when called
+[[nodiscard]] bool is_middle_click() noexcept;
+void set_middle_click(bool click) noexcept;
+
+} // namespace data
 
 } // namespace view::sdl3
 

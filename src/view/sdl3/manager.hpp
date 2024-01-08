@@ -15,16 +15,11 @@
 #include "./box/status.hpp"
 #include "./box/timeline.hpp"
 #include "./box/tool.hpp"
-#include "./font.hpp"
 #include "./input/button.hpp"
-#include "./input/textbox.hpp"
-#include "./modal/file.hpp"
 #include "./modal/modal.hpp"
 #include "./texture.hpp"
 #include "./window.hpp"
 #include "SDL_events.h"
-#include "SDL_render.h"
-#include "SDL_video.h"
 #include "core/draw/anim.hpp"
 #include "core/ds/vector.hpp"
 #include "types.hpp"
@@ -128,17 +123,14 @@ private:
 
   event::Input input_evt{};
   event::KeyPress keypress_evt{};
-  InputData data{};
 
   widget::ColorPicker fg_color{};
   widget::ColorPicker bg_color{};
 
-  i32 mouse_box_id = -1; // where is the mouse currently
   i32 ctx_menu_idx = -1; // which context menu is open
 
   bool running = false;
   bool is_input_evt = false;
-  bool is_draw_box_clicked = false;
 
   void input() noexcept;
   void handle_input_event() noexcept;
@@ -171,4 +163,3 @@ private:
 } // namespace view::sdl3
 
 #endif
-

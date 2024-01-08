@@ -31,7 +31,7 @@ public:
 
   void reset() noexcept override;
   void update_locale() noexcept override;
-  void input(const event::Input& evt, InputData& data) noexcept override;
+  void input(const event::Input& evt) noexcept override;
   void update(f32 delta) noexcept override;
   void render() noexcept override;
 
