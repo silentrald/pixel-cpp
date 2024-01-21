@@ -8,10 +8,8 @@
 #include "./locale.hpp"
 #include "core/logger/logger.hpp"
 #include <array>
-#include <cstring>
 #include <fstream>
 #include <string>
-#include <unordered_map>
 
 namespace cfg {
 
@@ -30,38 +28,34 @@ void locale::destroy_locale() noexcept {
   }
 }
 
-struct SectionHash {
-  [[nodiscard]] u32 operator()(const c8* str) const noexcept {
-    assert(str[0] != '\0');
-    assert(str[1] != '\0');
-    assert(str[2] != '\0');
-    return *str;
-  }
-};
+[[nodiscard]] constexpr u32 section_hash(const c8* str) noexcept {
+  assert(str[0] != '\0');
+  assert(str[1] != '\0');
+  assert(str[2] != '\0');
+  return str[0] | str[1] << 4 | str[2] << 8 | str[3] << 12;
+}
 
-struct SectionCmp {
-  [[nodiscard]] bool operator()(const c8* str1, const c8* str2) const noexcept {
-    return std::strncmp(str1, str2, 4) == 0;
-  }
-};
-
-// NOLINTNEXTLINE
-#define SECTION_ENTRY(key)                                                     \
-  { #key, locale::Section::key }
-const std::unordered_map<const c8*, locale::Section, SectionHash, SectionCmp>
-    // NOLINTNEXTLINE
-    section_map{
-        SECTION_ENTRY(GENERAL),         SECTION_ENTRY(MENU_ITEM),
-        SECTION_ENTRY(FILE_CTX_MENU),   SECTION_ENTRY(EXPORT_CTX_MENU),
-        SECTION_ENTRY(MODAL_TITLE),     SECTION_ENTRY(EDIT_CTX_MENU),
-        SECTION_ENTRY(LAYERS_CTX_MENU), SECTION_ENTRY(TIMELINE_CTX_MENU),
-    };
-#undef SECTION_ENTRY
+#define SECTION_CASE(key)                                                      \
+  case section_hash(#key):                                                     \
+    return locale::Section::key;
 
 locale::Section parse_section(const char* str) noexcept {
-  auto it = section_map.find(str);
-  return it != section_map.end() ? it->second : locale::Section::SIZE;
+  switch (section_hash(str)) {
+    SECTION_CASE(GENERAL);
+    SECTION_CASE(MENU_ITEM);
+    SECTION_CASE(FILE_CTX_MENU);
+    SECTION_CASE(EXPORT_CTX_MENU);
+    SECTION_CASE(MODAL_TITLE);
+    SECTION_CASE(EDIT_CTX_MENU);
+    SECTION_CASE(LAYERS_CTX_MENU);
+    SECTION_CASE(TIMELINE_CTX_MENU);
+
+  default:
+    return locale::Section::SIZE;
+  }
 }
+
+#undef SECTION_CASE
 
 error_code locale::load_locale(Locale locale) noexcept {
   _locale = locale;

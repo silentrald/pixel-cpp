@@ -7,6 +7,7 @@
 
 #include "./shortcut.hpp"
 #include "core/logger/logger.hpp"
+#include "view/input.hpp"
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -122,7 +123,7 @@ error_code Shortcut::load_config(const c8* path) noexcept {
       continue;
     }
 
-    this->map.insert({equal_index, key_map});
+    TRY(this->map.insert(equal_index, key_map));
   }
 
   ifs.close();
@@ -137,9 +138,8 @@ error_code Shortcut::save_config(const c8* path) const noexcept {
 }
 
 ShortcutKey Shortcut::get_shortcut_key(u32 key) const noexcept {
-  auto it = this->map.find(key);
-  return it == this->map.cend() ? ShortcutKey::NONE : it->second;
+  const auto* val = this->map[key];
+  return val ? *val : ShortcutKey::NONE;
 }
 
 } // namespace cfg
-
