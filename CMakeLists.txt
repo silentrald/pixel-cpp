@@ -153,18 +153,22 @@ include_directories(external/expected/include)
 
 # Unit testing
 add_subdirectory(external/catch2)
-add_executable(pixel_draw test/draw.cpp
+  add_executable(test_draw test/draw.cpp
   src/math.cpp
   src/colors.cpp
 
   ${draw_srcs}
   ${logger_srcs}
 )
-target_link_libraries(pixel_draw PRIVATE Catch2::Catch2WithMain)
+target_link_libraries(test_draw PRIVATE Catch2::Catch2WithMain)
 
-add_executable(pixel_vector test/vector.cpp ${logger_srcs})
-target_link_libraries(pixel_vector PRIVATE Catch2::Catch2WithMain)
+add_executable(test_vector test/vector.cpp ${logger_srcs})
+target_link_libraries(test_vector PRIVATE Catch2::Catch2WithMain)
 
+add_executable(test_hashmap test/hashmap.cpp ${logger_srcs})
+target_link_libraries(test_hashmap PRIVATE Catch2::Catch2WithMain)
+
+# Main executable
 set(pxl_lib
   SDL3::SDL3
   SDL3_ttf-shared

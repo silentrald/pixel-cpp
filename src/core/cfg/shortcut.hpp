@@ -8,9 +8,8 @@
 #ifndef PXL_CFG_SHORTCUT_HPP
 #define PXL_CFG_SHORTCUT_HPP
 
+#include "core/ds/hashmap.hpp"
 #include "types.hpp"
-#include "view/input.hpp"
-#include <unordered_map>
 
 #define TEXT_ID(prefix, key) prefix##_##key = hash_shortcut(#key)
 
@@ -69,7 +68,12 @@ public:
   [[nodiscard]] ShortcutKey get_shortcut_key(u32 key) const noexcept;
 
 private:
-  std::unordered_map<u32, ShortcutKey> map{};
+  struct NoHash {
+    [[nodiscard]] inline usize operator()(u32 val) const noexcept {
+      return val;
+    }
+  };
+  ds::hashmap<u32, ShortcutKey, NoHash> map{};
 };
 
 } // namespace cfg
@@ -77,4 +81,3 @@ private:
 #undef TEXT_ID
 
 #endif
-

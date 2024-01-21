@@ -29,5 +29,6 @@ Checks: >
   -bugprone-copy-constructor-init,
   -readability-const-return-type,
   -misc-no-recursion,
-  -modernize-use-default-member-init,
-  -cppcoreguidelines-pro-type-reinterpret-cast
+  -*-use-default-member-init,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -*-macro-usage

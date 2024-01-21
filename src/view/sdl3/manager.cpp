@@ -32,8 +32,6 @@ error_code Manager::init() noexcept {
   TRY(this->boxes.push_back(&this->preview_box));
 
   // Tool box
-  widget::Button btn{};
-
   TRY(this->tool_box.push_btn(
       "assets/tools/pencil.png", presenter::set_pencil_tool
   ));
